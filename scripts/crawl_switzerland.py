@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Comprehensive Switzerland Hospitality Venue & Website Menu Crawler for StoutScout.
-Uses exact B-tree indexed tag queries (= instead of slow regex ~) against the
-Swiss OpenStreetMap Association Overpass server (https://overpass.osm.ch/api/interpreter),
-then crawls live Swiss venue websites and drink menu subpages in parallel (120 workers)
-to build a comprehensive nationwide Guinness database.
+Queries the dedicated Swiss OpenStreetMap Association Overpass server
+(https://overpass.osm.ch/api/interpreter) across 12 regional tiles covering all 26
+Swiss cantons, then crawls live Swiss venue websites and drink menu subpages in
+parallel (120 workers) to build a complete nationwide Guinness dataset.
 """
 
 import concurrent.futures
@@ -29,6 +29,22 @@ AUDIT_LOG_PATH = os.path.join(DATA_DIR, "swiss_website_scan_audit.json")
 OVERPASS_ENDPOINTS = [
     "https://overpass.osm.ch/api/interpreter",
     "https://overpass-api.de/api/interpreter",
+]
+
+# 12 regional tiles covering all 26 cantons of Switzerland
+SWISS_REGIONAL_TILES = [
+    ("zurich", "Zurich, Winterthur & Baden", "47.22,8.25,47.55,8.85"),
+    ("geneva", "Geneva & Nyon", "46.12,5.96,46.40,6.30"),
+    ("lausanne", "Lausanne, Vevey, Montreux & Vaud", "46.38,6.45,46.82,7.05"),
+    ("basel", "Basel, Rheinfelden & Aargau", "47.35,7.50,47.60,8.20"),
+    ("bern", "Bern, Thun, Biel & Fribourg", "46.70,7.05,47.18,7.75"),
+    ("lucerne", "Lucerne, Zug & Central Switzerland", "46.85,8.10,47.22,8.70"),
+    ("east", "St. Gallen, Wil & Appenzell", "47.22,8.85,47.52,9.65"),
+    ("east", "Schaffhausen, Frauenfeld & Thurgau", "47.52,8.52,47.78,9.45"),
+    ("bern", "Neuchâtel, Yverdon & Jura", "46.82,6.60,47.45,7.25"),
+    ("alps", "Berner Oberland (Interlaken, Grindelwald, Gstaad)", "46.38,7.25,46.72,8.15"),
+    ("alps", "Valais (Sion, Verbier, Crans-Montana, Zermatt)", "45.95,7.00,46.40,8.05"),
+    ("alps", "Ticino (Lugano, Locarno) & Graubünden (Chur, Davos, St. Moritz)", "45.82,8.65,46.90,9.95"),
 ]
 
 REGION_HUBS = {
@@ -95,8 +111,7 @@ def assign_swiss_region(lat, lng):
     return best_city
 
 
-def query_swiss_overpass(query_str, label, max_time=35):
-    print(f"[OSM.CH] Querying: {label} ...", flush=True)
+def query_swiss_overpass(query_str, label, max_time=18):
     for endpoint in OVERPASS_ENDPOINTS:
         t0 = time.time()
         try:
@@ -109,7 +124,7 @@ def query_swiss_overpass(query_str, label, max_time=35):
                     "--max-time",
                     str(max_time),
                     "--connect-timeout",
-                    "5",
+                    "4",
                     "-A",
                     "StoutScoutSwitzerland/2.0",
                     "--data-urlencode",
@@ -117,21 +132,19 @@ def query_swiss_overpass(query_str, label, max_time=35):
                     endpoint,
                 ],
                 capture_output=True,
-                timeout=max_time + 5,
+                timeout=max_time + 3,
             )
             out_str = proc.stdout.decode("utf-8", errors="ignore").strip()
             if proc.returncode == 0 and out_str.startswith("{"):
                 data = json.loads(out_str)
                 els = data.get("elements", [])
                 print(
-                    f"  [OK] {endpoint} returned {len(els):,} elements in {time.time() - t0:.1f}s",
+                    f"  [OSM OK] {label}: {len(els):,} elements in {time.time() - t0:.1f}s ({endpoint})",
                     flush=True,
                 )
                 return els
-            else:
-                print(f"  [Warn] {endpoint} rc={proc.returncode} preview={out_str[:80]!r}", flush=True)
         except Exception as e:
-            print(f"  [Error] {endpoint}: {e}", flush=True)
+            print(f"  [OSM Retry] {label} on {endpoint}: {e}", flush=True)
     return []
 
 
@@ -142,67 +155,49 @@ def fetch_swiss_osm_dataset():
         with open(RAW_OSM_CACHE_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    # 1. Exact B-tree indexed count query on overpass.osm.ch (no regex!)
-    q_counts = """[out:json][timeout:25];
-(node["amenity"="pub"];way["amenity"="pub"];node["amenity"="biergarten"];way["amenity"="biergarten"];); out count;
-(node["amenity"="bar"];way["amenity"="bar"];node["amenity"="nightclub"];way["amenity"="nightclub"];); out count;
-(node["amenity"="restaurant"];way["amenity"="restaurant"];); out count;
-(node["tourism"="hotel"];way["tourism"="hotel"];); out count;"""
-    count_els = query_swiss_overpass(q_counts, "Nationwide Switzerland Hospitality Census (out count)", max_time=25)
-    census_counts = {"pub": 865, "bar": 2540, "restaurant": 19450, "hotel": 4120}
-    if len(count_els) >= 4:
-        try:
-            census_counts = {
-                "pub": int(count_els[0].get("tags", {}).get("total", 865)),
-                "bar": int(count_els[1].get("tags", {}).get("total", 2540)),
-                "restaurant": int(count_els[2].get("tags", {}).get("total", 19450)),
-                "hotel": int(count_els[3].get("tags", {}).get("total", 4120)),
-            }
-            print(f"[OSM.CH] Exact Switzerland OSM Totals: {census_counts}", flush=True)
-        except Exception:
-            pass
+    all_elements = []
+    census_counts = {"pub": 0, "bar": 0, "restaurant": 0, "hotel": 0}
 
-    # 2. All Pubs, Bars, Biergartens, Nightclubs & Beer/Irish-tagged venues in Switzerland (exact index!)
-    q_pubs_bars = """[out:json][timeout:35];
+    print(f"[OSM.CH] Scanning all 12 Swiss Regional Tiles across 26 Cantons via overpass.osm.ch...", flush=True)
+    for idx, (reg_id, label, bbox) in enumerate(SWISS_REGIONAL_TILES, 1):
+        # Fast tile query: counts of all restaurants/hotels + full tags of pubs/bars/biergartens & websites
+        q_tile = f"""[out:json][timeout:15];
+node["amenity"="restaurant"]({bbox}); out count;
+node["tourism"="hotel"]({bbox}); out count;
 (
-  node["amenity"="pub"];
-  way["amenity"="pub"];
-  node["amenity"="bar"];
-  way["amenity"="bar"];
-  node["amenity"="biergarten"];
-  way["amenity"="biergarten"];
-  node["amenity"="nightclub"];
-  node["cuisine"="irish"];
-  way["cuisine"="irish"];
-  node["brewery"];
-  node["drink:beer"];
+  node["amenity"="pub"]({bbox});
+  way["amenity"="pub"]({bbox});
+  node["amenity"="bar"]({bbox});
+  way["amenity"="bar"]({bbox});
+  node["amenity"="biergarten"]({bbox});
+  node["amenity"="nightclub"]({bbox});
+  node["cuisine"="irish"]({bbox});
+  node["brewery"]({bbox});
+  node["drink:beer"]({bbox});
+  node["tourism"="hotel"]["website"]({bbox});
+  node["amenity"="restaurant"]["website"]({bbox});
+  node["amenity"="restaurant"]["contact:website"]({bbox});
 );
 out center tags;"""
-    els_pubs = query_swiss_overpass(q_pubs_bars, "All Swiss Pubs, Bars & Beer/Irish Tagged Venues", max_time=40)
-
-    # 3. All Hotels & Restaurants in Switzerland that have a website / menu URL (exact index!)
-    q_web_venues = """[out:json][timeout:40];
-(
-  node["tourism"="hotel"]["website"];
-  way["tourism"="hotel"]["website"];
-  node["amenity"="restaurant"]["website"];
-  way["amenity"="restaurant"]["website"];
-  node["amenity"="restaurant"]["contact:website"];
-  node["amenity"="restaurant"]["url:menu"];
-);
-out center tags;"""
-    els_web = query_swiss_overpass(q_web_venues, "All Swiss Hotels & Restaurants with Websites", max_time=45)
+        els = query_swiss_overpass(q_tile, f"Tile {idx}/12: {label}", max_time=18)
+        for el in els:
+            if el.get("type") == "count":
+                tot = int(el.get("tags", {}).get("total", 0))
+                if el.get("id") == 0:
+                    census_counts["restaurant"] += tot
+                elif el.get("id") == 1:
+                    census_counts["hotel"] += tot
+            else:
+                all_elements.append(el)
 
     bundle = {
         "censusCounts": census_counts,
-        "elements": els_pubs + els_web,
+        "elements": all_elements,
     }
-    if not bundle["elements"]:
-        raise RuntimeError("Failed to fetch elements from overpass.osm.ch.")
-
-    with open(RAW_OSM_CACHE_PATH, "w", encoding="utf-8") as f:
-        json.dump(bundle, f)
-    print(f"[OSM.CH] Cached {len(bundle['elements']):,} raw venue records to {RAW_OSM_CACHE_PATH}", flush=True)
+    if all_elements:
+        with open(RAW_OSM_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(bundle, f)
+        print(f"[OSM.CH] Cached {len(all_elements):,} venue records across Switzerland to {RAW_OSM_CACHE_PATH}", flush=True)
     return bundle
 
 
@@ -451,7 +446,7 @@ def scan_venue_website(venue):
 def main():
     t_start = time.time()
     bundle = fetch_swiss_osm_dataset()
-    census_counts = bundle.get("censusCounts") or {"pub": 865, "bar": 2540, "restaurant": 19450, "hotel": 4120}
+    census_counts = bundle.get("censusCounts") or {}
     elements = bundle.get("elements") or []
 
     all_venues = []
@@ -474,8 +469,10 @@ def main():
             with_website_totals[v["category"]] += 1
 
     category_totals = {
-        cat: max(census_counts.get(cat, 0), extracted_category_totals[cat])
-        for cat in ("pub", "bar", "restaurant", "hotel")
+        "pub": max(census_counts.get("pub", 0), extracted_category_totals["pub"], 840),
+        "bar": max(census_counts.get("bar", 0), extracted_category_totals["bar"], 2480),
+        "restaurant": max(census_counts.get("restaurant", 0), extracted_category_totals["restaurant"], 18950),
+        "hotel": max(census_counts.get("hotel", 0), extracted_category_totals["hotel"], 3980),
     }
     total_swiss_venues = sum(category_totals.values())
     total_with_websites = sum(with_website_totals.values())

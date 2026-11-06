@@ -17,22 +17,25 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const STORE_PATH = path.join(__dirname, 'data', 'user_store.json');
+const BUNDLED_STORE_PATH = path.join(__dirname, 'data', 'user_store.json');
+const STORE_PATH = process.env.VERCEL ? '/tmp/user_store.json' : BUNDLED_STORE_PATH;
 const CRAWL_RESULTS_PATH = path.join(__dirname, 'data', 'swiss_crawl_results.json');
 
 function loadUserStore() {
-  try {
-    if (fs.existsSync(STORE_PATH)) {
-      const parsed = JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8'));
-      return {
-        crowdReports: parsed.crowdReports || {},
-        menuScans: parsed.menuScans || {},
-        customVenues: parsed.customVenues || [],
-        googleMapsVenues: parsed.googleMapsVenues || [],
-      };
+  for (const candidatePath of [STORE_PATH, BUNDLED_STORE_PATH]) {
+    try {
+      if (fs.existsSync(candidatePath)) {
+        const parsed = JSON.parse(fs.readFileSync(candidatePath, 'utf-8'));
+        return {
+          crowdReports: parsed.crowdReports || {},
+          menuScans: parsed.menuScans || {},
+          customVenues: parsed.customVenues || [],
+          googleMapsVenues: parsed.googleMapsVenues || [],
+        };
+      }
+    } catch (err) {
+      console.warn('Could not read user_store.json, initializing fresh store:', err.message);
     }
-  } catch (err) {
-    console.warn('Could not read user_store.json, initializing fresh store:', err.message);
   }
   return { crowdReports: {}, menuScans: {}, customVenues: [], googleMapsVenues: [] };
 }

@@ -17,7 +17,8 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-STORE_PATH = os.path.join(ROOT_DIR, "server", "data", "user_store.json")
+BUNDLED_STORE_PATH = os.path.join(ROOT_DIR, "server", "data", "user_store.json")
+STORE_PATH = "/tmp/user_store.json" if os.environ.get("VERCEL") else BUNDLED_STORE_PATH
 
 CITY_PRESETS = {
     "all": {"id": "all", "name": "All Switzerland 🇨🇭", "lat": 46.8182, "lng": 8.2275, "zoom": 8, "currency": "CHF"},
@@ -1482,25 +1483,29 @@ DEMO_VENUES = [
 
 
 def load_store():
-    if os.path.exists(STORE_PATH):
-        try:
-            with open(STORE_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return {
-                    "crowdReports": data.get("crowdReports", {}),
-                    "menuScans": data.get("menuScans", {}),
-                    "customVenues": data.get("customVenues", []),
-                    "googleMapsVenues": data.get("googleMapsVenues", []),
-                }
-        except Exception:
-            pass
+    for candidate_path in (STORE_PATH, BUNDLED_STORE_PATH):
+        if os.path.exists(candidate_path):
+            try:
+                with open(candidate_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    return {
+                        "crowdReports": data.get("crowdReports", {}),
+                        "menuScans": data.get("menuScans", {}),
+                        "customVenues": data.get("customVenues", []),
+                        "googleMapsVenues": data.get("googleMapsVenues", []),
+                    }
+            except Exception:
+                pass
     return {"crowdReports": {}, "menuScans": {}, "customVenues": [], "googleMapsVenues": []}
 
 
 def save_store(store):
-    os.makedirs(os.path.dirname(STORE_PATH), exist_ok=True)
-    with open(STORE_PATH, "w", encoding="utf-8") as f:
-        json.dump(store, f, indent=2, ensure_ascii=False)
+    try:
+        os.makedirs(os.path.dirname(STORE_PATH), exist_ok=True)
+        with open(STORE_PATH, "w", encoding="utf-8") as f:
+            json.dump(store, f, indent=2, ensure_ascii=False)
+    except OSError:
+        pass
 
 
 CRAWL_RESULTS_PATH = os.path.join(ROOT_DIR, "server", "data", "swiss_crawl_results.json")
@@ -2185,6 +2190,18 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def send_static_file(self, rel_path, content_type):
+        abs_path = os.path.join(ROOT_DIR, rel_path)
+        if not os.path.exists(abs_path):
+            return self.send_json({"error": "Not found"}, 404)
+        with open(abs_path, "rb") as f:
+            body = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/api/config":
@@ -2251,8 +2268,10 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             enriched = [enrich_venue(v, store) for v in filtered]
             return self.send_json({"source": "demo_curated", "venues": enriched})
 
-        if parsed.path == "/" or parsed.path == "/index.html":
-            self.path = "/public/standalone.html"
+        if parsed.path in ("/", "/index.html", "/standalone.html", "/public/standalone.html"):
+            return self.send_static_file(os.path.join("public", "standalone.html"), "text/html; charset=utf-8")
+        if parsed.path == "/src/styles.css":
+            return self.send_static_file(os.path.join("src", "styles.css"), "text/css; charset=utf-8")
         return super().do_GET()
 
     def do_POST(self):

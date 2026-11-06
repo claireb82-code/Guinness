@@ -47,10 +47,10 @@ Then open **http://localhost:3000** in your browser.
 
 ## Deploying to Vercel
 
-To deploy **Guinness Guide — Switzerland Venue & Menu Finder** to [Vercel](https://vercel.com):
-1. Expose the backend API routes (`/api/config`, `/api/venues`, `/api/scan-menu`, `/api/crowd-report`, `/api/add-venue`) as a Vercel Serverless Function under `api/` and add a `vercel.json` routing configuration.
-2. Point runtime writes for `user_store.json` to `/tmp/user_store.json` when `VERCEL=1` (since the serverless bundle directory is read-only) or connect a persistent store (e.g., Upstash Redis / Vercel Postgres).
-3. Optionally configure `GOOGLE_MAPS_API_KEY` in Vercel Project Settings → Environment Variables.
+This repository is pre-configured for one-click deployment to [Vercel](https://vercel.com):
+1. **Serverless API & Routing ([`vercel.json`](vercel.json) & [`api/index.py`](api/index.py))**: Routes all `/api/*` endpoints (`/api/config`, `/api/venues`, `/api/check-google-maps`, `/api/scan-menu`, `/api/crowd-report`, `/api/add-venue`) to `StoutScoutHandler` in [`app_server.py`](app_server.py) and bundles the Swiss dataset.
+2. **Serverless Storage Fallback**: When `VERCEL=1` is present at runtime, both [`app_server.py`](app_server.py) and [`server/index.js`](server/index.js) seed initial venue/report data from `server/data/user_store.json` and write runtime updates to `/tmp/user_store.json`.
+3. **Deploy**: Import the GitHub repository at [vercel.com/new](https://vercel.com/new) (or run `npx vercel --prod`). Optionally set `GOOGLE_MAPS_API_KEY` in Vercel Project Settings → Environment Variables.
 
 ---
 
@@ -92,6 +92,9 @@ See [`scripts/README.md`](scripts/README.md) for full details on crawler options
 Guinness/
 ├── AGENTS.md                        # Workspace rules enforcing auto-docs & git push on changes
 ├── README.md                        # Main project documentation
+├── vercel.json                      # Vercel serverless routing & bundle configuration
+├── api/
+│   └── index.py                     # Vercel Python Serverless Function entrypoint
 ├── app_server.py                    # Zero-dependency Python 3 server + embedded Swiss dataset
 ├── index.html                       # Vite React entry HTML
 ├── package.json                     # Node.js dependencies and scripts

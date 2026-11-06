@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 60,
+      "includeFiles": "{app_server.py,public/**,src/styles.css,server/data/*.json}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/src/styles.css",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/standalone",
+      "destination": "/standalone.html"
+    }
+  ]
+}
