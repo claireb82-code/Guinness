@@ -72,6 +72,7 @@ See [`scripts/README.md`](scripts/README.md) for full details on crawler options
 | :--- | :--- | :--- |
 | `GET` | `/api/config` | Returns regional presets (`CITY_PRESETS`) and server API key status |
 | `GET` | `/api/venues` | Returns filtered Swiss venues (`city`, `lat`, `lng`, `radius`, `scrapeMenus`) |
+| `POST` | `/api/check-google-maps` | Checks Google Maps / Places or a Google Maps URL/query for Guinness and imports venues |
 | `POST` | `/api/scan-switzerland` | Queries OpenStreetMap Overpass API live across Switzerland for Guinness/Irish pubs |
 | `POST` | `/api/scan-menu` | Live-scrapes a specific venue's website or menu URL for Guinness variants & CHF price |
 | `POST` | `/api/crowd-report` | Submits a community pint rating, serving format, price, and Guinness 0.0 report |

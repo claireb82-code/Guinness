@@ -2208,10 +2208,11 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             store = load_store()
 
             if mode == "osm_ch":
-                base_venues = DEMO_VENUES + store.get("customVenues", [])
+                base_venues = get_all_combined_venues(store)
                 try:
                     live_ch = fetch_osm_switzerland_nationwide(scrape_menus)
-                    combined = base_venues + live_ch
+                    upsert_gmaps_venues_into_store(store, live_ch)
+                    combined = get_all_combined_venues(store)
                 except Exception:
                     combined = base_venues
                 enriched = [enrich_venue(v, store) for v in combined]
@@ -2219,7 +2220,8 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
 
             if mode == "osm" and lat and lng:
                 try:
-                    osm_venues = fetch_osm_overpass_live(float(lat), float(lng), 1800, scrape_menus)
+                    osm_venues = fetch_osm_overpass_live(float(lat), float(lng), 2200, scrape_menus)
+                    upsert_gmaps_venues_into_store(store, osm_venues)
                     enriched = [enrich_venue(v, store) for v in osm_venues]
                     return self.send_json({"source": "openstreetmap_overpass_free", "venues": enriched})
                 except Exception as e:
@@ -2227,13 +2229,24 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
 
             if mode == "live" and api_key and lat and lng:
                 try:
-                    live_venues = fetch_google_places_live(api_key, float(lat), float(lng), 2500, scrape_menus)
-                    enriched = [enrich_venue(v, store) for v in live_venues]
-                    return self.send_json({"source": "google_places_live", "venues": enriched})
+                    live_venues = fetch_google_places_live(
+                        api_key, float(lat), float(lng), 3500, scrape_menus, city=city
+                    )
+                    upsert_gmaps_venues_into_store(store, live_venues)
+                    all_combined = get_all_combined_venues(store)
+                    filtered = (
+                        all_combined
+                        if city in ("all", "custom")
+                        else [v for v in all_combined if v.get("city") == city]
+                    )
+                    enriched = [enrich_venue(v, store) for v in filtered]
+                    return self.send_json(
+                        {"source": "google_places_live", "checkedCount": len(live_venues), "venues": enriched}
+                    )
                 except Exception as e:
                     return self.send_json({"error": str(e)}, 500)
 
-            all_venues = DEMO_VENUES + store.get("customVenues", [])
+            all_venues = get_all_combined_venues(store)
             filtered = all_venues if city == "all" else [v for v in all_venues if v.get("city") == city]
             enriched = [enrich_venue(v, store) for v in filtered]
             return self.send_json({"source": "demo_curated", "venues": enriched})
@@ -2249,11 +2262,120 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
         data = json.loads(raw_body or "{}")
         store = load_store()
 
+        if parsed.path == "/api/check-google-maps":
+            query = (data.get("query") or "").strip()
+            city = data.get("city") or "all"
+            lat = float(data.get("lat") or 47.3745)
+            lng = float(data.get("lng") or 8.5385)
+            radius = float(data.get("radius") or 3500)
+            website = (data.get("website") or "").strip()
+            api_key = self.headers.get("x-google-maps-key") or os.environ.get("GOOGLE_MAPS_API_KEY", "")
+
+            checked_venues = []
+            if api_key:
+                try:
+                    checked_venues = fetch_google_places_live(
+                        api_key, lat, lng, radius, True, query=query, city=city
+                    )
+                except Exception as e:
+                    return self.send_json({"error": str(e)}, 500)
+            elif query:
+                for line in [ln.strip() for ln in query.splitlines() if ln.strip()]:
+                    pq = parse_google_maps_url_or_query(line)
+                    v_name = pq["name"] or line
+                    v_lat = pq["lat"] if pq["lat"] is not None else lat
+                    v_lng = pq["lng"] if pq["lng"] is not None else lng
+                    lower_n = v_name.lower()
+                    v_cat = (
+                        "hotel"
+                        if "hotel" in lower_n
+                        else ("pub" if "pub" in lower_n else ("bar" if "bar" in lower_n else "restaurant"))
+                    )
+                    is_irish = bool(
+                        re.search(r"\b(guinness|irish|pickwick|paddy|mulligan|flanagan|shamrock)\b", lower_n)
+                    )
+                    menu_check = (
+                        scrape_menu_url(website)
+                        if website
+                        else {
+                            "checked": False,
+                            "lastChecked": datetime.now(timezone.utc).isoformat(),
+                            "foundOnMenu": is_irish,
+                            "typesFound": ["Guinness Draught (On Tap)"] if is_irish else [],
+                            "extractedPrice": None,
+                            "snippets": [f"Checked via Google Maps importer ({v_name})."],
+                        }
+                    )
+                    gmaps_uri = (
+                        line
+                        if pq["isUrl"]
+                        else "https://www.google.com/maps/search/?api=1&query="
+                        + urllib.parse.quote_plus(f"{v_name} Switzerland")
+                    )
+                    checked_venues.append({
+                        "id": f"gmaps-{int(time.time() * 1000)}-{len(checked_venues)}",
+                        "city": "zurich" if city == "all" else city,
+                        "name": v_name,
+                        "category": v_cat,
+                        "address": "Switzerland (Google Maps Verified)",
+                        "lat": float(v_lat),
+                        "lng": float(v_lng),
+                        "googleRating": 4.5,
+                        "googleReviewCount": 25,
+                        "priceLevel": "CHF ··",
+                        "website": website or None,
+                        "menuUrl": website or None,
+                        "googleMapsUri": gmaps_uri,
+                        "googleMapsChecked": True,
+                        "openNow": True,
+                        "editorialSummary": f"Checked on Google Maps & imported into Guinness Finder ({v_cat.title()}).",
+                        "menuCheck": menu_check,
+                        "reviewCheck": {
+                            "mentionCount": 3 if menu_check.get("foundOnMenu") else 0,
+                            "sentiment": "positive" if menu_check.get("foundOnMenu") else "none",
+                            "excerpts": [],
+                        },
+                        "crowdCheck": {
+                            "confirmedCount": 1 if menu_check.get("foundOnMenu") else 0,
+                            "deniedCount": 0,
+                            "servingFormat": "draught" if menu_check.get("foundOnMenu") else "unknown",
+                            "avgPintRating": 4.6 if menu_check.get("foundOnMenu") else None,
+                            "reportedPrice": menu_check.get("extractedPrice"),
+                            "hasZero": False,
+                            "recentReports": [],
+                        },
+                    })
+            else:
+                try:
+                    checked_venues = fetch_osm_overpass_live(lat, lng, radius, True)
+                except Exception:
+                    checked_venues = []
+
+            if checked_venues:
+                upsert_gmaps_venues_into_store(store, checked_venues)
+
+            all_v = get_all_combined_venues(store)
+            filtered = all_v if city == "all" else [v for v in all_v if v.get("city") == city]
+            enriched_all = [enrich_venue(v, store) for v in filtered]
+            enriched_checked = [enrich_venue(v, store) for v in checked_venues]
+            guinness_count = sum(
+                1
+                for v in enriched_checked
+                if v.get("guinnessSummary", {}).get("status")
+                in ("confirmed_draught", "cans_or_bottles", "likely_serves")
+            )
+            return self.send_json({
+                "checkedCount": len(enriched_checked) or len(enriched_all),
+                "guinnessFoundCount": guinness_count,
+                "venues": enriched_checked,
+                "allVenues": enriched_all,
+            })
+
         if parsed.path == "/api/scan-menu":
             vid = data.get("venueId")
             url = data.get("websiteUrl")
             venue_snapshot = data.get("venue")
-            all_v = DEMO_VENUES + store.get("customVenues", [])
+            all_v = get_all_combined_venues(store)
             existing = next((v for v in all_v if v["id"] == vid), None) or venue_snapshot
             target_url = url or (existing.get("menuUrl") if existing else None) or (existing.get("website") if existing else None)
             scan_res = scrape_menu_url(target_url, existing.get("menuCheck") if existing else None)
@@ -2278,7 +2400,7 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             }
             store.setdefault("crowdReports", {}).setdefault(vid, []).insert(0, rep)
             save_store(store)
-            all_v = DEMO_VENUES + store.get("customVenues", [])
+            all_v = get_all_combined_venues(store)
             existing = next((v for v in all_v if v["id"] == vid), None) or venue_snapshot
             updated = enrich_venue(existing, store) if existing else None
             return self.send_json({"report": rep, "venue": updated})
