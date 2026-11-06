@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Zero-dependency HTTP & API Server for StoutScout Switzerland (Guinness Map & Menu Finder).
+Zero-dependency HTTP & API Server for Guinness Guide — Switzerland Venue & Menu Finder.
 Provides the exact same REST API as server/index.js (/api/config, /api/venues,
-/api/scan-menu, /api/crowd-report, /api/add-venue) using Python 3 standard library,
-focused on Switzerland (Zurich, Geneva, Basel, Bern, Lausanne, Lucerne).
+/api/scan-menu, /api/crowd-report, /api/add-venue, /api/scan-switzerland) using
+Python 3 standard library, covering all 26 cantons of Switzerland.
 """
 
 import json
@@ -1691,10 +1691,10 @@ def fetch_google_places_live(api_key, lat, lng, radius=2500, scrape_menus=False)
         editorial = p.get("editorialSummary", {}).get("text", "")
         reviews = p.get("reviews", [])
         excerpts = []
-        mentions = 3 if re.search(r"guinness|stout", editorial, re.I) else 0
+        mentions = 3 if re.search(r"\bguinness\b", editorial, re.I) else 0
         for r in reviews:
             txt = r.get("text", {}).get("text", "")
-            if re.search(r"\b(guinness|stout|pint|creamy)\b", txt, re.I):
+            if re.search(r"\bguinness\b", txt, re.I):
                 mentions += 1
                 excerpts.append({
                     "author": r.get("authorAttribution", {}).get("displayName", "Reviewer"),
@@ -1958,7 +1958,7 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
             "typesFound": ["Guinness Draught (On Tap)"],
             "extractedPrice": "CHF 9.50",
             "snippets": [
-                f"Confirmed via nationwide Switzerland OpenStreetMap scan ({tags.get('brewery') or tags.get('cuisine') or 'Irish Pub / Stout Venue'})."
+                f"Confirmed via nationwide Switzerland OpenStreetMap scan ({tags.get('brewery') or tags.get('cuisine') or 'Guinness / Irish Pub Venue'})."
             ],
         }
 
@@ -2188,10 +2188,10 @@ if __name__ == "__main__":
         raise RuntimeError("Could not bind to any local port between 3000 and 3009.")
 
     url = f"http://localhost:{chosen_port}"
-    print(f"\n🍺 StoutScout Switzerland (Guinness Map & Menu Finder) is live at: {url}")
+    print(f"\n🍺 Guinness Guide Switzerland (Map & Menu Finder) is live at: {url}")
     print("   Press Ctrl+C to stop the server.\n")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nStopping StoutScout server. Sláinte!")
+        print("\nStopping Guinness Guide server. Sláinte!")
         server.server_close()

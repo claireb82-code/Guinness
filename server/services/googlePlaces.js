@@ -1,6 +1,6 @@
 import { scrapeVenueMenuForGuinness } from './menuScraper.js';
 
-const GUINNESS_REVIEW_REGEX = /\b(guinness|stout|creamy\s+pint|split\s+the\s+g|black\s+stuff|two[-\s]part\s+pour|irish\s+pub|pint\s+of\s+plain)\b/i;
+const GUINNESS_REVIEW_REGEX = /\bguinness\b/i;
 
 export function classifyCategory(types = [], name = '') {
   const lowerName = name.toLowerCase();
@@ -34,7 +34,7 @@ export function analyzeReviewsForGuinness(reviews = [], editorialSummary = '') {
   const excerpts = [];
   let mentionCount = 0;
 
-  if (editorialSummary && /guinness|stout|irish\s+pub/i.test(editorialSummary)) {
+  if (editorialSummary && /\bguinness\b/i.test(editorialSummary)) {
     mentionCount += 3;
   }
 

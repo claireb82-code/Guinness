@@ -18,9 +18,9 @@ import { PintIcon, formatCategoryLabel } from './PintIcon.jsx';
 
 function highlightGuinnessText(text) {
   if (!text) return null;
-  const parts = text.split(/(guinness(?:\s*0\.?0|\s*draught|\s*foreign\s*extra)?|stout|pint|creamy)/gi);
+  const parts = text.split(/(guinness(?:\s*0\.?0|\s*draught|\s*foreign\s*extra|\s*extra\s*cold|\s*surger)?)/gi);
   return parts.map((part, idx) =>
-    /^(guinness|stout|pint|creamy)/i.test(part) ? (
+    /^guinness/i.test(part) ? (
       <mark
         key={idx}
         style={{

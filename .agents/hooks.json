@@ -1,0 +1,12 @@
+{
+  "git-and-docs-enforcer": {
+    "enabled": true,
+    "Stop": [
+      {
+        "type": "command",
+        "command": "./check_git_and_docs.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}

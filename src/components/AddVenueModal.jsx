@@ -70,7 +70,7 @@ export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAd
         </div>
 
         <p style={{ fontSize: '0.78rem', color: '#b8ab99', marginBottom: '0.9rem', lineHeight: 1.45 }}>
-          Add a venue to the map. If you include its website or online menu URL, StoutScout will automatically crawl and
+          Add a venue to the map. If you include its website or online menu URL, Guinness Guide will automatically crawl and
           check the menu for Guinness!
         </p>
 

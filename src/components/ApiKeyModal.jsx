@@ -49,7 +49,7 @@ export function ApiKeyModal({
         </div>
 
         <p style={{ fontSize: '0.81rem', color: '#b8ab99', lineHeight: 1.5, marginBottom: '1rem' }}>
-          StoutScout works immediately in <strong>Curated Demo Mode</strong> (with real live menu URL scraping &
+          Guinness Guide works immediately in <strong>Curated Demo Mode</strong> (with real live menu URL scraping &
           crowdsourcing), or connects directly to your <strong>Google Maps JavaScript API & Places API</strong> key to
           discover every hotel, bar, pub, and restaurant in any radius.
         </p>

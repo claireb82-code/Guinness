@@ -4,7 +4,7 @@
  * and parses menu text for Guinness variants and pricing.
  */
 
-const MENU_PATH_PATTERNS = /menu|drink|beer|draught|draft|tap|bar|beverage|stout|food|wine|carta/i;
+const MENU_PATH_PATTERNS = /menu|drink|beer|draught|draft|tap|bar|beverage|food|wine|carta/i;
 
 const GUINNESS_VARIANTS = [
   { pattern: /guinness\s*0\.?0|guinness\s*zero|non[-\s]*alcoholic\s*guinness/i, label: 'Guinness 0.0 (Alcohol-Free)' },

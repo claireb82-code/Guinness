@@ -288,7 +288,7 @@ async function startServer() {
               servingFormat: servingFormat || 'draught',
               pintRating: servingFormat !== 'none' ? Number(pintRating || 5) : null,
               price: price || null,
-              note: note || 'Added venue to StoutScout map.',
+              note: note || 'Added venue to Guinness Guide map.',
               createdAt: new Date().toISOString(),
             },
           ],
@@ -326,7 +326,7 @@ async function startServer() {
   }
 
   app.listen(PORT, () => {
-    console.log(`\n🍺 StoutScout (Guinness Map & Menu Finder) running at http://localhost:${PORT}\n`);
+    console.log(`\n🍺 Guinness Guide (Switzerland Map & Menu Finder) running at http://localhost:${PORT}\n`);
   });
 }
 

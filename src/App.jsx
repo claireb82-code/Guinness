@@ -259,7 +259,7 @@ export default function App() {
           <PintIcon size={36} status="confirmed_draught" />
           <div>
             <div className="brand-title">
-              StoutScout
+              Guinness Guide
               <span
                 style={{
                   fontSize: '0.66rem',
@@ -272,11 +272,11 @@ export default function App() {
                   fontWeight: 600,
                 }}
               >
-                1759 EDITION
+                🇨🇭 SWITZERLAND
               </span>
             </div>
             <div className="brand-subtitle">
-              Hotels · Bars · Pubs · Restaurants — Menu & Pint Verification Map
+              Swiss Hotels · Bars · Pubs · Restaurants — Guinness Menu Radar
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StoutScout — Guinness Venue & Menu Finder</title>
+    <title>Guinness Guide — Switzerland Venue & Menu Finder</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -57,21 +57,12 @@
 
         let leafletMap = null;
         let activeTileLayer = null;
-        let currentMapStyle = 'dark';
+        let currentMapStyle = 'osm';
         let leafletMarkers = [];
 
         const FREE_TILE_LAYERS = {
-          dark: {
-            name: 'Dark Stout (CARTO)',
-            url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-            options: {
-              attribution: '&copy; OpenStreetMap &copy; CARTO (Free)',
-              subdomains: 'abcd',
-              maxZoom: 20,
-            },
-          },
           osm: {
-            name: 'OpenStreetMap Street',
+            name: 'OpenStreetMap',
             url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             options: {
               attribution: '&copy; OpenStreetMap Contributors (Free)',
@@ -84,6 +75,15 @@
             options: {
               attribution: '&copy; swisstopo (Federal Office of Topography — Free)',
               maxZoom: 19,
+            },
+          },
+          dark: {
+            name: 'Dark Map (CARTO)',
+            url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            options: {
+              attribution: '&copy; OpenStreetMap &copy; CARTO (Free)',
+              subdomains: 'abcd',
+              maxZoom: 20,
             },
           },
         };
@@ -100,7 +100,7 @@
         function highlightGuinnessHtml(text) {
           const safe = escapeHtml(text || '');
           return safe.replace(
-            /(guinness(?:\s*0\.?0|\s*draught|\s*foreign\s*extra)?|stout|pint|creamy)/gi,
+            /(guinness(?:\s*0\.?0|\s*draught|\s*foreign\s*extra|\s*extra\s*cold|\s*surger)?)/gi,
             '<mark style="background:rgba(200,164,93,0.28);color:#f7e2b0;padding:0 3px;border-radius:3px;font-weight:600;">$1</mark>'
           );
         }
@@ -236,9 +236,9 @@
 
                   <!-- Floating Free Map Tile Switcher (Top Right) -->
                   <div id="map-style-switcher" style="position:absolute;top:0.85rem;right:0.85rem;z-index:450;background:rgba(19,16,13,0.92);border:1px solid #332a21;border-radius:0.6rem;padding:0.3rem;display:flex;gap:0.25rem;box-shadow:0 8px 20px rgba(0,0,0,0.6);">
-                    <button type="button" data-mapstyle="dark" class="filter-pill active" style="font-size:0.7rem;padding:0.25rem 0.55rem;">Dark Stout</button>
-                    <button type="button" data-mapstyle="osm" class="filter-pill" style="font-size:0.7rem;padding:0.25rem 0.55rem;">OpenStreetMap</button>
+                    <button type="button" data-mapstyle="osm" class="filter-pill active" style="font-size:0.7rem;padding:0.25rem 0.55rem;">OpenStreetMap</button>
                     <button type="button" data-mapstyle="swisstopo" class="filter-pill" style="font-size:0.7rem;padding:0.25rem 0.55rem;">Swisstopo 🇨🇭</button>
+                    <button type="button" data-mapstyle="dark" class="filter-pill" style="font-size:0.7rem;padding:0.25rem 0.55rem;">Dark Map</button>
                   </div>
 
                   <div style="position:absolute;bottom:1.25rem;left:1rem;background:rgba(19,16,13,0.92);border:1px solid #332a21;border-radius:0.65rem;padding:0.65rem 0.85rem;z-index:400;display:flex;flex-direction:column;gap:0.35rem;font-size:0.73rem;box-shadow:0 8px 24px rgba(0,0,0,0.6);">
@@ -291,7 +291,7 @@
 
         function setMapTileStyle(styleKey) {
           if (!leafletMap || !window.L) return;
-          const cfg = FREE_TILE_LAYERS[styleKey] || FREE_TILE_LAYERS.dark;
+          const cfg = FREE_TILE_LAYERS[styleKey] || FREE_TILE_LAYERS.osm;
           currentMapStyle = styleKey;
           if (activeTileLayer) {
             leafletMap.removeLayer(activeTileLayer);
@@ -306,7 +306,7 @@
             center: [state.mapCenter.lat, state.mapCenter.lng],
             zoom: state.mapCenter.zoom || 8,
           });
-          setMapTileStyle('dark');
+          setMapTileStyle('osm');
 
           leafletMap.on('click', (e) => {
             if (e.latlng) {
@@ -376,7 +376,7 @@
                 ${pintSvgHtml(36, 'confirmed_draught')}
                 <div>
                   <div class="brand-title">
-                    StoutScout
+                    Guinness Guide
                     <span style="font-size:0.66rem;font-family:Inter,sans-serif;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(200,164,93,0.18);border:1px solid rgba(200,164,93,0.4);color:#e2be75;font-weight:600;">
                       🇨🇭 SWITZERLAND
                     </span>
