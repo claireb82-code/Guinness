@@ -1485,16 +1485,99 @@ def load_store():
     if os.path.exists(STORE_PATH):
         try:
             with open(STORE_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                return {
+                    "crowdReports": data.get("crowdReports", {}),
+                    "menuScans": data.get("menuScans", {}),
+                    "customVenues": data.get("customVenues", []),
+                    "googleMapsVenues": data.get("googleMapsVenues", []),
+                }
         except Exception:
             pass
-    return {"crowdReports": {}, "menuScans": {}, "customVenues": []}
+    return {"crowdReports": {}, "menuScans": {}, "customVenues": [], "googleMapsVenues": []}
 
 
 def save_store(store):
     os.makedirs(os.path.dirname(STORE_PATH), exist_ok=True)
     with open(STORE_PATH, "w", encoding="utf-8") as f:
-        json.dump(store, f, indent=2)
+        json.dump(store, f, indent=2, ensure_ascii=False)
+
+
+CRAWL_RESULTS_PATH = os.path.join(ROOT_DIR, "server", "data", "swiss_crawl_results.json")
+
+
+def load_crawl_venues():
+    if os.path.exists(CRAWL_RESULTS_PATH):
+        try:
+            with open(CRAWL_RESULTS_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return (data.get("confirmedVenues") or []) + (data.get("verifiedNoGuinnessSample") or [])
+        except Exception:
+            pass
+    return []
+
+
+def get_all_combined_venues(store):
+    crawl_venues = load_crawl_venues()
+    raw_list = (
+        (store.get("customVenues") or [])
+        + (store.get("googleMapsVenues") or [])
+        + DEMO_VENUES
+        + crawl_venues
+    )
+    seen_ids = set()
+    seen_names = set()
+    deduped = []
+    for v in raw_list:
+        if not v or not v.get("id"):
+            continue
+        norm_key = f"{(v.get('name') or '').strip().lower()}::{(v.get('city') or '').strip().lower()}"
+        if v["id"] in seen_ids or norm_key in seen_names:
+            continue
+        seen_ids.add(v["id"])
+        seen_names.add(norm_key)
+        if not v.get("googleMapsUri"):
+            v["googleMapsUri"] = (
+                "https://www.google.com/maps/search/?api=1&query="
+                + urllib.parse.quote_plus(f"{v.get('name', '')} {v.get('address', 'Switzerland')}")
+            )
+        v["googleMapsChecked"] = True
+        deduped.append(v)
+    return deduped
+
+
+def upsert_gmaps_venues_into_store(store, new_venues):
+    existing = store.get("googleMapsVenues") or []
+    by_id = {v["id"]: v for v in existing if v and v.get("id")}
+    for v in new_venues or []:
+        if v and v.get("id"):
+            by_id[v["id"]] = v
+    store["googleMapsVenues"] = list(by_id.values())
+    save_store(store)
+
+
+def parse_google_maps_url_or_query(raw_input):
+    raw = (raw_input or "").strip()
+    if not raw:
+        return {"name": "", "lat": None, "lng": None, "isUrl": False, "rawQuery": ""}
+    is_url = bool(re.match(r"^https?://(www\.)?(google\.[a-z.]+/maps|maps\.app\.goo\.gl|goo\.gl/maps)", raw, re.I))
+    lat, lng = None, None
+    m_coord = re.search(r"@(-?\d+\.\d+),(-?\d+\.\d+)", raw) or re.search(r"[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)", raw)
+    if m_coord:
+        lat, lng = float(m_coord.group(1)), float(m_coord.group(2))
+    extracted_name = ""
+    m_place = re.search(r"/maps/place/([^/@?]+)", raw, re.I)
+    if m_place:
+        extracted_name = urllib.parse.unquote_plus(m_place.group(1)).strip()
+    elif not is_url:
+        extracted_name = raw
+    return {
+        "name": extracted_name,
+        "lat": lat,
+        "lng": lng,
+        "isUrl": is_url,
+        "rawQuery": extracted_name or raw,
+    }
 
 
 def compute_guinness_status(venue):
