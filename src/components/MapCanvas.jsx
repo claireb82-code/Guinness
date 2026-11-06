@@ -68,7 +68,7 @@ export function MapCanvas({
 
     const script = document.createElement('script');
     script.id = 'google-maps-sdk-script';
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleApiKey)}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleApiKey)}&libraries=places,marker&v=weekly`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
@@ -98,7 +98,8 @@ export function MapCanvas({
       googleMapRef.current = new window.google.maps.Map(mapContainerRef.current, {
         center: { lat: center.lat, lng: center.lng },
         zoom,
-        styles: GUINNESS_GOOGLE_MAP_STYLES,
+        mapId: 'DEMO_MAP_ID',
+        internalUsageAttributionIds: ['gmp_git_agentskills_v1'],
         disableDefaultUI: false,
         mapTypeControl: false,
         streetViewControl: false,
@@ -119,32 +120,41 @@ export function MapCanvas({
     }
   }, [googleApiKey, googleSdkReady, center.lat, center.lng, zoom]);
 
-  // Render Google Map Markers
+  // Render Google Map Markers using AdvancedMarkerElement
   useEffect(() => {
     if (!googleMapRef.current || !googleSdkReady || !window.google?.maps) return;
 
-    googleMarkersRef.current.forEach((m) => m.setMap(null));
+    googleMarkersRef.current.forEach((m) => {
+      m.map = null;
+    });
     googleMarkersRef.current = [];
+
+    const AdvancedMarkerElement = window.google.maps.marker?.AdvancedMarkerElement;
+    if (!AdvancedMarkerElement) return;
 
     venues.forEach((venue) => {
       if (typeof venue.lat !== 'number' || typeof venue.lng !== 'number') return;
       const isSelected = selectedVenue?.id === venue.id;
       const status = venue.guinnessSummary?.status || 'unverified';
       const iconUrl = createMarkerSvgDataUrl(status, isSelected);
+      const size = isSelected ? 44 : 36;
 
-      const marker = new window.google.maps.Marker({
+      const imgEl = document.createElement('img');
+      imgEl.src = iconUrl;
+      imgEl.width = size;
+      imgEl.height = size;
+      imgEl.style.cursor = 'pointer';
+      imgEl.alt = `${venue.name} (${venue.guinnessSummary?.statusLabel})`;
+
+      const marker = new AdvancedMarkerElement({
         position: { lat: venue.lat, lng: venue.lng },
         map: googleMapRef.current,
         title: `${venue.name} (${venue.guinnessSummary?.statusLabel})`,
-        icon: {
-          url: iconUrl,
-          scaledSize: new window.google.maps.Size(isSelected ? 44 : 36, isSelected ? 44 : 36),
-          anchor: new window.google.maps.Point(isSelected ? 22 : 18, isSelected ? 22 : 18),
-        },
         zIndex: isSelected ? 999 : 10,
       });
+      marker.append(imgEl);
 
-      marker.addListener('click', () => {
+      marker.addEventListener('click', () => {
         onSelectVenue(venue);
       });
 
