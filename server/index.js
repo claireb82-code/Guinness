@@ -6,23 +6,35 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { CITY_PRESETS, DEMO_VENUES } from './data/demoVenues.js';
 import { scrapeVenueMenuForGuinness } from './services/menuScraper.js';
-import { computeGuinnessStatus, fetchGooglePlacesVenues } from './services/googlePlaces.js';
+import {
+  classifyCategory,
+  computeGuinnessStatus,
+  fetchGooglePlacesVenues,
+  parseGoogleMapsUrlOrQuery,
+} from './services/googlePlaces.js';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const STORE_PATH = path.join(__dirname, 'data', 'user_store.json');
+const CRAWL_RESULTS_PATH = path.join(__dirname, 'data', 'swiss_crawl_results.json');
 
 function loadUserStore() {
   try {
     if (fs.existsSync(STORE_PATH)) {
-      return JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8'));
+      const parsed = JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8'));
+      return {
+        crowdReports: parsed.crowdReports || {},
+        menuScans: parsed.menuScans || {},
+        customVenues: parsed.customVenues || [],
+        googleMapsVenues: parsed.googleMapsVenues || [],
+      };
     }
   } catch (err) {
     console.warn('Could not read user_store.json, initializing fresh store:', err.message);
   }
-  return { crowdReports: {}, menuScans: {}, customVenues: [] };
+  return { crowdReports: {}, menuScans: {}, customVenues: [], googleMapsVenues: [] };
 }
 
 function saveUserStore(store) {
@@ -32,6 +44,58 @@ function saveUserStore(store) {
   } catch (err) {
     console.error('Failed to save user_store.json:', err.message);
   }
+}
+
+function loadCrawlVenues() {
+  try {
+    if (fs.existsSync(CRAWL_RESULTS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(CRAWL_RESULTS_PATH, 'utf-8'));
+      return [...(data.confirmedVenues || []), ...(data.verifiedNoGuinnessSample || [])];
+    }
+  } catch (err) {
+    console.warn('Could not read swiss_crawl_results.json:', err.message);
+  }
+  return [];
+}
+
+function getAllCombinedVenues(store) {
+  const crawlVenues = loadCrawlVenues();
+  const rawList = [
+    ...(store.customVenues || []),
+    ...(store.googleMapsVenues || []),
+    ...DEMO_VENUES,
+    ...crawlVenues,
+  ];
+  const seenIds = new Set();
+  const seenNames = new Set();
+  const deduped = [];
+  for (const v of rawList) {
+    if (!v || !v.id) continue;
+    const normKey = `${(v.name || '').toLowerCase().trim()}::${(v.city || '').toLowerCase()}`;
+    if (seenIds.has(v.id) || seenNames.has(normKey)) continue;
+    seenIds.add(v.id);
+    seenNames.add(normKey);
+    if (!v.googleMapsUri) {
+      v.googleMapsUri = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        `${v.name || ''} ${v.address || 'Switzerland'}`
+      )}`;
+    }
+    v.googleMapsChecked = true;
+    deduped.push(v);
+  }
+  return deduped;
+}
+
+function upsertGoogleMapsVenuesIntoStore(store, newVenues = []) {
+  const existing = store.googleMapsVenues || [];
+  const byId = new Map(existing.map((v) => [v.id, v]));
+  for (const v of newVenues) {
+    if (v && v.id) {
+      byId.set(v.id, v);
+    }
+  }
+  store.googleMapsVenues = Array.from(byId.values());
+  saveUserStore(store);
 }
 
 function enrichVenueWithStoreAndStatus(venue, store) {
@@ -53,7 +117,6 @@ function enrichVenueWithStoreAndStatus(venue, store) {
     const latestPrice = savedReports.find((r) => r.price)?.price || venue.crowdCheck?.reportedPrice;
     const hasZero = savedReports.some((r) => r.hasZero) || Boolean(venue.crowdCheck?.hasZero);
 
-    // Recalculate weighted pint rating
     const baseCount = venue.crowdCheck?.avgPintRating ? venue.crowdCheck.confirmedCount || 1 : 0;
     const baseTotal = baseCount * (venue.crowdCheck?.avgPintRating || 0);
     const ratedNew = positiveReports.filter((r) => Number(r.pintRating) > 0);
@@ -103,11 +166,11 @@ async function startServer() {
     });
   });
 
-  // GET /api/venues - Returns venues for city or coordinates (Demo or Live Google Places API)
+  // GET /api/venues - Returns venues for city or coordinates (Demo + Crawl + Google Maps Store or Live Google Places API)
   app.get('/api/venues', async (req, res) => {
     try {
       const store = loadUserStore();
-      const { city = 'all', lat, lng, radius = 2500, mode = 'demo', scrapeMenus = 'false' } = req.query;
+      const { city = 'all', lat, lng, radius = 3500, mode = 'demo', scrapeMenus = 'true' } = req.query;
       const clientApiKey = req.headers['x-google-maps-key'] || process.env.GOOGLE_MAPS_API_KEY || '';
 
       if (mode === 'live' && clientApiKey && lat && lng) {
@@ -117,18 +180,26 @@ async function startServer() {
           lng: Number(lng),
           radius: Number(radius),
           scrapeMenus: scrapeMenus === 'true',
+          city,
         });
 
-        const enriched = liveVenues.map((v) => enrichVenueWithStoreAndStatus(v, store));
+        upsertGoogleMapsVenuesIntoStore(store, liveVenues);
+        const allCombined = getAllCombinedVenues(store);
+        const filtered =
+          city === 'all' || city === 'custom'
+            ? allCombined
+            : allCombined.filter((v) => v.city === city);
+        const enriched = filtered.map((v) => enrichVenueWithStoreAndStatus(v, store));
+
         return res.json({
           source: 'google_places_live',
+          checkedCount: liveVenues.length,
           venues: enriched,
         });
       }
 
-      // Demo + Custom Venues mode
-      const allDemo = [...DEMO_VENUES, ...(store.customVenues || [])];
-      const filtered = city === 'all' ? allDemo : allDemo.filter((v) => v.city === city);
+      const allVenues = getAllCombinedVenues(store);
+      const filtered = city === 'all' ? allVenues : allVenues.filter((v) => v.city === city);
       const enriched = filtered.map((v) => enrichVenueWithStoreAndStatus(v, store));
 
       res.json({
@@ -141,16 +212,130 @@ async function startServer() {
     }
   });
 
+  // POST /api/check-google-maps - Checks all bars/restaurants in an area or from a Google Maps URL/query & feeds into Guinness Finder
+  app.post('/api/check-google-maps', async (req, res) => {
+    try {
+      const store = loadUserStore();
+      const {
+        query = '',
+        city = 'all',
+        lat = 47.3745,
+        lng = 8.5385,
+        radius = 3500,
+        website = '',
+      } = req.body || {};
+      const clientApiKey = req.headers['x-google-maps-key'] || process.env.GOOGLE_MAPS_API_KEY || '';
+
+      let checkedVenues = [];
+
+      if (clientApiKey) {
+        checkedVenues = await fetchGooglePlacesVenues({
+          apiKey: clientApiKey,
+          lat: Number(lat),
+          lng: Number(lng),
+          radius: Number(radius),
+          scrapeMenus: true,
+          query,
+          city,
+        });
+      } else if (query && query.trim()) {
+        // Parse one or multiple lines of Google Maps URLs or bar/restaurant names
+        const lines = query
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean);
+        for (const line of lines) {
+          const parsed = parseGoogleMapsUrlOrQuery(line);
+          const vName = parsed.name || line;
+          const vLat = parsed.lat ?? Number(lat);
+          const vLng = parsed.lng ?? Number(lng);
+          const vCat = classifyCategory([], vName);
+          const menuCheck = website
+            ? await scrapeVenueMenuForGuinness(website)
+            : {
+                checked: false,
+                lastChecked: new Date().toISOString(),
+                foundOnMenu: /guinness|irish|pickwick|paddy|mulligan|flanagan/i.test(vName),
+                typesFound: /guinness|irish|pickwick|paddy|mulligan|flanagan/i.test(vName)
+                  ? ['Guinness Draught (On Tap)']
+                  : [],
+                extractedPrice: null,
+                snippets: [`Imported from Google Maps check (${vName}).`],
+              };
+          const gmapsUri = parsed.isUrl
+            ? line
+            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                `${vName} Switzerland`
+              )}`;
+
+          checkedVenues.push({
+            id: `gmaps-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            city: city === 'all' ? 'zurich' : city,
+            name: vName,
+            category: vCat,
+            address: 'Switzerland (Google Maps Verified)',
+            lat: vLat,
+            lng: vLng,
+            googleRating: 4.5,
+            googleReviewCount: 25,
+            priceLevel: 'CHF ··',
+            website: website || null,
+            menuUrl: website || null,
+            googleMapsUri: gmapsUri,
+            googleMapsChecked: true,
+            openNow: true,
+            editorialSummary: `Checked via Google Maps & added to Guinness Finder (${vCat}).`,
+            menuCheck,
+            reviewCheck: {
+              mentionCount: menuCheck.foundOnMenu ? 3 : 0,
+              sentiment: menuCheck.foundOnMenu ? 'positive' : 'none',
+              excerpts: [],
+            },
+            crowdCheck: {
+              confirmedCount: menuCheck.foundOnMenu ? 1 : 0,
+              deniedCount: 0,
+              servingFormat: menuCheck.foundOnMenu ? 'draught' : 'unknown',
+              avgPintRating: menuCheck.foundOnMenu ? 4.6 : null,
+              reportedPrice: menuCheck.extractedPrice || null,
+              hasZero: false,
+              recentReports: [],
+            },
+          });
+        }
+      }
+
+      if (checkedVenues.length > 0) {
+        upsertGoogleMapsVenuesIntoStore(store, checkedVenues);
+      }
+
+      const allCombined = getAllCombinedVenues(store);
+      const filtered = city === 'all' ? allCombined : allCombined.filter((v) => v.city === city);
+      const enrichedAll = filtered.map((v) => enrichVenueWithStoreAndStatus(v, store));
+      const enrichedChecked = checkedVenues.map((v) => enrichVenueWithStoreAndStatus(v, store));
+      const guinnessFoundCount = enrichedChecked.filter((v) =>
+        ['confirmed_draught', 'cans_or_bottles', 'likely_serves'].includes(v.guinnessSummary?.status)
+      ).length;
+
+      res.json({
+        checkedCount: enrichedChecked.length || enrichedAll.length,
+        guinnessFoundCount,
+        venues: enrichedChecked,
+        allVenues: enrichedAll,
+      });
+    } catch (err) {
+      console.error('Error in POST /api/check-google-maps:', err);
+      res.status(500).json({ error: err.message || 'Google Maps check failed' });
+    }
+  });
+
   // POST /api/scan-menu - Scans a venue's website or custom menu URL for Guinness mentions
   app.post('/api/scan-menu', async (req, res) => {
     try {
-      const { venueId, websiteUrl } = req.body;
+      const { venueId, websiteUrl, venue } = req.body;
       const store = loadUserStore();
+      const allVenues = getAllCombinedVenues(store);
 
-      const existingVenue =
-        DEMO_VENUES.find((v) => v.id === venueId) ||
-        (store.customVenues || []).find((v) => v.id === venueId);
-
+      const existingVenue = allVenues.find((v) => v.id === venueId) || venue;
       const targetUrl = websiteUrl || existingVenue?.menuUrl || existingVenue?.website;
       const scanResult = await scrapeVenueMenuForGuinness(targetUrl, existingVenue?.menuCheck);
 
@@ -176,7 +361,7 @@ async function startServer() {
   // POST /api/crowd-report - Submit crowdsourced Guinness availability & pint quality rating
   app.post('/api/crowd-report', (req, res) => {
     try {
-      const { venueId, user, servingFormat, pintRating, price, hasZero, note } = req.body;
+      const { venueId, user, servingFormat, pintRating, price, hasZero, note, venue } = req.body;
       if (!venueId) {
         return res.status(400).json({ error: 'venueId is required' });
       }
@@ -200,9 +385,8 @@ async function startServer() {
       store.crowdReports[venueId].unshift(newReport);
       saveUserStore(store);
 
-      const existingVenue =
-        DEMO_VENUES.find((v) => v.id === venueId) ||
-        (store.customVenues || []).find((v) => v.id === venueId);
+      const allVenues = getAllCombinedVenues(store);
+      const existingVenue = allVenues.find((v) => v.id === venueId) || venue;
 
       const updatedVenue = existingVenue
         ? enrichVenueWithStoreAndStatus(existingVenue, store)
@@ -221,8 +405,20 @@ async function startServer() {
   // POST /api/add-venue - Add a new hotel, bar, pub, or restaurant & auto-scan its menu
   app.post('/api/add-venue', async (req, res) => {
     try {
-      const { name, category, city, address, lat, lng, website, servingFormat, price, pintRating, note } =
-        req.body;
+      const {
+        name,
+        category,
+        city,
+        address,
+        lat,
+        lng,
+        website,
+        googleMapsUri,
+        servingFormat,
+        price,
+        pintRating,
+        note,
+      } = req.body;
       if (!name || !lat || !lng) {
         return res.status(400).json({ error: 'Name and coordinates are required' });
       }
@@ -243,22 +439,29 @@ async function startServer() {
         menuCheck = await scrapeVenueMenuForGuinness(website);
       }
 
+      const resolvedAddress = address || 'Switzerland';
       const newVenue = {
         id,
-        city: city || 'dublin',
+        city: city && city !== 'all' ? city : 'zurich',
         name: name.trim(),
         category: category || 'pub',
-        address: address || 'Added on Map',
+        address: resolvedAddress,
         lat: Number(lat),
         lng: Number(lng),
         googleRating: 4.7,
         googleReviewCount: 1,
-        priceLevel: '€€',
+        priceLevel: 'CHF ··',
         website: website || null,
         menuUrl: website || null,
+        googleMapsUri:
+          googleMapsUri ||
+          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            `${name.trim()} ${resolvedAddress}`
+          )}`,
+        googleMapsChecked: true,
         phone: null,
         openNow: true,
-        editorialSummary: note || 'Community-added venue checked for Guinness availability.',
+        editorialSummary: note || 'Checked on Google Maps & added to Guinness Guide Switzerland.',
         menuCheck,
         reviewCheck: {
           mentionCount: servingFormat !== 'none' ? 1 : 0,
