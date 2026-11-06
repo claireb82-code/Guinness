@@ -3,7 +3,7 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
-      "includeFiles": "{app_server.py,public/**,src/styles.css,server/data/*.json}"
+      "includeFiles": "{app_server.py,public/**,src/styles.css,server/data/swiss_crawl_results.json}"
     }
   },
   "rewrites": [

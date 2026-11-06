@@ -1522,6 +1522,17 @@ def load_crawl_venues():
     return []
 
 
+def load_crawl_stats():
+    if os.path.exists(CRAWL_RESULTS_PATH):
+        try:
+            with open(CRAWL_RESULTS_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("stats") or {}
+        except Exception:
+            pass
+    return {}
+
+
 def get_all_combined_venues(store):
     crawl_venues = load_crawl_venues()
     raw_list = (
@@ -2211,6 +2222,7 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                     "hasEnvApiKey": bool(env_key),
                     "envApiKey": env_key,
                     "cities": CITY_PRESETS,
+                    "swissCrawlStats": load_crawl_stats(),
                 }
             )
 
@@ -2223,6 +2235,7 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             scrape_menus = qs.get("scrapeMenus", ["false"])[0] == "true"
             api_key = self.headers.get("x-google-maps-key") or os.environ.get("GOOGLE_MAPS_API_KEY", "")
             store = load_store()
+            crawl_stats = load_crawl_stats()
 
             if mode == "osm_ch":
                 base_venues = get_all_combined_venues(store)
@@ -2233,14 +2246,18 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                 except Exception:
                     combined = base_venues
                 enriched = [enrich_venue(v, store) for v in combined]
-                return self.send_json({"source": "switzerland_nationwide_scan", "venues": enriched})
+                return self.send_json(
+                    {"source": "switzerland_nationwide_scan", "swissCrawlStats": crawl_stats, "venues": enriched}
+                )
 
             if mode == "osm" and lat and lng:
                 try:
                     osm_venues = fetch_osm_overpass_live(float(lat), float(lng), 2200, scrape_menus)
                     upsert_gmaps_venues_into_store(store, osm_venues)
                     enriched = [enrich_venue(v, store) for v in osm_venues]
-                    return self.send_json({"source": "openstreetmap_overpass_free", "venues": enriched})
+                    return self.send_json(
+                        {"source": "openstreetmap_overpass_free", "swissCrawlStats": crawl_stats, "venues": enriched}
+                    )
                 except Exception as e:
                     return self.send_json({"error": str(e)}, 500)
 
@@ -2258,7 +2275,12 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                     )
                     enriched = [enrich_venue(v, store) for v in filtered]
                     return self.send_json(
-                        {"source": "google_places_live", "checkedCount": len(live_venues), "venues": enriched}
+                        {
+                            "source": "google_places_live",
+                            "checkedCount": len(live_venues),
+                            "swissCrawlStats": crawl_stats,
+                            "venues": enriched,
+                        }
                     )
                 except Exception as e:
                     return self.send_json({"error": str(e)}, 500)
@@ -2266,7 +2288,7 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             all_venues = get_all_combined_venues(store)
             filtered = all_venues if city == "all" else [v for v in all_venues if v.get("city") == city]
             enriched = [enrich_venue(v, store) for v in filtered]
-            return self.send_json({"source": "demo_curated", "venues": enriched})
+            return self.send_json({"source": "demo_curated", "swissCrawlStats": crawl_stats, "venues": enriched})
 
         if parsed.path in ("/", "/index.html", "/standalone.html", "/public/standalone.html"):
             return self.send_static_file(os.path.join("public", "standalone.html"), "text/html; charset=utf-8")

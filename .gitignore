@@ -5,3 +5,4 @@ dist/
 __pycache__/
 *.pyc
 server/data/user_store.json
+server/data/swiss_osm_raw_cache.json
