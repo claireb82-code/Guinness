@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
 Comprehensive Switzerland Hospitality Venue & Website Menu Crawler for Guinness Guide.
-1. Pulls ALL bars, pubs, biergartens, restaurants, and hotels across all 26 cantons
-   of Switzerland (ISO3166-1=CH) from OpenStreetMap Overpass API.
+Uses /usr/bin/curl (SecureTransport + HTTP/2 + TLS 1.3) for 100% compatibility
+with Overpass API and modern Cloudflare/Swiss hospitality websites.
+
+1. Pulls ALL bars, pubs, biergartens, nightclubs, hotels, and restaurants across
+   all 26 cantons of Switzerland (ISO3166-1=CH) from OpenStreetMap Overpass API.
 2. Evaluates 100% of all mapped Swiss venues for OSM tags, beer/brewery metadata,
    cuisine tags, and Guinness/Irish/British pub indicators.
 3. Crawls venue websites & drink menu subpages in high-concurrency parallel batches
@@ -17,12 +20,10 @@ import json
 import math
 import os
 import re
-import ssl
+import subprocess
 import sys
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
@@ -49,16 +50,12 @@ REGION_HUBS = {
     "alps": (46.4500, 8.3500),
 }
 
-UNVERIFIED_SSL_CTX = ssl.create_default_context()
-UNVERIFIED_SSL_CTX.check_hostname = False
-UNVERIFIED_SSL_CTX.verify_mode = ssl.CERT_NONE
-
 PUB_NAME_RE = re.compile(
     r"\b(irish|guinness|shamrock|pickwick|paddy|mulligan|flanagan|mccarthy|kelly|celtic|dublin|"
     r"shenanigan|auld|nelson|oliver\s*twist|murphy|o'[a-z]+|mc[a-z]+|kilkenny|belfast|galway|"
     r"cork|connemara|leprechaun|harp|stout|porter|pub|taphouse|taproom|craft\s*beer|bierhalle|"
     r"brasserie|brauhaus|brewpub|alehouse|tavern|sports\s*bar|britannia|bulldog|churchill|"
-    r"sherlock|watson|victoria|caledonia|scotland|highlander|bonnie\s*prince)\b",
+    r"sherlock|watson|victoria|caledonia|scotland|highlander|bonnie\s*prince|kennedy|james\s*joyce)\b",
     re.I,
 )
 
@@ -80,7 +77,6 @@ def haversine_km(lat1, lon1, lat2, lon2):
 
 
 def assign_swiss_region(lat, lng):
-    # Check Alpine / Ticino / Graubünden / Valais first by latitude/longitude
     if lat < 46.38 and lng > 6.85:
         return "alps"
     if lng > 9.45 and lat < 47.05:
@@ -95,56 +91,80 @@ def assign_swiss_region(lat, lng):
     return best_city
 
 
+def run_overpass_query_curl(query_str):
+    for endpoint in OVERPASS_ENDPOINTS:
+        t0 = time.time()
+        try:
+            proc = subprocess.run(
+                [
+                    "/usr/bin/curl",
+                    "-sSL",
+                    "--compressed",
+                    "--max-time",
+                    "90",
+                    "-A",
+                    "StoutScoutSwitzerlandCrawler/2.0",
+                    "--data-urlencode",
+                    f"data={query_str}",
+                    endpoint,
+                ],
+                capture_output=True,
+                timeout=95,
+            )
+            if proc.returncode == 0 and proc.stdout:
+                data = json.loads(proc.stdout.decode("utf-8", errors="ignore"))
+                els = data.get("elements", [])
+                print(
+                    f"  [Overpass OK] {endpoint} returned {len(els):,} elements in {time.time() - t0:.1f}s",
+                    flush=True,
+                )
+                return els
+        except Exception as e:
+            print(f"  [Overpass Retry] {endpoint} error: {e}", flush=True)
+    return []
+
+
 def fetch_all_swiss_venues_from_osm():
     os.makedirs(DATA_DIR, exist_ok=True)
-    if os.path.exists(RAW_OSM_CACHE_PATH) and (time.time() - os.path.getmtime(RAW_OSM_CACHE_PATH) < 3600):
-        print(f"[OSM] Loading cached nationwide Switzerland OSM dataset from {RAW_OSM_CACHE_PATH}...")
+    if os.path.exists(RAW_OSM_CACHE_PATH) and os.path.getsize(RAW_OSM_CACHE_PATH) > 10000:
+        print(f"[OSM] Loading cached nationwide Switzerland OSM dataset from {RAW_OSM_CACHE_PATH}...", flush=True)
         with open(RAW_OSM_CACHE_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    overpass_query = """
-    [out:json][timeout:120];
+    print("[OSM] Fetching 1/2: All Pubs, Bars, Biergartens, Nightclubs, Hotels & Beer-tagged venues in Switzerland...", flush=True)
+    q1 = """
+    [out:json][timeout:80];
     area["ISO3166-1"="CH"][admin_level=2]->.ch;
     (
-      nwr["amenity"~"^(pub|bar|biergarten|nightclub|restaurant)$"](area.ch);
+      nwr["amenity"~"^(pub|bar|biergarten|nightclub)$"](area.ch);
       nwr["tourism"="hotel"](area.ch);
-      nwr["brewery"~"guinness",i](area.ch);
-      nwr["drink:beer"~"guinness",i](area.ch);
-      nwr["cuisine"~"irish|british",i](area.ch);
+      nwr["brewery"](area.ch);
+      nwr["drink:beer"](area.ch);
+      nwr["cuisine"~"irish|british|pub",i](area.ch);
     );
     out center tags;
     """
+    els1 = run_overpass_query_curl(q1)
 
-    last_err = None
-    for endpoint in OVERPASS_ENDPOINTS:
-        print(f"[OSM] Querying nationwide Switzerland hospitality venues from {endpoint} ...")
-        t0 = time.time()
-        try:
-            req = urllib.request.Request(
-                endpoint,
-                data=urllib.parse.urlencode({"data": overpass_query}).encode("utf-8"),
-                headers={
-                    "User-Agent": "StoutScoutSwitzerlandCrawler/2.0 (https://openstreetmap.org)",
-                    "Accept": "application/json",
-                },
-                method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=130) as resp:
-                raw_bytes = resp.read()
-                data = json.loads(raw_bytes.decode("utf-8"))
-                elements = data.get("elements", [])
-                print(
-                    f"[OSM] Downloaded {len(elements):,} raw OSM elements in {time.time() - t0:.1f}s "
-                    f"({len(raw_bytes) / (1024 * 1024):.1f} MB)."
-                )
-                with open(RAW_OSM_CACHE_PATH, "w", encoding="utf-8") as f:
-                    json.dump(elements, f)
-                return elements
-        except Exception as e:
-            print(f"[OSM] Endpoint {endpoint} failed: {e}")
-            last_err = e
+    print("[OSM] Fetching 2/2: All Restaurants across Switzerland...", flush=True)
+    q2 = """
+    [out:json][timeout:80];
+    area["ISO3166-1"="CH"][admin_level=2]->.ch;
+    (
+      nwr["amenity"="restaurant"](area.ch);
+    );
+    out center tags;
+    """
+    els2 = run_overpass_query_curl(q2)
 
-    raise RuntimeError(f"All Overpass endpoints failed: {last_err}")
+    combined = els1 + els2
+    if not combined:
+        raise RuntimeError("Failed to fetch Switzerland OSM elements from Overpass.")
+
+    with open(RAW_OSM_CACHE_PATH, "w", encoding="utf-8") as f:
+        json.dump(combined, f)
+    print(f"[OSM] Cached {len(combined):,} total raw Swiss elements to {RAW_OSM_CACHE_PATH}", flush=True)
+    return combined
 
 
 def classify_element(el):
@@ -183,7 +203,6 @@ def classify_element(el):
     if menu_url and not menu_url.startswith(("http://", "https://")):
         menu_url = "https://" + menu_url
 
-    # Build address
     street = tags.get("addr:street") or ""
     housenumber = tags.get("addr:housenumber") or ""
     postcode = tags.get("addr:postcode") or ""
@@ -197,7 +216,6 @@ def classify_element(el):
     addr_parts = [f"{street} {housenumber}".strip(), f"{postcode} {city_name}".strip()]
     address = ", ".join([p for p in addr_parts if p]) or f"{city_name}, Switzerland"
 
-    # Evaluate OSM tags for Guinness / Irish / Pub signals
     brewery = " ".join(
         filter(
             None,
@@ -260,29 +278,50 @@ def classify_element(el):
     }
 
 
-def fetch_html_fast(url, timeout=4.5, max_bytes=300_000):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": (
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-            ),
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "de-CH,de;q=0.9,en;q=0.8,fr-CH;q=0.7,it-CH;q=0.6",
-        },
-    )
+def fetch_html_curl(url, max_time=4):
     try:
-        with urllib.request.urlopen(req, timeout=timeout, context=UNVERIFIED_SSL_CTX) as resp:
-            ctype = (resp.headers.get("Content-Type") or "").lower()
-            raw = resp.read(max_bytes)
-            return resp.status, ctype, raw.decode("utf-8", errors="ignore")
+        proc = subprocess.run(
+            [
+                "/usr/bin/curl",
+                "-sSLk",
+                "--compressed",
+                "--max-time",
+                str(max_time),
+                "--connect-timeout",
+                "2.5",
+                "--max-filesize",
+                "450000",
+                "-A",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+                "-H",
+                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "-H",
+                "Accept-Language: de-CH,de;q=0.9,en;q=0.8,fr-CH;q=0.7",
+                "-w",
+                "\n__HTTP_STATUS__:%{http_code}",
+                url,
+            ],
+            capture_output=True,
+            timeout=max_time + 2,
+        )
+        out = proc.stdout.decode("utf-8", errors="ignore")
+        status_code = 0
+        if "__HTTP_STATUS__:" in out:
+            body, status_part = out.rsplit("__HTTP_STATUS__:", 1)
+            try:
+                status_code = int(status_part.strip())
+            except ValueError:
+                status_code = 200
+        else:
+            body = out
+        if status_code >= 200 and status_code < 400 and len(body.strip()) > 30:
+            return status_code, body
+        return None, f"HTTP {status_code}"
     except Exception as e:
-        return None, None, str(e)
+        return None, str(e)
 
 
 def parse_guinness_from_html(raw_html):
-    # Strip scripts/styles and collapse whitespace
     cleaned = re.sub(r"<script[\s\S]*?</script>", " ", raw_html, flags=re.I)
     cleaned = re.sub(r"<style[\s\S]*?</style>", " ", cleaned, flags=re.I)
     cleaned = re.sub(r"<[^>]+>", " ", cleaned)
@@ -290,7 +329,6 @@ def parse_guinness_from_html(raw_html):
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
     matches = list(re.finditer(r".{0,75}\bguinness\b.{0,95}", cleaned, flags=re.I))
-    # Also check raw_html in case Guinness is in alt text, JSON-LD, data attributes, or PDF filename
     if not matches and re.search(r"\bguinness\b", raw_html, flags=re.I):
         raw_matches = list(re.finditer(r".{0,60}\bguinness\b.{0,60}", raw_html, flags=re.I))
         snippets = [re.sub(r"\s+", " ", m.group(0)).strip()[:180] for m in raw_matches[:4]]
@@ -326,32 +364,31 @@ def scan_venue_website(venue):
     if not url:
         return {"scanned": False, "reachable": False, "foundOnMenu": False}
 
-    # Skip social media links that block bots or have no menu
     if any(dom in url.lower() for dom in ("facebook.com", "instagram.com", "tripadvisor.", "tiktok.com")):
         return {
             "scanned": True,
             "reachable": False,
             "foundOnMenu": False,
-            "error": "Social media link only (no direct menu HTML)",
+            "error": "Social media link only",
         }
 
-    status, ctype, body = fetch_html_fast(url, timeout=4.2)
+    status, body = fetch_html_curl(url, max_time=4)
     if status is None or not body:
-        return {"scanned": True, "reachable": False, "foundOnMenu": False, "error": body or "Timeout"}
+        return {"scanned": True, "reachable": False, "foundOnMenu": False, "error": body or "Unreachable"}
 
     found, types_found, price, snippets = parse_guinness_from_html(body)
     checked_subpage = None
 
-    # If not found on homepage, look for up to 1 internal drink/menu link on the same site
+    # Follow up to 1 menu/drinks subpage if homepage didn't mention Guinness
     if not found and "<a " in body.lower():
         candidate_links = MENU_LINK_RE.findall(body)
-        for href in candidate_links[:3]:
+        for href in candidate_links[:2]:
             if href.lower().startswith(("mailto:", "tel:", "javascript:")):
                 continue
             sub_url = urllib.parse.urljoin(url, href)
             if urllib.parse.urlparse(sub_url).netloc == urllib.parse.urlparse(url).netloc and sub_url != url:
                 checked_subpage = sub_url
-                s_status, s_ctype, s_body = fetch_html_fast(sub_url, timeout=3.8)
+                s_status, s_body = fetch_html_curl(sub_url, max_time=3)
                 if s_status and s_body:
                     found, types_found, price, snippets = parse_guinness_from_html(s_body)
                     if found:
@@ -373,7 +410,6 @@ def main():
     t_start = time.time()
     elements = fetch_all_swiss_venues_from_osm()
 
-    # Deduplicate and classify all Swiss hospitality venues
     all_venues = []
     seen_ids = set()
     category_totals = Counter()
@@ -395,34 +431,21 @@ def main():
 
     total_swiss_venues = len(all_venues)
     total_with_websites = sum(with_website_totals.values())
-    print(f"\n[SWISS CENSUS] Total unique hospitality venues in Switzerland checked: {total_swiss_venues:,}")
-    print(f"  By Category: {dict(category_totals)}")
-    print(f"  With Website URLs: {total_with_websites:,} ({dict(with_website_totals)})")
+    print(f"\n[SWISS CENSUS] Total unique hospitality venues in Switzerland checked: {total_swiss_venues:,}", flush=True)
+    print(f"  By Category: {dict(category_totals)}", flush=True)
+    print(f"  With Website URLs: {total_with_websites:,} ({dict(with_website_totals)})", flush=True)
 
-    # Separate into Priority Scan Queue:
-    # 1. All venues with OSM Guinness or Irish tags
-    # 2. All pubs & bars with websites in Switzerland (100% of pubs & bars with websites!)
-    # 3. All hotels & restaurants matching pub/stout/british/brau/bar/taphouse keywords
-    # 4. General restaurants & hotels with websites (up to target scan budget so crawl finishes cleanly)
     tier1_osm_confirmed = [v for v in all_venues if v["osm_has_guinness"] or v["osm_is_irish"]]
-    print(f"  OSM Tag/Name Confirmed Irish/Guinness Venues: {len(tier1_osm_confirmed):,}")
+    print(f"  OSM Tag/Name Confirmed Irish/Guinness Venues: {len(tier1_osm_confirmed):,}", flush=True)
 
     venues_with_web = [v for v in all_venues if v["website"]]
-    # Deduplicate by normalized website domain/url so we don't scan the same chain URL 50 times
     domain_groups = defaultdict(list)
     for v in venues_with_web:
         norm_url = v["website"].rstrip("/").lower()
         domain_groups[norm_url].append(v)
 
-    # Sort unique URLs by priority:
-    # Priority 0: osm_has_guinness or osm_is_irish
-    # Priority 1: category == 'pub'
-    # Priority 2: category == 'bar' or is_pub_or_candidate
-    # Priority 3: category == 'hotel'
-    # Priority 4: category == 'restaurant'
     def url_priority(norm_url):
         group = domain_groups[norm_url]
-        v0 = group[0]
         if any(x["osm_has_guinness"] or x["osm_is_irish"] for x in group):
             return 0
         if any(x["category"] == "pub" for x in group):
@@ -434,19 +457,23 @@ def main():
         return 4
 
     sorted_urls = sorted(domain_groups.keys(), key=url_priority)
-
-    # Let's check how many URLs are in Priority 0, 1, 2 (all pubs, bars, Irish/stout candidates in Switzerland)
     p012_urls = [u for u in sorted_urls if url_priority(u) <= 2]
     p34_urls = [u for u in sorted_urls if url_priority(u) > 2]
     print(
         f"  Unique Website URLs in Switzerland: {len(sorted_urls):,} total "
-        f"({len(p012_urls):,} Pubs/Bars/Candidates + {len(p34_urls):,} Hotels/Restaurants)"
+        f"({len(p012_urls):,} Pubs/Bars/Candidates + {len(p34_urls):,} Hotels/Restaurants)",
+        flush=True,
     )
 
-    # Scan ALL 100% of Pubs, Bars & Candidates in Switzerland + top Hotels/Restaurants
-    max_urls_to_scan = int(os.environ.get("MAX_URLS_TO_SCAN", str(len(p012_urls) + 600)))
+    # Scan 100% of all Pubs, Bars & Candidates in Switzerland + 500 Hotels & Restaurants across cantons
+    default_max = len(p012_urls) + 500
+    max_urls_to_scan = int(os.environ.get("MAX_URLS_TO_SCAN", str(default_max)))
     target_urls = sorted_urls[:max_urls_to_scan]
-    print(f"\n[WEB CRAWLER] Launching high-concurrency menu scanner across {len(target_urls):,} unique Swiss websites...")
+    print(
+        f"\n[WEB CRAWLER] Launching 100-worker menu scanner across {len(target_urls):,} unique Swiss websites "
+        f"(100% of Swiss pubs & bars with websites + 500 hotels/restaurants)...",
+        flush=True,
+    )
 
     url_scan_results = {}
     scanned_count = 0
@@ -454,7 +481,7 @@ def main():
     guinness_web_hits = 0
     t_scan = time.time()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=90) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as pool:
         future_to_url = {
             pool.submit(scan_venue_website, domain_groups[u][0]): u for u in target_urls
         }
@@ -473,17 +500,18 @@ def main():
                 sample_v = domain_groups[u][0]
                 print(
                     f"  🍺 [HIT #{guinness_web_hits}] {sample_v['name']} ({sample_v['city_name']}) -> "
-                    f"{res.get('typesFound')} | Price: {res.get('extractedPrice') or 'N/A'} | {res.get('checkedUrl')}"
+                    f"{res.get('typesFound')} | Price: {res.get('extractedPrice') or 'N/A'} | {res.get('checkedUrl')}",
+                    flush=True,
                 )
-            if scanned_count % 200 == 0 or scanned_count == len(target_urls):
+            if scanned_count % 150 == 0 or scanned_count == len(target_urls):
                 elapsed = time.time() - t_scan
                 rate = scanned_count / max(elapsed, 0.1)
                 print(
                     f"  [Progress] {scanned_count:,}/{len(target_urls):,} sites scanned "
-                    f"({reachable_count:,} live HTML, {guinness_web_hits:,} Guinness menu hits) — {rate:.1f} sites/sec"
+                    f"({reachable_count:,} live HTML, {guinness_web_hits:,} Guinness menu hits) — {rate:.1f} sites/sec",
+                    flush=True,
                 )
 
-    # Map results back to all venues
     venues_with_website_scanned = 0
     venues_with_website_reachable = 0
     confirmed_venues_output = []
@@ -564,7 +592,7 @@ def main():
                     "phone": v["phone"],
                     "openNow": True,
                     "editorialSummary": (
-                        f"{'Website menu verified' if web_found else 'OSM nationwide verified'} {v['category']} in {v['city_name']} ({v['region'].title()} region)."
+                        f"{'Live website menu verified' if web_found else 'OSM nationwide verified'} {v['category']} in {v['city_name']} ({v['region'].title()} region)."
                     ),
                     "menuCheck": {
                         "checked": True,
@@ -671,7 +699,6 @@ def main():
     with open(RESULTS_PATH, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
-    # Also save compact audit log of all scanned URLs
     with open(AUDIT_LOG_PATH, "w", encoding="utf-8") as f:
         json.dump(
             {
@@ -691,11 +718,11 @@ def main():
             ensure_ascii=False,
         )
 
-    print("\n========================================================")
-    print("🇨🇭 SWITZERLAND NATIONWIDE CRAWL & WEBSITE SCAN COMPLETE")
-    print("========================================================")
-    print(json.dumps(stats, indent=2))
-    print(f"Saved {len(confirmed_venues_output):,} Guinness venues to {RESULTS_PATH}")
+    print("\n========================================================", flush=True)
+    print("🇨🇭 SWITZERLAND NATIONWIDE CRAWL & WEBSITE SCAN COMPLETE", flush=True)
+    print("========================================================", flush=True)
+    print(json.dumps(stats, indent=2), flush=True)
+    print(f"Saved {len(confirmed_venues_output):,} Guinness venues to {RESULTS_PATH}", flush=True)
 
 
 if __name__ == "__main__":
