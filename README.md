@@ -54,7 +54,7 @@ To deploy **Guinness Guide — Switzerland Venue & Menu Finder** to [Vercel](htt
 
 ---
 
-## Nationwide Switzerland Crawler
+## Nationwide Switzerland Crawler & Google Maps Venue Checker
 
 To re-run the nationwide OpenStreetMap Overpass query and high-concurrency website menu scanner across all 26 Swiss cantons:
 
@@ -62,7 +62,13 @@ To re-run the nationwide OpenStreetMap Overpass query and high-concurrency websi
 python3 scripts/crawl_switzerland.py
 ```
 
-See [`scripts/README.md`](scripts/README.md) for full details on crawler options, output datasets, and git sync utilities.
+To check bars, pubs, restaurants, cafés, and hotels on Google Maps (via Google Places API New `places:searchNearby` & `places:searchText`, or by cross-checking Swiss venues and Google Maps URLs), scrape their online menus for Guinness, and feed the verified input directly into the Guinness Finder:
+
+```bash
+python3 scripts/check_google_maps.py
+```
+
+See [`scripts/README.md`](scripts/README.md) for full details on crawler options, Google Maps checking flags, output datasets, and git sync utilities.
 
 ---
 
