@@ -1603,7 +1603,8 @@ def compute_guinness_status(venue):
     crowd_denied = venue.get("crowdCheck", {}).get("deniedCount", 0) or 0
     serving_format = venue.get("crowdCheck", {}).get("servingFormat") or ("draught" if menu_found else "unknown")
 
-    if not menu_found and crowd_denied >= 3 and crowd_confirmed == 0:
+    menu_checked = bool(venue.get("menuCheck", {}).get("checked"))
+    if not menu_found and crowd_confirmed == 0 and (crowd_denied >= 3 or (menu_checked and serving_format == "none")):
         return {
             "status": "no_guinness",
             "statusLabel": "No Guinness Served",
