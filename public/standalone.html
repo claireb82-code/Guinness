@@ -1070,14 +1070,33 @@
             const coords = state.clickedCoords || state.mapCenter;
             mount.innerHTML = `
               <div class="modal-backdrop" id="modal-bg">
-                <div class="modal-card" onclick="event.stopPropagation()">
+                <div class="modal-card" onclick="event.stopPropagation()" style="max-width:580px;">
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.85rem;">
-                    <h3 class="font-serif-guinness" style="font-size:1.15rem;">＋ Add & Inspect Hotel, Bar, Pub or Restaurant</h3>
+                    <h3 class="font-serif-guinness" style="font-size:1.15rem;">🗺️ Check Google Maps & Add Bars / Restaurants to Guinness Finder</h3>
                     <button id="btn-close-modal" style="background:transparent;border:none;color:#b8ab99;cursor:pointer;font-size:1rem;">✕</button>
                   </div>
+
+                  <form id="form-check-gmaps" style="background:#120f0c;border:1px solid #473928;border-radius:0.65rem;padding:0.85rem;margin-bottom:1rem;display:flex;flex-direction:column;gap:0.55rem;">
+                    <div style="font-size:0.82rem;font-weight:700;color:#e2be75;">
+                      1. Check Google Maps Bars, Pubs, Restaurants & Hotels → Feed into Finder
+                    </div>
+                    <div style="font-size:0.74rem;color:#b8ab99;line-height:1.4;">
+                      Paste any Google Maps place URL, bar/restaurant name, or batch list of venues (or leave blank to check all bars & restaurants in the current map area) and automatically scan their menus & reviews for Guinness.
+                    </div>
+                    <textarea id="gmaps-query" class="stout-textarea" rows="2" placeholder="Paste Google Maps URL (https://www.google.com/maps/place/...), venue name, or search query (e.g. 'bars and restaurants in Zurich')..."></textarea>
+                    <div style="display:flex;gap:0.5rem;">
+                      <input id="gmaps-web" type="text" class="stout-input" style="flex:1;" placeholder="Optional: Venue Website / Menu URL to crawl for Guinness" />
+                      <button type="submit" id="btn-submit-gmaps-check" class="btn-gold">🔍 Check on Google Maps & Import</button>
+                    </div>
+                  </form>
+
+                  <div style="font-size:0.8rem;font-weight:700;color:#d7cbb8;margin-bottom:0.55rem;">
+                    2. Or Add & Inspect a Specific Venue Directly
+                  </div>
+
                   <form id="form-add-venue" style="display:flex;flex-direction:column;gap:0.7rem;">
                     <div style="display:grid;grid-template-columns:2fr 1fr;gap:0.55rem;">
-                      <input id="add-name" type="text" required class="stout-input" placeholder="Venue Name (e.g. The Long Hall) *" />
+                      <input id="add-name" type="text" required class="stout-input" placeholder="Venue Name (e.g. Kennedy's Irish Pub) *" />
                       <select id="add-cat" class="stout-select">
                         <option value="pub">🍺 Pub</option>
                         <option value="bar">🍸 Bar</option>
@@ -1097,7 +1116,7 @@
                         <option value="cans_bottles">🥫 Cans / Bottles Only</option>
                         <option value="none">❌ No Guinness</option>
                       </select>
-                      <input id="add-price" type="text" class="stout-input" placeholder="Pint Price (e.g. €6.30)" />
+                      <input id="add-price" type="text" class="stout-input" placeholder="Pint Price (e.g. CHF 9.50)" />
                     </div>
                     <textarea id="add-note" class="stout-textarea" rows="2" placeholder="Tasting notes or menu details..."></textarea>
                     <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.3rem;">
@@ -1119,6 +1138,49 @@
             document.getElementById('btn-cancel-add')?.addEventListener('click', () => {
               state.addModalOpen = false;
               renderModals();
+            });
+            document.getElementById('form-check-gmaps')?.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const btn = document.getElementById('btn-submit-gmaps-check');
+              if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Checking Google Maps...';
+              }
+              try {
+                const payload = {
+                  query: document.getElementById('gmaps-query')?.value || '',
+                  website: document.getElementById('gmaps-web')?.value || '',
+                  city: state.activeCity,
+                  lat: Number(coords.lat),
+                  lng: Number(coords.lng),
+                  radius: 3500,
+                };
+                const res = await fetch('/api/check-google-maps', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(state.googleApiKey ? { 'x-google-maps-key': state.googleApiKey } : {}),
+                  },
+                  body: JSON.stringify(payload),
+                });
+                const data = await res.json();
+                if (data.allVenues) {
+                  state.venues = data.allVenues;
+                  if (data.venues && data.venues[0]) {
+                    state.selectedVenueId = data.venues[0].id;
+                    if (leafletMap) {
+                      leafletMap.flyTo([data.venues[0].lat, data.venues[0].lng], 15, { duration: 0.65 });
+                    }
+                  }
+                }
+                state.addModalOpen = false;
+                renderAll();
+              } finally {
+                if (btn) {
+                  btn.disabled = false;
+                  btn.textContent = '🔍 Check on Google Maps & Import';
+                }
+              }
             });
             document.getElementById('form-add-venue')?.addEventListener('submit', async (e) => {
               e.preventDefault();

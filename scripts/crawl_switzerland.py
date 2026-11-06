@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Comprehensive Switzerland Hospitality Venue & Website Menu Crawler for Guinness Guide — Switzerland Venue & Menu Finder.
-Uses IPv4 curl (-4) + fast spatial bounding-box queries across Switzerland
-(45.82, 5.95, 47.81, 10.49) with concurrent Overpass mirror racing and polygon
-clipping in Python, followed by a 100-worker website & drink-menu HTML crawler.
+Comprehensive Switzerland Hospitality Venue & Website Menu Crawler for StoutScout.
+Uses the dedicated Swiss OpenStreetMap Association Overpass server
+(https://overpass.osm.ch/api/interpreter) to fetch all pubs, bars, biergartens,
+nightclubs, hotels, and restaurants across Switzerland, then crawls their live
+websites and drink menu subpages in parallel (100 workers) for Guinness.
 """
 
 import concurrent.futures
@@ -25,12 +26,10 @@ RESULTS_PATH = os.path.join(DATA_DIR, "swiss_crawl_results.json")
 RAW_OSM_CACHE_PATH = os.path.join(DATA_DIR, "swiss_osm_raw_cache.json")
 AUDIT_LOG_PATH = os.path.join(DATA_DIR, "swiss_website_scan_audit.json")
 
+# Primary: Swiss OpenStreetMap Association (osm.ch) dedicated Switzerland Overpass server
 OVERPASS_ENDPOINTS = [
+    "https://overpass.osm.ch/api/interpreter",
     "https://overpass-api.de/api/interpreter",
-    "https://lz4.overpass-api.de/api/interpreter",
-    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://z.overpass-api.de/api/interpreter",
 ]
 
 CH_BBOX = "45.82,5.95,47.81,10.49"
@@ -79,15 +78,6 @@ def is_inside_switzerland(lat, lng, tags):
     postcode = (tags.get("addr:postcode") or "").strip()
     if postcode and re.match(r"^\d{5}$", postcode):
         return False
-    # Exclude non-Swiss bounding-box corners
-    if lat < 46.15 and lng < 6.80 and not (46.12 <= lat <= 46.36 and 5.95 <= lng <= 6.32):
-        return False
-    if lat > 47.62 and lng < 8.40 and not (47.50 <= lat <= 47.62 and 7.52 <= lng <= 7.70):
-        return False
-    if lat < 46.18 and lng > 9.15 and not (lng < 9.08 or (lat > 46.20 and lng > 9.95)):
-        return False
-    if lat > 47.56 and lng > 9.55:
-        return False
     return True
 
 
@@ -106,117 +96,104 @@ def assign_swiss_region(lat, lng):
     return best_city
 
 
-def single_overpass_call(endpoint, query_str, max_time=45):
-    t0 = time.time()
-    proc = subprocess.run(
-        [
-            "/usr/bin/curl",
-            "-4",
-            "-sSLk",
-            "--compressed",
-            "--max-time",
-            str(max_time),
-            "--connect-timeout",
-            "5",
-            "-A",
-            "StoutScoutSwitzerland/2.0 (https://openstreetmap.org; contact@stoutscout.ch)",
-            "-H",
-            "Accept: application/json, */*",
-            "--data-urlencode",
-            f"data={query_str}",
-            endpoint,
-        ],
-        capture_output=True,
-        timeout=max_time + 5,
-    )
-    out_str = proc.stdout.decode("utf-8", errors="ignore").strip()
-    if proc.returncode == 0 and out_str.startswith("{"):
-        data = json.loads(out_str)
-        els = data.get("elements", [])
-        return endpoint, els, time.time() - t0
-    raise RuntimeError(f"{endpoint} rc={proc.returncode} preview={out_str[:80]!r}")
-
-
-def race_overpass_query(query_str, label, max_time=45):
-    print(f"[OSM] Racing Overpass mirrors for: {label} ...", flush=True)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(OVERPASS_ENDPOINTS)) as pool:
-        futures = [
-            pool.submit(single_overpass_call, ep, query_str, max_time)
-            for ep in OVERPASS_ENDPOINTS
-        ]
-        for fut in concurrent.futures.as_completed(futures):
-            try:
-                ep, els, elapsed = fut.result()
-                print(f"  [Winner] {ep} returned {len(els):,} elements in {elapsed:.1f}s!", flush=True)
+def query_swiss_overpass(query_str, label, max_time=45):
+    print(f"[OSM.CH] Querying: {label} ...", flush=True)
+    for endpoint in OVERPASS_ENDPOINTS:
+        t0 = time.time()
+        try:
+            proc = subprocess.run(
+                [
+                    "/usr/bin/curl",
+                    "-4",
+                    "-sSLk",
+                    "--compressed",
+                    "--max-time",
+                    str(max_time),
+                    "--connect-timeout",
+                    "5",
+                    "-A",
+                    "StoutScoutSwitzerland/2.0 (https://openstreetmap.ch)",
+                    "--data-urlencode",
+                    f"data={query_str}",
+                    endpoint,
+                ],
+                capture_output=True,
+                timeout=max_time + 5,
+            )
+            out_str = proc.stdout.decode("utf-8", errors="ignore").strip()
+            if proc.returncode == 0 and out_str.startswith("{"):
+                data = json.loads(out_str)
+                els = data.get("elements", [])
+                print(
+                    f"  [OK] {endpoint} returned {len(els):,} elements in {time.time() - t0:.1f}s",
+                    flush=True,
+                )
                 return els
-            except Exception as e:
-                print(f"  [Mirror Info] {e}", flush=True)
+            else:
+                print(f"  [Warn] {endpoint} rc={proc.returncode} preview={out_str[:80]!r}", flush=True)
+        except Exception as e:
+            print(f"  [Error] {endpoint}: {e}", flush=True)
     return []
 
 
 def fetch_swiss_osm_dataset():
     os.makedirs(DATA_DIR, exist_ok=True)
     if os.path.exists(RAW_OSM_CACHE_PATH) and os.path.getsize(RAW_OSM_CACHE_PATH) > 50000:
-        print(f"[OSM] Loading cached nationwide Switzerland OSM dataset from {RAW_OSM_CACHE_PATH}...", flush=True)
+        print(f"[OSM.CH] Loading cached nationwide Switzerland OSM dataset from {RAW_OSM_CACHE_PATH}...", flush=True)
         with open(RAW_OSM_CACHE_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    # 1. Fast spatial bounding-box count query
-    q_counts = f"""[out:json][timeout:25];
-node["amenity"~"^(pub|biergarten)$"]({CH_BBOX}); out count;
-node["amenity"~"^(bar|nightclub)$"]({CH_BBOX}); out count;
-node["amenity"="restaurant"]({CH_BBOX}); out count;
-node["tourism"="hotel"]({CH_BBOX}); out count;"""
-    count_els = race_overpass_query(q_counts, "Switzerland Spatial BBox Census (out count)", max_time=30)
-    # Apply 0.72 Swiss-interior factor to raw rectangle node counts (or fallback to verified OSM CH counts)
+    # Note: overpass.osm.ch is already clipped to the Switzerland + Liechtenstein extract!
+    q_counts = f"""[out:json][timeout:30];
+nwr["amenity"~"^(pub|biergarten)$"]({CH_BBOX}); out count;
+nwr["amenity"~"^(bar|nightclub)$"]({CH_BBOX}); out count;
+nwr["amenity"="restaurant"]({CH_BBOX}); out count;
+nwr["tourism"="hotel"]({CH_BBOX}); out count;"""
+    count_els = query_swiss_overpass(q_counts, "Nationwide Switzerland Hospitality Census (out count)", max_time=35)
     census_counts = {"pub": 845, "bar": 2480, "restaurant": 18920, "hotel": 3960}
     if len(count_els) >= 4:
         try:
             census_counts = {
-                "pub": max(800, int(int(count_els[0].get("tags", {}).get("total", 1150)) * 0.74)),
-                "bar": max(2200, int(int(count_els[1].get("tags", {}).get("total", 3350)) * 0.74)),
-                "restaurant": max(17500, int(int(count_els[2].get("tags", {}).get("total", 25500)) * 0.74)),
-                "hotel": max(3600, int(int(count_els[3].get("tags", {}).get("total", 5350)) * 0.74)),
+                "pub": int(count_els[0].get("tags", {}).get("total", 845)),
+                "bar": int(count_els[1].get("tags", {}).get("total", 2480)),
+                "restaurant": int(count_els[2].get("tags", {}).get("total", 18920)),
+                "hotel": int(count_els[3].get("tags", {}).get("total", 3960)),
             }
-            print(f"[OSM] Switzerland OSM Totals: {census_counts}", flush=True)
+            print(f"[OSM.CH] Exact Switzerland OSM Totals: {census_counts}", flush=True)
         except Exception:
             pass
 
-    # 2. All Pubs, Bars, Biergartens, Nightclubs & Beer/Irish-tagged venues in Switzerland
-    q_pubs_bars = f"""[out:json][timeout:35];
+    q_pubs_bars = f"""[out:json][timeout:45];
 (
-  node["amenity"~"^(pub|bar|biergarten|nightclub)$"]({CH_BBOX});
-  way["amenity"~"^(pub|bar|biergarten|nightclub)$"]({CH_BBOX});
-  node["brewery"]({CH_BBOX});
-  node["drink:beer"]({CH_BBOX});
-  node["cuisine"~"irish|british|pub",i]({CH_BBOX});
-  way["cuisine"~"irish|british|pub",i]({CH_BBOX});
+  nwr["amenity"~"^(pub|bar|biergarten|nightclub)$"]({CH_BBOX});
+  nwr["brewery"]({CH_BBOX});
+  nwr["drink:beer"]({CH_BBOX});
+  nwr["cuisine"~"irish|british|pub",i]({CH_BBOX});
 );
 out center tags;"""
-    els_pubs = race_overpass_query(q_pubs_bars, "All Swiss Pubs, Bars & Beer/Irish Tagged Venues", max_time=45)
+    els_pubs = query_swiss_overpass(q_pubs_bars, "All Swiss Pubs, Bars & Beer/Irish Tagged Venues", max_time=50)
 
-    # 3. All Hotels & Restaurants in Switzerland that have a website / menu URL
-    q_web_venues = f"""[out:json][timeout:40];
+    q_web_venues = f"""[out:json][timeout:50];
 (
-  node["tourism"="hotel"]["website"]({CH_BBOX});
-  way["tourism"="hotel"]["website"]({CH_BBOX});
-  node["amenity"="restaurant"]["website"]({CH_BBOX});
-  way["amenity"="restaurant"]["website"]({CH_BBOX});
-  node["amenity"="restaurant"]["contact:website"]({CH_BBOX});
+  nwr["tourism"="hotel"]["website"]({CH_BBOX});
+  nwr["tourism"="hotel"]["contact:website"]({CH_BBOX});
+  nwr["amenity"="restaurant"]["website"]({CH_BBOX});
+  nwr["amenity"="restaurant"]["contact:website"]({CH_BBOX});
+  nwr["amenity"="restaurant"]["url:menu"]({CH_BBOX});
 );
 out center tags;"""
-    els_web = race_overpass_query(q_web_venues, "All Swiss Hotels & Restaurants with Websites", max_time=50)
+    els_web = query_swiss_overpass(q_web_venues, "All Swiss Hotels & Restaurants with Websites", max_time=55)
 
     bundle = {
         "censusCounts": census_counts,
         "elements": els_pubs + els_web,
     }
     if not bundle["elements"]:
-        raise RuntimeError("Failed to fetch elements from Overpass mirrors.")
+        raise RuntimeError("Failed to fetch elements from overpass.osm.ch.")
 
     with open(RAW_OSM_CACHE_PATH, "w", encoding="utf-8") as f:
         json.dump(bundle, f)
-    print(f"[OSM] Cached {len(bundle['elements']):,} raw venue records to {RAW_OSM_CACHE_PATH}", flush=True)
+    print(f"[OSM.CH] Cached {len(bundle['elements']):,} raw venue records to {RAW_OSM_CACHE_PATH}", flush=True)
     return bundle
 
 
@@ -345,7 +322,7 @@ def fetch_html_curl(url, max_time=4):
                 "--max-time",
                 str(max_time),
                 "--connect-timeout",
-                "2.5",
+                "2.2",
                 "--max-filesize",
                 "450000",
                 "-A",
@@ -429,7 +406,7 @@ def scan_venue_website(venue):
             "error": "Social media link only",
         }
 
-    status, body = fetch_html_curl(url, max_time=4)
+    status, body = fetch_html_curl(url, max_time=3.5)
     if status is None or not body:
         return {"scanned": True, "reachable": False, "foundOnMenu": False, "error": body or "Unreachable"}
 
@@ -444,7 +421,7 @@ def scan_venue_website(venue):
             sub_url = urllib.parse.urljoin(url, href)
             if urllib.parse.urlparse(sub_url).netloc == urllib.parse.urlparse(url).netloc and sub_url != url:
                 checked_subpage = sub_url
-                s_status, s_body = fetch_html_curl(sub_url, max_time=3)
+                s_status, s_body = fetch_html_curl(sub_url, max_time=2.8)
                 if s_status and s_body:
                     found, types_found, price, snippets = parse_guinness_from_html(s_body)
                     if found:
@@ -528,12 +505,13 @@ def main():
         flush=True,
     )
 
-    default_max = len(p012_urls) + 500
+    # Scan 100% of all Pubs, Bars & Candidates in Switzerland + 400 Hotels/Restaurants
+    default_max = len(p012_urls) + 400
     max_urls_to_scan = int(os.environ.get("MAX_URLS_TO_SCAN", str(default_max)))
     target_urls = sorted_urls[:max_urls_to_scan]
     print(
-        f"\n[WEB CRAWLER] Launching 100-worker menu scanner across {len(target_urls):,} unique Swiss websites "
-        f"(100% of Swiss pubs & bars with websites + 500 hotels/restaurants)...",
+        f"\n[WEB CRAWLER] Launching 120-worker menu scanner across {len(target_urls):,} unique Swiss websites "
+        f"(100% of Swiss pubs & bars with websites + 400 hotels/restaurants)...",
         flush=True,
     )
 
@@ -543,7 +521,7 @@ def main():
     guinness_web_hits = 0
     t_scan = time.time()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=120) as pool:
         future_to_url = {
             pool.submit(scan_venue_website, domain_groups[u][0]): u for u in target_urls
         }
@@ -565,7 +543,7 @@ def main():
                     f"{res.get('typesFound')} | Price: {res.get('extractedPrice') or 'N/A'} | {res.get('checkedUrl')}",
                     flush=True,
                 )
-            if scanned_count % 150 == 0 or scanned_count == len(target_urls):
+            if scanned_count % 200 == 0 or scanned_count == len(target_urls):
                 elapsed = time.time() - t_scan
                 rate = scanned_count / max(elapsed, 0.1)
                 print(
