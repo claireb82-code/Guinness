@@ -1,0 +1,75 @@
+{
+  "stats": {
+    "crawledAt": "2026-11-06T10:32:35.893851+00:00",
+    "durationSeconds": 0.1,
+    "totalSwissVenuesChecked": 26250,
+    "byCategoryTotal": {
+      "pub": 840,
+      "bar": 2480,
+      "restaurant": 18950,
+      "hotel": 3980
+    },
+    "totalVenuesWithWebsite": 0,
+    "byCategoryWithWebsite": {},
+    "uniqueWebsitesScanned": 0,
+    "venuesWithWebsiteScanned": 0,
+    "websitesReachableHttp200": 0,
+    "venuesWithWebsiteReachable": 0,
+    "guinnessWebsiteHits": 0,
+    "guinnessOsmTagHits": 0,
+    "totalGuinnessVenuesFound": 0,
+    "verifiedNoGuinnessCount": 0,
+    "byRegion": {
+      "zurich": {
+        "totalVenues": 0,
+        "websitesScanned": 0,
+        "guinnessConfirmed": 0,
+        "noGuinnessVerified": 0
+      },
+      "geneva": {
+        "totalVenues": 0,
+        "websitesScanned": 0,
+        "guinnessConfirmed": 0,
+        "noGuinnessVerified": 0
+      },
+      "lausanne": {
+        "totalVenues": 0,
+        "websitesScanned": 0,
+        "guinnessConfirmed": 0,
+        "noGuinnessVerified": 0
+      },
+      "basel": {
+        "totalVenues": 0,
+        "websitesScanned": 0,
+        "guinnessConfirmed": 0,
+        "noGuinnessVerified": 0
+      },
+      "bern": {
+        "totalVenues": 0,
+        "websitesScanned": 0,
+        "guinnessConfirmed": 0,
+        "noGuinnessVerified": 0
+      },
+      "lucerne": {
+        "totalVenues": 0,
+        "websitesScanned": 0,
+        "guinnessConfirmed": 0,
+        "noGuinnessVerified": 0
+      },
+      "east": {
+        "totalVenues": 0,
+        "websitesScanned": 0,
+        "guinnessConfirmed": 0,
+        "noGuinnessVerified": 0
+      },
+      "alps": {
+        "totalVenues": 0,
+        "websitesScanned": 0,
+        "guinnessConfirmed": 0,
+        "noGuinnessVerified": 0
+      }
+    }
+  },
+  "confirmedVenues": [],
+  "verifiedNoGuinnessSample": []
+}
