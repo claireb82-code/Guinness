@@ -45,6 +45,15 @@ Then open **http://localhost:3000** in your browser.
 
 ---
 
+## Deploying to Vercel
+
+To deploy **Guinness Guide — Switzerland Venue & Menu Finder** to [Vercel](https://vercel.com):
+1. Expose the backend API routes (`/api/config`, `/api/venues`, `/api/scan-menu`, `/api/crowd-report`, `/api/add-venue`) as a Vercel Serverless Function under `api/` and add a `vercel.json` routing configuration.
+2. Point runtime writes for `user_store.json` to `/tmp/user_store.json` when `VERCEL=1` (since the serverless bundle directory is read-only) or connect a persistent store (e.g., Upstash Redis / Vercel Postgres).
+3. Optionally configure `GOOGLE_MAPS_API_KEY` in Vercel Project Settings → Environment Variables.
+
+---
+
 ## Nationwide Switzerland Crawler
 
 To re-run the nationwide OpenStreetMap Overpass query and high-concurrency website menu scanner across all 26 Swiss cantons:

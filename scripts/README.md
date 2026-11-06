@@ -6,8 +6,8 @@ This directory contains data collection scripts and Git automation utilities for
 
 ### 1. [`crawl_switzerland.py`](crawl_switzerland.py)
 Nationwide Switzerland hospitality venue and menu crawler:
-- Queries OpenStreetMap Overpass API (`ISO3166-1=CH`) for every mapped `bar`, `pub`, `biergarten`, `restaurant`, and `hotel`/`hostel`/`guest_house`/`alpine_hut` across all 26 Swiss cantons.
-- Evaluates OSM tags (`brewery`, `beer`, `drink:beer`, `cuisine`, `irish_pub`, etc.) and pub name indicators.
+- Queries OpenStreetMap Overpass API (`ISO3166-1=CH`) across concurrent Overpass mirrors for every mapped `bar`, `pub`, `biergarten`, `restaurant`, and `hotel`/`hostel`/`guest_house`/`alpine_hut` across all 26 Swiss cantons.
+- Evaluates OSM tags (`brewery`, `beer`, `drink:beer`, `cuisine`, `irish_pub`, etc.), pub name indicators, and generates Google Maps lookup URIs (`googleMapsUri`).
 - Crawls venue websites and drink menu links (`/menu`, `/drinks`, `/getraenke`, `/karte`, `/bar`, `/boissons`) in parallel batches to detect **Guinness Draught**, **Guinness 0.0**, cans/bottles, and CHF prices.
 
 **Usage:**
