@@ -662,6 +662,7 @@ export default function App() {
         initialCoords={clickedCoords || mapCenter}
         activeCity={activeCity}
         onAddVenue={handleAddVenue}
+        onCheckGoogleMaps={handleCheckGoogleMaps}
       />
     </div>
   );

@@ -224,13 +224,16 @@
                 <div class="map-pane">
                   <div id="map-canvas" style="width:100%;height:100%;"></div>
 
-                  <!-- Floating Free OpenStreetMap Area & Nationwide Scanner Buttons -->
+                  <!-- Floating Free OpenStreetMap & Google Maps Scanner Buttons -->
                   <div style="position:absolute;top:0.85rem;left:50%;transform:translateX(-50%);z-index:450;display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
                     <button type="button" id="btn-scan-all-ch-osm" class="btn-gold" style="box-shadow:0 8px 24px rgba(0,0,0,0.7);padding:0.45rem 0.9rem;border-radius:999px;font-size:0.76rem;">
                       🇨🇭 Search All Switzerland for Guinness (Nationwide)
                     </button>
                     <button type="button" id="btn-scan-map-area-osm" class="btn-outline" style="background:rgba(19,16,13,0.92);box-shadow:0 8px 24px rgba(0,0,0,0.7);padding:0.45rem 0.9rem;border-radius:999px;font-size:0.76rem;">
                       🌍 Scan Zoomed Map Area (All Venues)
+                    </button>
+                    <button type="button" id="btn-check-gmaps-modal" class="btn-outline" style="background:rgba(19,16,13,0.92);box-shadow:0 8px 24px rgba(0,0,0,0.7);padding:0.45rem 0.9rem;border-radius:999px;font-size:0.76rem;border-color:#c8a45d;">
+                      🗺️ Check Google Maps → Guinness Finder
                     </button>
                   </div>
 
@@ -275,6 +278,15 @@
             state.mode = 'osm';
             renderHeaderAndToolbar();
             loadVenues();
+          });
+
+          document.getElementById('btn-check-gmaps-modal')?.addEventListener('click', () => {
+            if (leafletMap) {
+              const c = leafletMap.getCenter();
+              state.clickedCoords = { lat: Number(c.lat.toFixed(5)), lng: Number(c.lng.toFixed(5)) };
+            }
+            state.addModalOpen = true;
+            renderModals();
           });
 
           const switcher = document.getElementById('map-style-switcher');
