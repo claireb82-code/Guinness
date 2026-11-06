@@ -15,7 +15,17 @@ Nationwide Switzerland hospitality venue and menu crawler:
 python3 scripts/crawl_switzerland.py
 ```
 
-### 2. [`sync_to_git.sh`](sync_to_git.sh)
+### 2. [`check_google_maps.py`](check_google_maps.py)
+Google Maps hospitality venue checker and importer:
+- Checks bars, pubs, restaurants, cafés, and hotels across Swiss hubs (or via a Google Maps URL / search query / city) using Google Places API v1 and fallback web verification.
+- Inspects Google Maps reviews, editorial summaries, and official venue websites/menus for `"guinness"` mentions, variants, and CHF prices, then merges verified records into `server/data/user_store.json` and `server/data/swiss_crawl_results.json`.
+
+**Usage:**
+```bash
+python3 scripts/check_google_maps.py
+```
+
+### 3. [`sync_to_git.sh`](sync_to_git.sh)
 Stages all tracked/untracked repository changes, commits them with a descriptive message, and pushes to `origin/main`.
 
 **Usage:**
@@ -23,7 +33,7 @@ Stages all tracked/untracked repository changes, commits them with a descriptive
 ./scripts/sync_to_git.sh "Update venue dataset and documentation"
 ```
 
-### 3. [`install_git_hooks.sh`](install_git_hooks.sh)
+### 4. [`install_git_hooks.sh`](install_git_hooks.sh)
 Configures `.git/hooks/post-commit` so that every local `git commit` automatically pushes to `origin/main`.
 
 **Usage:**

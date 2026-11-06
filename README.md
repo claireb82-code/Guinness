@@ -92,6 +92,7 @@ Guinness/
 │   └── standalone.html              # Self-contained React + Leaflet UI served by app_server.py
 ├── scripts/
 │   ├── README.md                    # Documentation for scripts & automation utilities
+│   ├── check_google_maps.py         # Google Maps venue & review verifier / importer
 │   ├── crawl_switzerland.py         # Nationwide Swiss OSM Overpass + website menu crawler
 │   ├── install_git_hooks.sh         # Installs local Git hooks (auto-push on commit)
 │   └── sync_to_git.sh               # Stages, commits, and pushes changes to origin/main
