@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StoutScout — Guinness Venue & Menu Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      (function () {
+        const DEFAULT_CITIES = {
+          all: { id: 'all', name: 'All Switzerland 🇨🇭', lat: 46.8182, lng: 8.2275, zoom: 8 },
+          zurich: { id: 'zurich', name: 'Zurich & Winterthur', lat: 47.3745, lng: 8.5385, zoom: 13 },
+          geneva: { id: 'geneva', name: 'Geneva', lat: 46.2044, lng: 6.1432, zoom: 14 },
+          lausanne: { id: 'lausanne', name: 'Lausanne & Montreux', lat: 46.5197, lng: 6.6323, zoom: 12 },
+          basel: { id: 'basel', name: 'Basel & Aargau', lat: 47.5546, lng: 7.5886, zoom: 13 },
+          bern: { id: 'bern', name: 'Bern & Fribourg', lat: 46.948, lng: 7.445, zoom: 13 },
+          lucerne: { id: 'lucerne', name: 'Lucerne & Zug', lat: 47.0518, lng: 8.3075, zoom: 12 },
+          east: { id: 'east', name: 'St. Gallen & East', lat: 47.4245, lng: 9.3767, zoom: 11 },
+          alps: { id: 'alps', name: 'Alps & Ticino', lat: 46.45, lng: 8.35, zoom: 9 },
+        };
+
+        const state = {
+          activeCity: 'all',
+          mapCenter: { ...DEFAULT_CITIES.all },
+          venues: [],
+          loading: true,
+          batchScanning: false,
+          selectedVenueId: null,
+          searchQuery: '',
+          categoryFilter: 'all',
+          guinnessFilter: 'all',
+          googleApiKey: localStorage.getItem('stoutscout_gmaps_key') || '',
+          mode: 'demo',
+          autoScrapeMenus: true,
+          apiKeyModalOpen: false,
+          addModalOpen: false,
+          showReportForm: false,
+          scanningSingle: false,
+          clickedCoords: null,
+        };
+
+        let leafletMap = null;
+        let activeTileLayer = null;
+        let currentMapStyle = 'dark';
+        let leafletMarkers = [];
+
+        const FREE_TILE_LAYERS = {
+          dark: {
+            name: 'Dark Stout (CARTO)',
+            url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            options: {
+              attribution: '&copy; OpenStreetMap &copy; CARTO (Free)',
+              subdomains: 'abcd',
+              maxZoom: 20,
+            },
+          },
+          osm: {
+            name: 'OpenStreetMap Street',
+            url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            options: {
+              attribution: '&copy; OpenStreetMap Contributors (Free)',
+              maxZoom: 19,
+            },
+          },
+          swisstopo: {
+            name: 'Swisstopo Official 🇨🇭',
+            url: 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',
+            options: {
+              attribution: '&copy; swisstopo (Federal Office of Topography — Free)',
+              maxZoom: 19,
+            },
+          },
+        };
+
+        function escapeHtml(str) {
+          if (str === null || str === undefined) return '';
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+
+        function highlightGuinnessHtml(text) {
+          const safe = escapeHtml(text || '');
+          return safe.replace(
+            /(guinness(?:\s*0\.?0|\s*draught|\s*foreign\s*extra)?|stout|pint|creamy)/gi,
+            '<mark style="background:rgba(200,164,93,0.28);color:#f7e2b0;padding:0 3px;border-radius:3px;font-weight:600;">$1</mark>'
+          );
+        }
+
+        function pintSvgHtml(size, status) {
+          const borderColor =
+            status === 'confirmed_draught'
+              ? '#c8a45d'
+              : status === 'cans_or_bottles'
+              ? '#e2be75'
+              : status === 'likely_serves'
+              ? '#fbbf24'
+              : status === 'no_guinness'
+              ? '#f87171'
+              : '#8c7e6d';
+          return `<svg width="${size}" height="${size}" viewBox="0 0 36 36" fill="none" style="flex-shrink:0">
+            <circle cx="18" cy="18" r="17" fill="#171310" stroke="${borderColor}" stroke-width="2"/>
+            <path d="M11 9.5C11 8.4 11.9 7.5 13 7.5H23C24.1 7.5 25 8.4 25 9.5V12.5H11V9.5Z" fill="#F5EFE6"/>
+            <path d="M11 12.5H25L23.2 27.5C23.1 28.3 22.4 29 21.6 29H14.4C13.6 29 12.9 28.3 12.8 27.5L11 12.5Z" fill="#0A0806"/>
+            <path d="M11 9.5C11 8.4 11.9 7.5 13 7.5H23C24.1 7.5 25 8.4 25 9.5L23.2 27.5C23.1 28.3 22.4 29 21.6 29H14.4C13.6 29 12.9 28.3 12.8 27.5L11 9.5Z" stroke="${borderColor}" stroke-width="1.4"/>
+            <path d="M16.5 16.5V22.5C16.5 22.5 19.8 21.2 19.8 18.2C19.8 16.8 16.5 16.5 16.5 16.5Z" stroke="#C8A45D" stroke-width="1.3" fill="rgba(200,164,93,0.25)"/>
+          </svg>`;
+        }
+
+        function createMarkerDataUrl(status, isSelected) {
+          const ringColor = isSelected
+            ? '#ffffff'
+            : status === 'confirmed_draught'
+            ? '#34d399'
+            : status === 'cans_or_bottles'
+            ? '#c8a45d'
+            : status === 'likely_serves'
+            ? '#fbbf24'
+            : status === 'no_guinness'
+            ? '#f87171'
+            : '#9ca3af';
+          const scale = isSelected ? 44 : 36;
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${scale}" height="${scale}" viewBox="0 0 40 40">
+            <circle cx="20" cy="20" r="18" fill="#14110e" stroke="${ringColor}" stroke-width="${isSelected ? '3.2' : '2.4'}"/>
+            <path d="M13 10.5C13 9.4 13.9 8.5 15 8.5H25C26.1 8.5 27 9.4 27 10.5V13.8H13V10.5Z" fill="#F5EFE6"/>
+            <path d="M13 13.8H27L25.1 29.2C25 30 24.3 30.7 23.5 30.7H16.5C15.7 30.7 15 30 14.9 29.2L13 13.8Z" fill="#090705"/>
+            <path d="M13 10.5C13 9.4 13.9 8.5 15 8.5H25C26.1 8.5 27 9.4 27 10.5L25.1 29.2C25 30 24.3 30.7 23.5 30.7H16.5C15.7 30.7 15 30 14.9 29.2L13 10.5Z" stroke="#C8A45D" stroke-width="1.3" fill="none"/>
+            <path d="M18.2 17.5V23.8C18.2 23.8 21.8 22.4 21.8 19.3C21.8 17.8 18.2 17.5 18.2 17.5Z" stroke="#C8A45D" stroke-width="1.3" fill="#C8A45D"/>
+          </svg>`;
+          return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+        }
+
+        function formatCategory(cat) {
+          return { pub: 'Pub', bar: 'Bar', hotel: 'Hotel', restaurant: 'Restaurant' }[cat] || 'Venue';
+        }
+
+        function getFilteredVenues() {
+          return state.venues.filter((v) => {
+            if (state.categoryFilter !== 'all' && v.category !== state.categoryFilter) return false;
+            const status = v.guinnessSummary?.status;
+            if (state.guinnessFilter === 'serves_any') {
+              if (status === 'no_guinness' || status === 'unverified') return false;
+            } else if (state.guinnessFilter === 'draught_only') {
+              if (status !== 'confirmed_draught') return false;
+            } else if (state.guinnessFilter === 'on_menu') {
+              if (!v.menuCheck?.foundOnMenu) return false;
+            } else if (state.guinnessFilter === 'in_reviews') {
+              if (!(v.reviewCheck?.mentionCount > 0)) return false;
+            } else if (state.guinnessFilter === 'guinness_zero') {
+              const hasZero =
+                v.crowdCheck?.hasZero ||
+                (v.menuCheck?.typesFound || []).some((t) => /0\.0|zero/i.test(t));
+              if (!hasZero) return false;
+            }
+
+            if (state.searchQuery.trim()) {
+              const q = state.searchQuery.toLowerCase();
+              const inName = (v.name || '').toLowerCase().includes(q);
+              const inAddr = (v.address || '').toLowerCase().includes(q);
+              const inMenu = (v.menuCheck?.snippets || []).some((s) => s.toLowerCase().includes(q));
+              const inSum = (v.editorialSummary || '').toLowerCase().includes(q);
+              if (!inName && !inAddr && !inMenu && !inSum) return false;
+            }
+            return true;
+          });
+        }
+
+        async function loadVenues() {
+          state.loading = true;
+          renderSidebarAndDrawer();
+          try {
+            const params = new URLSearchParams({
+              city: state.activeCity,
+              lat: String(state.mapCenter.lat),
+              lng: String(state.mapCenter.lng),
+              mode: state.mode,
+              scrapeMenus: String(state.autoScrapeMenus),
+            });
+            const res = await fetch('/api/venues?' + params.toString(), {
+              headers: state.googleApiKey ? { 'x-google-maps-key': state.googleApiKey } : {},
+            });
+            const data = await res.json();
+            if (data.venues) {
+              state.venues = data.venues;
+              if (data.venues.length > 0 && !state.venues.some((v) => v.id === state.selectedVenueId)) {
+                state.selectedVenueId = data.venues[0].id;
+              }
+            }
+          } catch (err) {
+            console.error('Error loading venues:', err);
+          } finally {
+            state.loading = false;
+            renderAll();
+          }
+        }
+
+        function initShell() {
+          const root = document.getElementById('root');
+          root.innerHTML = `
+            <div class="app-shell">
+              <div class="foam-accent-bar"></div>
+              <header class="top-header" id="top-header-mount"></header>
+              <div class="toolbar-strip" id="toolbar-mount"></div>
+              <div class="main-workspace">
+                <div class="sidebar-list" id="sidebar-mount"></div>
+                <div class="map-pane">
+                  <div id="map-canvas" style="width:100%;height:100%;"></div>
+
+                  <!-- Floating Free OpenStreetMap Area & Nationwide Scanner Buttons -->
+                  <div style="position:absolute;top:0.85rem;left:50%;transform:translateX(-50%);z-index:450;display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+                    <button type="button" id="btn-scan-all-ch-osm" class="btn-gold" style="box-shadow:0 8px 24px rgba(0,0,0,0.7);padding:0.45rem 0.9rem;border-radius:999px;font-size:0.76rem;">
+                      🇨🇭 Search All Switzerland for Guinness (Nationwide)
+                    </button>
+                    <button type="button" id="btn-scan-map-area-osm" class="btn-outline" style="background:rgba(19,16,13,0.92);box-shadow:0 8px 24px rgba(0,0,0,0.7);padding:0.45rem 0.9rem;border-radius:999px;font-size:0.76rem;">
+                      🌍 Scan Zoomed Map Area (All Venues)
+                    </button>
+                  </div>
+
+                  <!-- Floating Free Map Tile Switcher (Top Right) -->
+                  <div id="map-style-switcher" style="position:absolute;top:0.85rem;right:0.85rem;z-index:450;background:rgba(19,16,13,0.92);border:1px solid #332a21;border-radius:0.6rem;padding:0.3rem;display:flex;gap:0.25rem;box-shadow:0 8px 20px rgba(0,0,0,0.6);">
+                    <button type="button" data-mapstyle="dark" class="filter-pill active" style="font-size:0.7rem;padding:0.25rem 0.55rem;">Dark Stout</button>
+                    <button type="button" data-mapstyle="osm" class="filter-pill" style="font-size:0.7rem;padding:0.25rem 0.55rem;">OpenStreetMap</button>
+                    <button type="button" data-mapstyle="swisstopo" class="filter-pill" style="font-size:0.7rem;padding:0.25rem 0.55rem;">Swisstopo 🇨🇭</button>
+                  </div>
+
+                  <div style="position:absolute;bottom:1.25rem;left:1rem;background:rgba(19,16,13,0.92);border:1px solid #332a21;border-radius:0.65rem;padding:0.65rem 0.85rem;z-index:400;display:flex;flex-direction:column;gap:0.35rem;font-size:0.73rem;box-shadow:0 8px 24px rgba(0,0,0,0.6);">
+                    <div style="font-weight:700;color:#c8a45d;text-transform:uppercase;letter-spacing:0.08em;font-size:0.66rem;">Guinness Map Key (Free OSM + Swisstopo)</div>
+                    <div><span style="color:#34d399;">●</span> Confirmed Draught On Tap</div>
+                    <div><span style="color:#c8a45d;">●</span> Confirmed Bottles / Cans</div>
+                    <div><span style="color:#fbbf24;">●</span> Likely Serves / Tagged Irish Pub</div>
+                    <div><span style="color:#f87171;">●</span> Confirmed No Guinness</div>
+                  </div>
+                </div>
+                <div id="drawer-mount"></div>
+              </div>
+              <div id="modals-mount"></div>
+            </div>
+          `;
+          initLeafletMap();
+
+          document.getElementById('btn-scan-all-ch-osm')?.addEventListener('click', () => {
+            state.activeCity = 'all';
+            state.mapCenter = { ...DEFAULT_CITIES.all };
+            if (leafletMap) {
+              leafletMap.flyTo([state.mapCenter.lat, state.mapCenter.lng], state.mapCenter.zoom, { duration: 0.8 });
+            }
+            state.mode = 'osm_ch';
+            renderHeaderAndToolbar();
+            loadVenues();
+          });
+
+          document.getElementById('btn-scan-map-area-osm')?.addEventListener('click', () => {
+            if (leafletMap) {
+              const c = leafletMap.getCenter();
+              state.mapCenter = { lat: c.lat, lng: c.lng, zoom: Math.max(leafletMap.getZoom(), 14) };
+            }
+            state.mode = 'osm';
+            renderHeaderAndToolbar();
+            loadVenues();
+          });
+
+          const switcher = document.getElementById('map-style-switcher');
+          switcher?.querySelectorAll('[data-mapstyle]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const styleKey = btn.getAttribute('data-mapstyle');
+              setMapTileStyle(styleKey);
+              switcher.querySelectorAll('[data-mapstyle]').forEach((b) => {
+                b.classList.toggle('active', b.getAttribute('data-mapstyle') === styleKey);
+              });
+            });
+          });
+        }
+
+        function setMapTileStyle(styleKey) {
+          if (!leafletMap || !window.L) return;
+          const cfg = FREE_TILE_LAYERS[styleKey] || FREE_TILE_LAYERS.dark;
+          currentMapStyle = styleKey;
+          if (activeTileLayer) {
+            leafletMap.removeLayer(activeTileLayer);
+          }
+          activeTileLayer = window.L.tileLayer(cfg.url, cfg.options).addTo(leafletMap);
+        }
+
+        function initLeafletMap() {
+          const container = document.getElementById('map-canvas');
+          if (!container || !window.L) return;
+          leafletMap = window.L.map(container, {
+            center: [state.mapCenter.lat, state.mapCenter.lng],
+            zoom: state.mapCenter.zoom || 8,
+          });
+          setMapTileStyle('dark');
+
+          leafletMap.on('click', (e) => {
+            if (e.latlng) {
+              state.clickedCoords = {
+                lat: Number(e.latlng.lat.toFixed(5)),
+                lng: Number(e.latlng.lng.toFixed(5)),
+              };
+              state.addModalOpen = true;
+              renderModals();
+            }
+          });
+        }
+
+        function updateMapMarkers() {
+          const filtered = getFilteredVenues();
+          if (!leafletMap || !window.L) return;
+
+          leafletMarkers.forEach((m) => m.remove());
+          leafletMarkers = [];
+
+          filtered.forEach((venue) => {
+            if (typeof venue.lat !== 'number' || typeof venue.lng !== 'number') return;
+            const isSelected = state.selectedVenueId === venue.id;
+            const status = venue.guinnessSummary?.status || 'unverified';
+            const size = isSelected ? 44 : 36;
+            const icon = window.L.icon({
+              iconUrl: createMarkerDataUrl(status, isSelected),
+              iconSize: [size, size],
+              iconAnchor: [size / 2, size / 2],
+              className: 'custom-pint-marker',
+            });
+            const marker = window.L.marker([venue.lat, venue.lng], {
+              icon,
+              zIndexOffset: isSelected ? 900 : 0,
+            }).addTo(leafletMap);
+
+            marker.on('click', () => {
+              state.selectedVenueId = venue.id;
+              state.showReportForm = false;
+              renderSidebarAndDrawer();
+              updateMapMarkers();
+              leafletMap.flyTo([venue.lat, venue.lng], Math.max(state.mapCenter.zoom || 14, 15), {
+                duration: 0.6,
+              });
+            });
+
+            leafletMarkers.push(marker);
+          });
+        }
+
+        function renderHeaderAndToolbar() {
+          const headerEl = document.getElementById('top-header-mount');
+          if (headerEl) {
+            const cityButtonsHtml = Object.values(DEFAULT_CITIES)
+              .map(
+                (c) => `
+                <button type="button" data-city="${c.id}" class="filter-pill ${
+                  state.activeCity === c.id && state.mode === 'demo' ? 'active' : ''
+                }">
+                  📍 ${escapeHtml(c.name.split(',')[0])}
+                </button>`
+              )
+              .join('');
+
+            headerEl.innerHTML = `
+              <div class="brand-group">
+                ${pintSvgHtml(36, 'confirmed_draught')}
+                <div>
+                  <div class="brand-title">
+                    StoutScout
+                    <span style="font-size:0.66rem;font-family:Inter,sans-serif;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(200,164,93,0.18);border:1px solid rgba(200,164,93,0.4);color:#e2be75;font-weight:600;">
+                      🇨🇭 SWITZERLAND
+                    </span>
+                  </div>
+                  <div class="brand-subtitle">Swiss Hotels · Bars · Pubs · Restaurants — Guinness Menu Radar</div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:0.5rem;flex:1;max-width:760px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:0.3rem;flex-wrap:wrap;">
+                  ${cityButtonsHtml}
+                  <button type="button" id="btn-near-me" class="filter-pill" title="Use GPS Location">🧭 Near Me</button>
+                </div>
+                <div style="position:relative;flex:1;min-width:190px;">
+                  <input
+                    id="search-input"
+                    type="text"
+                    class="stout-input"
+                    style="width:100%;font-size:0.79rem;"
+                    placeholder="Search venues, streets, or menu items (e.g. '0.0', 'oysters')..."
+                    value="${escapeHtml(state.searchQuery)}"
+                  />
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                <button type="button" id="btn-open-add" class="btn-outline">
+                  ＋ Add / Check Venue
+                </button>
+                <button type="button" id="btn-open-apikey" class="btn-gold">
+                  🔑 ${state.mode === 'live' && state.googleApiKey ? 'Google Places: Live' : 'API Key / Mode'}
+                </button>
+              </div>
+            `;
+
+            headerEl.querySelectorAll('[data-city]').forEach((btn) => {
+              btn.addEventListener('click', () => {
+                const cid = btn.getAttribute('data-city');
+                state.activeCity = cid;
+                state.mode = 'demo';
+                state.mapCenter = { ...DEFAULT_CITIES[cid] };
+                if (leafletMap) {
+                  leafletMap.flyTo([state.mapCenter.lat, state.mapCenter.lng], state.mapCenter.zoom, {
+                    duration: 0.8,
+                  });
+                }
+                renderHeaderAndToolbar();
+                loadVenues();
+              });
+            });
+
+            const nearMeBtn = document.getElementById('btn-near-me');
+            if (nearMeBtn) {
+              nearMeBtn.addEventListener('click', () => {
+                if (!navigator.geolocation) {
+                  alert('Geolocation is not supported in this browser.');
+                  return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                  (pos) => {
+                    state.mapCenter = {
+                      lat: pos.coords.latitude,
+                      lng: pos.coords.longitude,
+                      zoom: 14,
+                    };
+                    if (leafletMap) {
+                      leafletMap.flyTo([state.mapCenter.lat, state.mapCenter.lng], 14, { duration: 0.8 });
+                    }
+                    state.mode = state.googleApiKey ? 'live' : 'osm';
+                    loadVenues();
+                  },
+                  () => alert('Could not get GPS location. Check browser location permissions.')
+                );
+              });
+            }
+
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+              searchInput.addEventListener('input', (e) => {
+                state.searchQuery = e.target.value;
+                renderSidebarAndDrawer();
+                updateMapMarkers();
+              });
+            }
+
+            document.getElementById('btn-open-add')?.addEventListener('click', () => {
+              state.clickedCoords = { lat: state.mapCenter.lat, lng: state.mapCenter.lng };
+              state.addModalOpen = true;
+              renderModals();
+            });
+
+            document.getElementById('btn-open-apikey')?.addEventListener('click', () => {
+              state.apiKeyModalOpen = true;
+              renderModals();
+            });
+          }
+
+          const toolbarEl = document.getElementById('toolbar-mount');
+          if (toolbarEl) {
+            const categories = [
+              { id: 'all', label: 'All Venues' },
+              { id: 'pub', label: '🍺 Pubs' },
+              { id: 'bar', label: '🍸 Bars' },
+              { id: 'restaurant', label: '🍽️ Restaurants' },
+              { id: 'hotel', label: '🏨 Hotels' },
+            ];
+            const guinnessFilters = [
+              { id: 'all', label: 'Show All' },
+              { id: 'serves_any', label: '✓ Serves Guinness' },
+              { id: 'draught_only', label: '🍺 Draught On Tap' },
+              { id: 'on_menu', label: '📜 Found on Menu' },
+              { id: 'in_reviews', label: '💬 In Google Reviews' },
+              { id: 'guinness_zero', label: '0.0 Available' },
+            ];
+
+            toolbarEl.innerHTML = `
+              <div class="pill-group">
+                <span style="font-size:0.72rem;color:#9c8e7b;font-weight:600;margin-right:4px;">VENUE TYPE:</span>
+                ${categories
+                  .map(
+                    (c) => `
+                  <button type="button" data-cat="${c.id}" class="filter-pill ${
+                      state.categoryFilter === c.id ? 'active' : ''
+                    }">${c.label}</button>`
+                  )
+                  .join('')}
+              </div>
+              <div class="pill-group">
+                <span style="font-size:0.72rem;color:#9c8e7b;font-weight:600;margin-right:4px;">GUINNESS FILTER:</span>
+                ${guinnessFilters
+                  .map(
+                    (gf) => `
+                  <button type="button" data-gf="${gf.id}" class="filter-pill ${
+                      state.guinnessFilter === gf.id ? 'active' : ''
+                    }">${gf.label}</button>`
+                  )
+                  .join('')}
+              </div>
+            `;
+
+            toolbarEl.querySelectorAll('[data-cat]').forEach((btn) => {
+              btn.addEventListener('click', () => {
+                state.categoryFilter = btn.getAttribute('data-cat');
+                renderHeaderAndToolbar();
+                renderSidebarAndDrawer();
+                updateMapMarkers();
+              });
+            });
+
+            toolbarEl.querySelectorAll('[data-gf]').forEach((btn) => {
+              btn.addEventListener('click', () => {
+                state.guinnessFilter = btn.getAttribute('data-gf');
+                renderHeaderAndToolbar();
+                renderSidebarAndDrawer();
+                updateMapMarkers();
+              });
+            });
+          }
+        }
+
+        function renderSidebarAndDrawer() {
+          const filtered = getFilteredVenues();
+          const sidebarEl = document.getElementById('sidebar-mount');
+          if (sidebarEl) {
+            const servingCount = filtered.filter((v) =>
+              ['confirmed_draught', 'cans_or_bottles', 'likely_serves'].includes(v.guinnessSummary?.status)
+            ).length;
+            const onMenuCount = filtered.filter((v) => v.menuCheck?.foundOnMenu).length;
+
+            const cardsHtml = state.loading
+              ? `<div style="padding:2rem 1rem;text-align:center;color:#b8ab99;font-size:0.84rem;">Scanning area for hotels, bars, pubs & restaurants...</div>`
+              : filtered.length === 0
+              ? `<div style="padding:2rem 1rem;text-align:center;color:#b8ab99;font-size:0.84rem;">No venues match your current filters.</div>`
+              : filtered
+                  .map((venue) => {
+                    const summary = venue.guinnessSummary || {};
+                    const isSelected = state.selectedVenueId === venue.id;
+                    const firstSnippet = venue.menuCheck?.snippets?.[0];
+                    return `
+                      <div class="venue-card ${isSelected ? 'selected' : ''}" data-vid="${escapeHtml(venue.id)}">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.35rem;">
+                          <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                            <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;padding:0.1rem 0.42rem;border-radius:4px;background:#2b231b;color:#c8a45d;font-weight:700;">
+                              ${escapeHtml(formatCategory(venue.category))}
+                            </span>
+                            <span class="status-badge status-${escapeHtml(summary.status)}">
+                              ${escapeHtml(summary.statusLabel)}
+                            </span>
+                          </div>
+                          ${
+                            venue.crowdCheck?.avgPintRating
+                              ? `<span style="font-size:0.76rem;font-weight:700;color:#f5efe6;background:rgba(200,164,93,0.2);padding:0.12rem 0.45rem;border-radius:6px;">🍺 ${escapeHtml(
+                                  venue.crowdCheck.avgPintRating
+                                )}</span>`
+                              : ''
+                          }
+                        </div>
+                        <h3 class="font-serif-guinness" style="font-size:1rem;color:#f5efe6;margin-bottom:0.2rem;">
+                          ${escapeHtml(venue.name)}
+                        </h3>
+                        <div style="font-size:0.73rem;color:#9c8e7b;margin-bottom:0.5rem;">
+                          ${escapeHtml(venue.address)}
+                        </div>
+                        ${
+                          firstSnippet
+                            ? `<div style="font-size:0.72rem;background:#14110e;border-left:2px solid ${
+                                venue.menuCheck?.foundOnMenu ? '#c8a45d' : '#57493a'
+                              };padding:0.35rem 0.55rem;border-radius:0 4px 4px 0;color:#d7cbb8;margin-bottom:0.55rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                📜 ${escapeHtml(firstSnippet)}
+                              </div>`
+                            : ''
+                        }
+                        <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.7rem;color:#b8ab99;border-top:1px solid #2b231b;padding-top:0.45rem;">
+                          <span style="color:${venue.menuCheck?.foundOnMenu ? '#6ee7b7' : '#8f7e68'};">
+                            ${venue.menuCheck?.foundOnMenu ? '✓ Menu Verified' : '○ No Menu Match'}
+                          </span>
+                          <span>💬 ${venue.reviewCheck?.mentionCount || 0} rev.</span>
+                          <span>🍺 ${escapeHtml(
+                            venue.crowdCheck?.reportedPrice ||
+                              venue.menuCheck?.extractedPrice ||
+                              (venue.crowdCheck?.confirmedCount || 0) + ' reports'
+                          )}</span>
+                        </div>
+                      </div>
+                    `;
+                  })
+                  .join('');
+
+            sidebarEl.innerHTML = `
+              <div style="padding:0.7rem 0.9rem;border-bottom:1px solid #332a21;display:flex;align-items:center;justify-content:space-between;background:#14110e;">
+                <div>
+                  <div style="font-size:0.8rem;font-weight:700;color:#f5efe6;">
+                    ${servingCount} of ${filtered.length} Venues Serve Guinness
+                  </div>
+                  <div style="font-size:0.7rem;color:#9c8e7b;">
+                    ${onMenuCount} confirmed directly via online menu scan
+                  </div>
+                </div>
+                <button type="button" id="btn-batch-scan" class="btn-outline" style="padding:0.32rem 0.6rem;font-size:0.72rem;" ${
+                  state.batchScanning ? 'disabled' : ''
+                }>
+                  🔄 ${state.batchScanning ? 'Scanning...' : 'Scan All Menus'}
+                </button>
+              </div>
+              <div class="venue-cards-scroll">${cardsHtml}</div>
+            `;
+
+            sidebarEl.querySelectorAll('[data-vid]').forEach((card) => {
+              card.addEventListener('click', () => {
+                const vid = card.getAttribute('data-vid');
+                state.selectedVenueId = vid;
+                state.showReportForm = false;
+                const v = state.venues.find((x) => x.id === vid);
+                if (v && leafletMap) {
+                  leafletMap.flyTo([v.lat, v.lng], Math.max(state.mapCenter.zoom || 14, 15), { duration: 0.6 });
+                }
+                renderSidebarAndDrawer();
+                updateMapMarkers();
+              });
+            });
+
+            document.getElementById('btn-batch-scan')?.addEventListener('click', async () => {
+              state.batchScanning = true;
+              renderSidebarAndDrawer();
+              try {
+                for (const v of filtered) {
+                  if (v.website || v.menuUrl) {
+                    const res = await fetch('/api/scan-menu', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ venueId: v.id, websiteUrl: v.menuUrl || v.website }),
+                    });
+                    const data = await res.json();
+                    if (data.venue) {
+                      state.venues = state.venues.map((item) => (item.id === v.id ? data.venue : item));
+                    }
+                  }
+                }
+              } finally {
+                state.batchScanning = false;
+                renderSidebarAndDrawer();
+                updateMapMarkers();
+              }
+            });
+          }
+
+          // Render Right Detail Drawer
+          const drawerMount = document.getElementById('drawer-mount');
+          const selectedVenue = state.venues.find((v) => v.id === state.selectedVenueId) || null;
+          if (!drawerMount) return;
+          if (!selectedVenue) {
+            drawerMount.innerHTML = '';
+            return;
+          }
+
+          const summary = selectedVenue.guinnessSummary || {};
+          const menuCheck = selectedVenue.menuCheck || {};
+          const reviewCheck = selectedVenue.reviewCheck || {};
+          const crowdCheck = selectedVenue.crowdCheck || {};
+          const gmapsUrl =
+            'https://www.google.com/maps/search/?api=1&query=' +
+            encodeURIComponent(selectedVenue.name + ' ' + selectedVenue.address);
+
+          const typesBadgesHtml = (menuCheck.typesFound || [])
+            .map(
+              (t) =>
+                `<span style="font-size:0.71rem;background:rgba(200,164,93,0.16);border:1px solid rgba(200,164,93,0.35);color:#f3d999;padding:0.18rem 0.5rem;border-radius:0.35rem;font-weight:600;">🍺 ${escapeHtml(
+                  t
+                )}</span>`
+            )
+            .join('');
+
+          const menuSnippetsHtml = (menuCheck.snippets || [])
+            .map((line) => `<div style="line-height:1.4;">“${highlightGuinnessHtml(line)}”</div>`)
+            .join('');
+
+          const reviewsHtml =
+            (reviewCheck.excerpts || []).length > 0
+              ? reviewCheck.excerpts
+                  .map(
+                    (ex) => `
+                  <div style="background:#120f0c;border:1px solid #2b231b;border-radius:0.5rem;padding:0.6rem 0.7rem;font-size:0.76rem;">
+                    <div style="display:flex;justify-content:space-between;color:#b8ab99;font-size:0.7rem;margin-bottom:0.25rem;">
+                      <span style="font-weight:600;color:#f5efe6;">${escapeHtml(ex.author)}</span>
+                      <span>${'★'.repeat(ex.rating || 5)} · ${escapeHtml(ex.date)}</span>
+                    </div>
+                    <p style="color:#d7cbb8;line-height:1.4;">${highlightGuinnessHtml(ex.text)}</p>
+                  </div>`
+                  )
+                  .join('')
+              : `<p style="font-size:0.76rem;color:#9c8e7b;">No explicit "Guinness" mentions in sampled reviews yet.</p>`;
+
+          const recentReportsHtml = (crowdCheck.recentReports || [])
+            .map(
+              (rep) => `
+              <div style="background:#120f0c;border:1px solid #2b231b;border-radius:0.5rem;padding:0.55rem 0.7rem;font-size:0.75rem;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.2rem;">
+                  <span style="font-weight:600;color:#f5efe6;">${escapeHtml(rep.user)}</span>
+                  <span style="color:#c8a45d;font-weight:600;">
+                    ${
+                      rep.servingFormat === 'none'
+                        ? '❌ No Guinness'
+                        : `${rep.pintRating ? rep.pintRating + ' ★' : ''} ${rep.price ? '· ' + escapeHtml(rep.price) : ''}`
+                    }
+                  </span>
+                </div>
+                ${rep.note ? `<p style="color:#d7cbb8;line-height:1.35;">${escapeHtml(rep.note)}</p>` : ''}
+              </div>`
+            )
+            .join('');
+
+          drawerMount.innerHTML = `
+            <aside class="detail-drawer">
+              <div style="padding:1rem 1.15rem;border-bottom:1px solid #332a21;background:#14110e;position:sticky;top:0;z-index:5;display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;">
+                <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+                  ${pintSvgHtml(38, summary.status)}
+                  <div>
+                    <div style="display:flex;align-items:center;gap:0.45rem;margin-bottom:0.25rem;">
+                      <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.09em;padding:0.12rem 0.48rem;border-radius:4px;background:#272019;color:#c8a45d;font-weight:700;">
+                        ${escapeHtml(formatCategory(selectedVenue.category))}
+                      </span>
+                      ${
+                        selectedVenue.googleRating
+                          ? `<span style="font-size:0.75rem;color:#e2be75;font-weight:600;">★ ${escapeHtml(
+                              selectedVenue.googleRating
+                            )} (${escapeHtml(selectedVenue.googleReviewCount)})</span>`
+                          : ''
+                      }
+                    </div>
+                    <h2 class="font-serif-guinness" style="font-size:1.18rem;line-height:1.25;">${escapeHtml(
+                      selectedVenue.name
+                    )}</h2>
+                    <div style="font-size:0.76rem;color:#b8ab99;margin-top:0.25rem;">📍 ${escapeHtml(
+                      selectedVenue.address
+                    )}</div>
+                  </div>
+                </div>
+                <button id="btn-close-drawer" style="background:#241e18;border:1px solid #382e24;color:#f5efe6;border-radius:0.4rem;padding:0.3rem 0.55rem;cursor:pointer;">✕</button>
+              </div>
+
+              <div style="padding:1rem 1.15rem;display:flex;flex-direction:column;gap:1rem;">
+                <!-- Summary Card -->
+                <div style="background:linear-gradient(145deg,#241d16 0%,#18130f 100%);border:1px solid #473928;border-radius:0.75rem;padding:0.95rem;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
+                    <span class="status-badge status-${escapeHtml(summary.status)}">${escapeHtml(
+            summary.statusLabel
+          )}</span>
+                    <span style="font-size:0.76rem;color:#c8a45d;font-weight:700;">${escapeHtml(
+                      summary.confidence
+                    )}% Match Confidence</span>
+                  </div>
+                  ${
+                    selectedVenue.editorialSummary
+                      ? `<p style="font-size:0.8rem;color:#d7cbb8;line-height:1.45;margin-bottom:0.75rem;">${highlightGuinnessHtml(
+                          selectedVenue.editorialSummary
+                        )}</p>`
+                      : ''
+                  }
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;border-top:1px solid #332a21;padding-top:0.7rem;">
+                    <div>
+                      <div style="font-size:0.66rem;color:#9c8e7b;text-transform:uppercase;">Pint Score</div>
+                      <div style="font-size:0.95rem;font-weight:700;color:#f5efe6;margin-top:0.1rem;">
+                        ${crowdCheck.avgPintRating ? escapeHtml(crowdCheck.avgPintRating) + ' / 5.0 🍺' : 'Unrated'}
+                      </div>
+                    </div>
+                    <div>
+                      <div style="font-size:0.66rem;color:#9c8e7b;text-transform:uppercase;">Pint Price</div>
+                      <div style="font-size:0.95rem;font-weight:700;color:#e2be75;margin-top:0.1rem;">
+                        ${escapeHtml(
+                          crowdCheck.reportedPrice || menuCheck.extractedPrice || selectedVenue.priceLevel || '—'
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <div style="font-size:0.66rem;color:#9c8e7b;text-transform:uppercase;">Guinness 0.0</div>
+                      <div style="font-size:0.88rem;font-weight:600;color:#f5efe6;margin-top:0.1rem;">
+                        ${
+                          crowdCheck.hasZero || (menuCheck.typesFound || []).some((t) => /0\.0|zero/i.test(t))
+                            ? 'Available ✓'
+                            : 'Unconfirmed'
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+                    <a href="${gmapsUrl}" target="_blank" rel="noreferrer" class="btn-outline" style="text-decoration:none;flex:1;justify-content:center;font-size:0.75rem;">
+                      🗺️ Open in Google Maps
+                    </a>
+                    ${
+                      selectedVenue.website
+                        ? `<a href="${escapeHtml(
+                            selectedVenue.website
+                          )}" target="_blank" rel="noreferrer" class="btn-outline" style="text-decoration:none;flex:1;justify-content:center;font-size:0.75rem;">🌐 Venue Website</a>`
+                        : ''
+                    }
+                  </div>
+                </div>
+
+                <!-- Pillar 1: Menu Scanner -->
+                <div style="background:#1b1612;border:1px solid #332a21;border-radius:0.75rem;padding:0.95rem;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+                    <div style="font-weight:700;font-size:0.86rem;color:#e2be75;">📜 1. Online Menu & Website Check</div>
+                    <span style="font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:99px;background:${
+                      menuCheck.foundOnMenu ? 'rgba(52,211,153,0.15)' : 'rgba(184,171,153,0.12)'
+                    };color:${menuCheck.foundOnMenu ? '#6ee7b7' : '#b8ab99'};font-weight:600;">
+                      ${menuCheck.foundOnMenu ? 'Found on Menu' : menuCheck.checked ? 'Not on HTML Menu' : 'Not Scanned Yet'}
+                    </span>
+                  </div>
+                  ${
+                    typesBadgesHtml
+                      ? `<div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.6rem;">${typesBadgesHtml}</div>`
+                      : ''
+                  }
+                  ${
+                    menuSnippetsHtml
+                      ? `<div style="background:#120f0c;border:1px solid #2b231b;border-radius:0.5rem;padding:0.6rem 0.7rem;font-size:0.76rem;color:#d7cbb8;display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.65rem;">${menuSnippetsHtml}</div>`
+                      : ''
+                  }
+                  <form id="form-scan-menu" style="display:flex;gap:0.4rem;margin-top:0.35rem;">
+                    <input
+                      id="input-menu-url"
+                      type="text"
+                      class="stout-input"
+                      style="flex:1;font-size:0.76rem;padding:0.4rem 0.65rem;"
+                      placeholder="Menu or website URL to scan..."
+                      value="${escapeHtml(selectedVenue.menuUrl || selectedVenue.website || '')}"
+                    />
+                    <button type="submit" class="btn-gold" style="font-size:0.75rem;" ${
+                      state.scanningSingle ? 'disabled' : ''
+                    }>
+                      ${state.scanningSingle ? 'Scanning...' : 'Scan Menu'}
+                    </button>
+                  </form>
+                </div>
+
+                <!-- Pillar 2: Google Reviews -->
+                <div style="background:#1b1612;border:1px solid #332a21;border-radius:0.75rem;padding:0.95rem;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.55rem;">
+                    <div style="font-weight:700;font-size:0.86rem;color:#e2be75;">💬 2. Google Reviews Mention Check</div>
+                    <span style="font-size:0.72rem;color:#c8a45d;font-weight:600;">${
+                      reviewCheck.mentionCount || 0
+                    } Mentions</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:0.5rem;">${reviewsHtml}</div>
+                </div>
+
+                <!-- Pillar 3: Community Reports -->
+                <div style="background:#1b1612;border:1px solid #332a21;border-radius:0.75rem;padding:0.95rem;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
+                    <div style="font-weight:700;font-size:0.86rem;color:#e2be75;">🍺 3. Community Pint Reports</div>
+                    <button type="button" id="btn-toggle-report" class="btn-gold" style="padding:0.3rem 0.65rem;font-size:0.73rem;">
+                      ${state.showReportForm ? 'Cancel' : '+ Log Pint / Confirm'}
+                    </button>
+                  </div>
+                  <div style="font-size:0.75rem;color:#b8ab99;margin-bottom:0.6rem;">
+                    Confirmed by <strong style="color:#6ee7b7;">${crowdCheck.confirmedCount || 0}</strong> scouts ·
+                    Denied by <strong style="color:#fca5a5;">${crowdCheck.deniedCount || 0}</strong>
+                  </div>
+
+                  ${
+                    state.showReportForm
+                      ? `
+                    <form id="form-crowd-report" style="background:#120f0c;border:1px solid #c8a45d;border-radius:0.6rem;padding:0.8rem;display:flex;flex-direction:column;gap:0.6rem;margin-bottom:0.75rem;">
+                      <div style="font-size:0.8rem;font-weight:700;color:#e2be75;">Submit Your Guinness Inspection</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                        <select id="rep-format" class="stout-select">
+                          <option value="draught">🍺 On Draught (Tap)</option>
+                          <option value="cans_bottles">🥫 Cans / Bottles Only</option>
+                          <option value="none">❌ No Guinness Served</option>
+                        </select>
+                        <select id="rep-rating" class="stout-select">
+                          <option value="5.0">5.0 — Creamiest Dream Pint</option>
+                          <option value="4.8">4.8 — Exceptional Pour</option>
+                          <option value="4.5">4.5 — Very Solid Pint</option>
+                          <option value="4.0">4.0 — Good Standard Pour</option>
+                          <option value="3.5">3.5 — Average</option>
+                        </select>
+                      </div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                        <input id="rep-user" type="text" class="stout-input" placeholder="Your Name (optional)" />
+                        <input id="rep-price" type="text" class="stout-input" placeholder="Pint Price (e.g. CHF 9.50)" value="${escapeHtml(
+                          crowdCheck.reportedPrice || menuCheck.extractedPrice || ''
+                        )}" />
+                      </div>
+                      <label style="display:flex;align-items:center;gap:0.45rem;font-size:0.76rem;color:#d7cbb8;cursor:pointer;">
+                        <input id="rep-zero" type="checkbox" ${crowdCheck.hasZero ? 'checked' : ''} />
+                        Also serves Guinness 0.0 (Non-Alcoholic)
+                      </label>
+                      <textarea id="rep-note" class="stout-textarea" rows="2" placeholder="Notes on pour, dome, glass type, temperature..."></textarea>
+                      <button type="submit" class="btn-gold" style="justify-content:center;">Save Guinness Report</button>
+                    </form>`
+                      : ''
+                  }
+
+                  <div style="display:flex;flex-direction:column;gap:0.45rem;">${recentReportsHtml}</div>
+                </div>
+              </div>
+            </aside>
+          `;
+
+          document.getElementById('btn-close-drawer')?.addEventListener('click', () => {
+            state.selectedVenueId = null;
+            renderSidebarAndDrawer();
+            updateMapMarkers();
+          });
+
+          document.getElementById('form-scan-menu')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const urlVal = document.getElementById('input-menu-url')?.value || '';
+            state.scanningSingle = true;
+            renderSidebarAndDrawer();
+            try {
+              const res = await fetch('/api/scan-menu', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ venueId: selectedVenue.id, websiteUrl: urlVal, venue: selectedVenue }),
+              });
+              const data = await res.json();
+              if (data.venue) {
+                state.venues = state.venues.map((v) => (v.id === selectedVenue.id ? data.venue : v));
+              }
+            } finally {
+              state.scanningSingle = false;
+              renderSidebarAndDrawer();
+              updateMapMarkers();
+            }
+          });
+
+          document.getElementById('btn-toggle-report')?.addEventListener('click', () => {
+            state.showReportForm = !state.showReportForm;
+            renderSidebarAndDrawer();
+          });
+
+          document.getElementById('form-crowd-report')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+              venueId: selectedVenue.id,
+              venue: selectedVenue,
+              user: document.getElementById('rep-user')?.value || 'Swiss Guinness Scout',
+              servingFormat: document.getElementById('rep-format')?.value || 'draught',
+              pintRating: Number(document.getElementById('rep-rating')?.value || 5.0),
+              price: document.getElementById('rep-price')?.value || '',
+              hasZero: Boolean(document.getElementById('rep-zero')?.checked),
+              note: document.getElementById('rep-note')?.value || '',
+            };
+            const res = await fetch('/api/crowd-report', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (data.venue) {
+              state.venues = state.venues.map((v) => (v.id === selectedVenue.id ? data.venue : v));
+              state.showReportForm = false;
+              renderSidebarAndDrawer();
+              updateMapMarkers();
+            }
+          });
+        }
+
+        function renderModals() {
+          const mount = document.getElementById('modals-mount');
+          if (!mount) return;
+
+          if (state.apiKeyModalOpen) {
+            mount.innerHTML = `
+              <div class="modal-backdrop" id="modal-bg">
+                <div class="modal-card" onclick="event.stopPropagation()">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.85rem;">
+                    <h3 class="font-serif-guinness" style="font-size:1.18rem;">🗺️ Map & Venue Discovery Mode</h3>
+                    <button id="btn-close-modal" style="background:transparent;border:none;color:#b8ab99;cursor:pointer;font-size:1rem;">✕</button>
+                  </div>
+                  <p style="font-size:0.81rem;color:#b8ab99;line-height:1.5;margin-bottom:1rem;">
+                    You can use <strong>100% Free OpenStreetMap + Swisstopo Maps</strong> (no API key or credit card required)
+                    to discover hotels, bars, pubs, and restaurants anywhere in Switzerland, or optionally connect a Google Maps API key.
+                  </p>
+                  <div style="display:flex;flex-direction:column;gap:0.55rem;margin-bottom:1rem;">
+                    <button type="button" id="btn-use-demo" class="btn-outline" style="justify-content:space-between;padding:0.65rem 0.85rem;">
+                      <span>🇨🇭 <strong>Curated Swiss Guinness Map</strong> (Free — Verified Swiss Pubs, Bars & Hotels)</span>
+                      <span style="color:#34d399;font-size:0.72rem;font-weight:700;">FREE</span>
+                    </button>
+                    <button type="button" id="btn-use-osm" class="btn-outline" style="justify-content:space-between;padding:0.65rem 0.85rem;">
+                      <span>🌍 <strong>Live OpenStreetMap Overpass Scan</strong> (Free — Scans current map area)</span>
+                      <span style="color:#34d399;font-size:0.72rem;font-weight:700;">FREE</span>
+                    </button>
+                  </div>
+                  <div style="border-top:1px solid #332a21;padding-top:0.85rem;margin-bottom:0.9rem;">
+                    <label style="font-size:0.76rem;color:#d7cbb8;display:block;margin-bottom:0.35rem;">Optional: Google Maps Platform API Key</label>
+                    <input id="input-gmaps-key" type="password" class="stout-input" style="width:100%;" placeholder="AIzaSy... (Leave blank to use free OpenStreetMap)" value="${escapeHtml(
+                      state.googleApiKey
+                    )}" />
+                  </div>
+                  <div style="display:flex;justify-content:flex-end;gap:0.55rem;">
+                    <button type="button" id="btn-save-apikey" class="btn-gold">Save Settings</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            document.getElementById('modal-bg')?.addEventListener('click', () => {
+              state.apiKeyModalOpen = false;
+              renderModals();
+            });
+            document.getElementById('btn-close-modal')?.addEventListener('click', () => {
+              state.apiKeyModalOpen = false;
+              renderModals();
+            });
+            document.getElementById('btn-use-demo')?.addEventListener('click', () => {
+              state.mode = 'demo';
+              state.apiKeyModalOpen = false;
+              renderModals();
+              renderHeaderAndToolbar();
+              loadVenues();
+            });
+            document.getElementById('btn-use-osm')?.addEventListener('click', () => {
+              if (leafletMap) {
+                const c = leafletMap.getCenter();
+                state.mapCenter = { lat: c.lat, lng: c.lng, zoom: Math.max(leafletMap.getZoom(), 14) };
+              }
+              state.mode = 'osm';
+              state.apiKeyModalOpen = false;
+              renderModals();
+              renderHeaderAndToolbar();
+              loadVenues();
+            });
+            document.getElementById('btn-save-apikey')?.addEventListener('click', () => {
+              const keyVal = (document.getElementById('input-gmaps-key')?.value || '').trim();
+              state.googleApiKey = keyVal;
+              localStorage.setItem('stoutscout_gmaps_key', keyVal);
+              state.mode = keyVal ? 'live' : 'demo';
+              state.apiKeyModalOpen = false;
+              renderModals();
+              renderHeaderAndToolbar();
+              loadVenues();
+            });
+            return;
+          }
+
+          if (state.addModalOpen) {
+            const coords = state.clickedCoords || state.mapCenter;
+            mount.innerHTML = `
+              <div class="modal-backdrop" id="modal-bg">
+                <div class="modal-card" onclick="event.stopPropagation()">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.85rem;">
+                    <h3 class="font-serif-guinness" style="font-size:1.15rem;">＋ Add & Inspect Hotel, Bar, Pub or Restaurant</h3>
+                    <button id="btn-close-modal" style="background:transparent;border:none;color:#b8ab99;cursor:pointer;font-size:1rem;">✕</button>
+                  </div>
+                  <form id="form-add-venue" style="display:flex;flex-direction:column;gap:0.7rem;">
+                    <div style="display:grid;grid-template-columns:2fr 1fr;gap:0.55rem;">
+                      <input id="add-name" type="text" required class="stout-input" placeholder="Venue Name (e.g. The Long Hall) *" />
+                      <select id="add-cat" class="stout-select">
+                        <option value="pub">🍺 Pub</option>
+                        <option value="bar">🍸 Bar</option>
+                        <option value="restaurant">🍽️ Restaurant</option>
+                        <option value="hotel">🏨 Hotel</option>
+                      </select>
+                    </div>
+                    <input id="add-addr" type="text" class="stout-input" placeholder="Street Address" />
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;">
+                      <input id="add-lat" type="number" step="any" class="stout-input" value="${coords.lat}" />
+                      <input id="add-lng" type="number" step="any" class="stout-input" value="${coords.lng}" />
+                    </div>
+                    <input id="add-web" type="text" class="stout-input" placeholder="Website or Online Menu URL (Auto-scanned for Guinness)" />
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;">
+                      <select id="add-format" class="stout-select">
+                        <option value="draught">🍺 Serves Guinness On Tap</option>
+                        <option value="cans_bottles">🥫 Cans / Bottles Only</option>
+                        <option value="none">❌ No Guinness</option>
+                      </select>
+                      <input id="add-price" type="text" class="stout-input" placeholder="Pint Price (e.g. €6.30)" />
+                    </div>
+                    <textarea id="add-note" class="stout-textarea" rows="2" placeholder="Tasting notes or menu details..."></textarea>
+                    <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.3rem;">
+                      <button type="button" id="btn-cancel-add" class="btn-outline">Cancel</button>
+                      <button type="submit" class="btn-gold">Add Venue & Scan Menu</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            `;
+            document.getElementById('modal-bg')?.addEventListener('click', () => {
+              state.addModalOpen = false;
+              renderModals();
+            });
+            document.getElementById('btn-close-modal')?.addEventListener('click', () => {
+              state.addModalOpen = false;
+              renderModals();
+            });
+            document.getElementById('btn-cancel-add')?.addEventListener('click', () => {
+              state.addModalOpen = false;
+              renderModals();
+            });
+            document.getElementById('form-add-venue')?.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const payload = {
+                name: document.getElementById('add-name')?.value || 'New Venue',
+                category: document.getElementById('add-cat')?.value || 'pub',
+                city: state.activeCity,
+                address: document.getElementById('add-addr')?.value || 'Added on Map',
+                lat: Number(document.getElementById('add-lat')?.value || state.mapCenter.lat),
+                lng: Number(document.getElementById('add-lng')?.value || state.mapCenter.lng),
+                website: document.getElementById('add-web')?.value || '',
+                servingFormat: document.getElementById('add-format')?.value || 'draught',
+                price: document.getElementById('add-price')?.value || '',
+                pintRating: 4.8,
+                note: document.getElementById('add-note')?.value || '',
+              };
+              const res = await fetch('/api/add-venue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+              });
+              const data = await res.json();
+              if (data.venue) {
+                state.venues = [data.venue, ...state.venues];
+                state.selectedVenueId = data.venue.id;
+                state.addModalOpen = false;
+                renderModals();
+                renderSidebarAndDrawer();
+                updateMapMarkers();
+                if (leafletMap) {
+                  leafletMap.flyTo([data.venue.lat, data.venue.lng], 15, { duration: 0.65 });
+                }
+              }
+            });
+            return;
+          }
+
+          mount.innerHTML = '';
+        }
+
+        function renderAll() {
+          renderHeaderAndToolbar();
+          renderSidebarAndDrawer();
+          updateMapMarkers();
+          renderModals();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+          initShell();
+          renderAll();
+          loadVenues();
+        });
+      })();
+    </script>
+  </body>
+</html>

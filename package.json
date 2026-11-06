@@ -1,0 +1,25 @@
+{
+  "name": "guinness-finder",
+  "version": "1.0.0",
+  "description": "Locate hotels, bars, pubs, and restaurants via Google Maps, inspect menus & reviews for Guinness, and crowdsource pint quality.",
+  "type": "module",
+  "scripts": {
+    "dev": "node server/index.js",
+    "client": "vite",
+    "build": "vite build",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "lucide-react": "^0.454.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.2",
+    "vite": "^5.4.8"
+  }
+}
