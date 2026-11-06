@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, X, Search } from 'lucide-react';
+import { PlusCircle, X, Search, Globe2 } from 'lucide-react';
 
-export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAddVenue }) {
+export function AddVenueModal({
+  isOpen,
+  onClose,
+  initialCoords,
+  activeCity,
+  onAddVenue,
+  onCheckGoogleMaps,
+}) {
+  const [gmapsQuery, setGmapsQuery] = useState('');
+  const [gmapsWebsite, setGmapsWebsite] = useState('');
+  const [checkingGmaps, setCheckingGmaps] = useState(false);
+
   const [name, setName] = useState('');
   const [category, setCategory] = useState('pub');
   const [address, setAddress] = useState('');
-  const [lat, setLat] = useState(initialCoords?.lat || 53.3441);
-  const [lng, setLng] = useState(initialCoords?.lng || -6.2675);
+  const [lat, setLat] = useState(initialCoords?.lat || 47.3745);
+  const [lng, setLng] = useState(initialCoords?.lng || 8.5385);
   const [website, setWebsite] = useState('');
   const [servingFormat, setServingFormat] = useState('draught');
   const [price, setPrice] = useState('');
@@ -22,6 +33,26 @@ export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAd
   }, [initialCoords?.lat, initialCoords?.lng]);
 
   if (!isOpen) return null;
+
+  const handleGmapsCheckSubmit = async (e) => {
+    e.preventDefault();
+    if (!onCheckGoogleMaps) return;
+    setCheckingGmaps(true);
+    try {
+      await onCheckGoogleMaps({
+        query: gmapsQuery,
+        website: gmapsWebsite,
+        city: activeCity,
+        lat: Number(lat),
+        lng: Number(lng),
+      });
+      setGmapsQuery('');
+      setGmapsWebsite('');
+      onClose();
+    } finally {
+      setCheckingGmaps(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,12 +84,12 @@ export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAd
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 580 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <PlusCircle size={20} color="#c8a45d" />
             <h3 className="font-serif-guinness" style={{ fontSize: '1.15rem' }}>
-              Add & Inspect Hotel, Bar, Pub or Restaurant
+              Check Google Maps & Add Bars / Restaurants to Guinness Finder
             </h3>
           </div>
           <button
@@ -69,10 +100,53 @@ export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAd
           </button>
         </div>
 
-        <p style={{ fontSize: '0.78rem', color: '#b8ab99', marginBottom: '0.9rem', lineHeight: 1.45 }}>
-          Add a venue to the map. If you include its website or online menu URL, Guinness Guide will automatically crawl and
-          check the menu for Guinness!
-        </p>
+        {/* Google Maps Direct Checker & Importer */}
+        <form
+          onSubmit={handleGmapsCheckSubmit}
+          style={{
+            background: '#120f0c',
+            border: '1px solid #473928',
+            borderRadius: '0.65rem',
+            padding: '0.85rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.55rem',
+          }}
+        >
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#e2be75', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Globe2 size={15} color="#c8a45d" />
+            1. Check Google Maps Bars, Pubs, Restaurants & Hotels → Feed into Finder
+          </div>
+          <div style={{ fontSize: '0.74rem', color: '#b8ab99', lineHeight: 1.4 }}>
+            Paste any Google Maps place link, bar/restaurant name, or multiple lines of venues (or leave blank to check all bars & restaurants in the current map area) and automatically scan their menus & reviews for Guinness.
+          </div>
+          <textarea
+            className="stout-textarea"
+            rows={2}
+            placeholder="Paste Google Maps URL (https://www.google.com/maps/place/...), venue name, or search query (e.g. 'bars and restaurants in Zurich')..."
+            value={gmapsQuery}
+            onChange={(e) => setGmapsQuery(e.target.value)}
+          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input
+              type="text"
+              className="stout-input"
+              style={{ flex: 1 }}
+              placeholder="Optional: Venue Website / Menu URL to crawl for Guinness"
+              value={gmapsWebsite}
+              onChange={(e) => setGmapsWebsite(e.target.value)}
+            />
+            <button type="submit" className="btn-gold" disabled={checkingGmaps}>
+              <Search size={14} />
+              {checkingGmaps ? 'Checking Google Maps...' : 'Check on Google Maps & Import'}
+            </button>
+          </div>
+        </form>
+
+        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#d7cbb8', marginBottom: '0.55rem' }}>
+          2. Or Add & Inspect a Specific Venue Directly
+        </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.55rem' }}>
@@ -85,7 +159,7 @@ export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAd
                 required
                 className="stout-input"
                 style={{ width: '100%' }}
-                placeholder="e.g. The Long Hall / The Merrion Hotel"
+                placeholder="e.g. Kennedy's Irish Pub / Baur au Lac"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -117,7 +191,7 @@ export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAd
               type="text"
               className="stout-input"
               style={{ width: '100%' }}
-              placeholder="51 South Great George's St, Dublin 2"
+              placeholder="Freischützgasse 14, 8004 Zürich, Switzerland"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
@@ -160,7 +234,7 @@ export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAd
               type="text"
               className="stout-input"
               style={{ width: '100%' }}
-              placeholder="https://example-pub.com/drinks-menu"
+              placeholder="https://example.ch/drinks-menu"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
             />
@@ -208,7 +282,7 @@ export function AddVenueModal({ isOpen, onClose, initialCoords, activeCity, onAd
                 type="text"
                 className="stout-input"
                 style={{ width: '100%' }}
-                placeholder="€6.20"
+                placeholder="CHF 9.50"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />

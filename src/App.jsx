@@ -190,6 +190,31 @@ export default function App() {
     }
   };
 
+  const handleCheckGoogleMaps = async ({ query = '', website = '', city = activeCity, lat = mapCenter.lat, lng = mapCenter.lng } = {}) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/check-google-maps', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(googleApiKey ? { 'x-google-maps-key': googleApiKey } : {}),
+        },
+        body: JSON.stringify({ query, website, city, lat, lng, radius: 3500 }),
+      });
+      const data = await res.json();
+      if (data.allVenues) {
+        setVenues(data.allVenues);
+        if (data.venues?.[0]) {
+          setSelectedVenueId(data.venues[0].id);
+          setMapCenter({ lat: data.venues[0].lat, lng: data.venues[0].lng, zoom: 15 });
+        }
+      }
+      return data;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtered Venues
   const filteredVenues = useMemo(() => {
     return venues.filter((v) => {
