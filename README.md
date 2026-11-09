@@ -181,6 +181,7 @@ npm run test:e2e    # builds the React app, then drives real pages in Chromium (
 | `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 | `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
 | `tests/e2e/nearme.e2e.mjs`, `tests/js/geo.test.js` | the Near me filter with emulated geolocation (Zürich, London, denied permission), including the on-by-default behaviour (starts at 500 m, widens and says so, stays on Anywhere far from every venue, silent when denied, remembers the choice, user clicks win, no request carries the position, phone): the right venues, nearest first, distances, tighter radii, Anywhere restoring the list, the map position/circle, the details distance, the header button, the explained denial, **no request carries the position**, city chips turning it off, the empty state with the nearest match and its three actions, *Scan around me* (sends the position exactly once) and a busy-server message, plus the phone filter sheet; the unit tests cover the haversine distance (known city pairs, antimeridian, invalid input), formatting, filtering/sorting, boundaries and error messages |
+| `tests/e2e/map.e2e.mjs`, `tests/js/mapClick.test.js` | map gestures in both UIs with real Leaflet: **a double-click zooms and does not open the add-venue form**; a lone click on empty map still offers to add a venue there (after a 300 ms wait to rule out a double-click); the click/double-click timing logic with a fake clock |
 | `tests/e2e/mobile.e2e.mjs` | the **phone / tablet / desktop layouts** of the built React app (plus the standalone page) with real Leaflet and the real API: no sideways scroll on iPhone SE / 13, Pixel 5, landscape and iPad; the list comes first and no sheet covers it; Leaflet markers do not swallow taps; List / Map tabs; the filters sheet; every control ≥ 44 px and fields ≥ 16 px; the full-width add-venue sheet; and a desktop regression check at 1024 / 1280 / 1920 px. Against the old stylesheet all 16 fail. `tests/js/mobileLayout.test.js` keeps the breakpoint identical in the CSS, the React app and the standalone page |
 | `tests/e2e/ui.e2e.mjs` | the real `standalone.html` in a browser: no `javascript:` links, hostile text stays inert, server errors and rate limits are shown to the user |
 
@@ -270,7 +271,7 @@ Guinness/
     ├── safeUrl.js                   # http(s)-only link helper (mirrored in standalone.html)
     ├── styles.css                   # Styling and theme variables
     └── components/
-        ├── AddVenueModal.jsx        # Modal for submitting new venues
+        ├── AddVenueModal.jsx        # Modal for submitting new venues (opened by a single click on the map)
         ├── ApiKeyModal.jsx          # Modal for switching Map modes & Google API key
         ├── MapCanvas.jsx            # Leaflet / Google Maps interactive map canvas
         ├── PintIcon.jsx             # Custom SVG Guinness pint markers & badges

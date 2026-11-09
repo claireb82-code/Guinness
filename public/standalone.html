@@ -352,16 +352,30 @@
           });
           setMapTileStyle('osm');
 
+          // A double-click zooms the map; only a lone click offers to add a venue. A double-click delivers two
+          // "click" events first, so a click waits 300 ms for a second click, a double-click or map movement.
+          let pendingClick = null;
+          const cancelPendingClick = () => {
+            if (pendingClick !== null) clearTimeout(pendingClick);
+            pendingClick = null;
+          };
           leafletMap.on('click', (e) => {
-            if (e.latlng) {
-              state.clickedCoords = {
-                lat: Number(e.latlng.lat.toFixed(5)),
-                lng: Number(e.latlng.lng.toFixed(5)),
-              };
+            if (!e.latlng) return;
+            const wasPending = pendingClick !== null;
+            cancelPendingClick();
+            if (wasPending) return;
+            const coords = {
+              lat: Number(e.latlng.lat.toFixed(5)),
+              lng: Number(e.latlng.lng.toFixed(5)),
+            };
+            pendingClick = setTimeout(() => {
+              pendingClick = null;
+              state.clickedCoords = coords;
               state.addModalOpen = true;
               renderModals();
-            }
+            }, 300);
           });
+          leafletMap.on('dblclick zoomstart movestart', cancelPendingClick);
         }
 
         function updateMapMarkers() {
