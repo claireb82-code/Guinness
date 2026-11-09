@@ -183,6 +183,7 @@ npm run test:e2e    # builds the React app, then drives real pages in Chromium (
 | `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
 | `tests/test_evidence.py`, `tests/e2e/evidence.e2e.mjs` | **honest evidence**: the bundled data files and every importer carry no invented ratings, review counts, quotes or visitor reports (checked over all ~230 real venues); a tag or a name is a labelled hint, never "confirmed" or "found on a menu"; an unreadable website is *unknown*, not *no Guinness*; "On Tap" only when the page says so; the header counts confirmed and likely apart; the venue panel explains a hint; **prices**: the one printed after "Guinness" (not a neighbouring beer's) is extracted from a scan, starter-list prices stay visible but marked "unchecked" |
 | `tests/test_geocode.py`, `tests/e2e/location.e2e.mjs` | **venues land at their address**: the geocoder against a fake Nominatim (Switzerland only, polite User-Agent, cache, busy vs not-found, malformed answers), `/api/geocode`, `/api/relocate-venue` (only a venue's own stored address is used, bundled venues are never moved, errors), and the form in both UIs (the address is looked up when no spot was clicked, a clicked spot is kept, an unknown address blocks the submit, a venue saved in the wrong place can be moved) |
+| `tests/test_repo.py` | repository hygiene: nothing that `.gitignore` excludes is tracked, the old product name is gone, city fallbacks name cities that exist, the UI mentions no other countries |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 | `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
@@ -240,7 +241,6 @@ All `POST` endpoints require `Content-Type: application/json` and answer errors 
 
 ```text
 Guinness/
-├── AGENTS.md                        # Workspace rules enforcing auto-docs & git push on changes
 ├── README.md                        # Main project documentation
 ├── vercel.json                      # Vercel serverless routing & bundle configuration
 ├── api/
@@ -263,9 +263,7 @@ Guinness/
 │   ├── import_overture.py           # Builds server/data/overture_ch.json from Overture Maps (needs pyarrow)
 │   ├── README.md                    # Documentation for scripts & automation utilities
 │   ├── check_google_maps.py         # Google Maps venue & review verifier / importer
-│   ├── crawl_switzerland.py         # Nationwide Swiss OSM Overpass + website menu crawler
-│   ├── install_git_hooks.sh         # Installs local Git hooks (auto-push on commit)
-│   └── sync_to_git.sh               # Stages, commits, and pushes changes to origin/main
+│   └── crawl_switzerland.py         # Nationwide Swiss OSM Overpass + website menu crawler
 ├── server/
 │   ├── index.js                     # Express API backend (dev server, same status rules as app_server.py)
 │   ├── data/
@@ -289,10 +287,8 @@ Guinness/
 
 ---
 
-## Automatic Git Push & Documentation Workflow
+## Contributing
 
-This repository is configured so that all code changes keep documentation up to date and are automatically pushed to GitHub (`origin/main`):
-
-1. **Git `post-commit` Hook**: Installed via [`scripts/install_git_hooks.sh`](scripts/install_git_hooks.sh) into `.git/hooks/post-commit`. Every `git commit` automatically pushes to `origin main`.
-2. **One-Command Sync Script**: Run `./scripts/sync_to_git.sh "Commit message"` to stage all changes, verify documentation, commit, and push to `origin/main`.
-3. **Agent Rules & Lifecycle Hook ([`AGENTS.md`](AGENTS.md) & [`.agents/hooks.json`](.agents/hooks.json))**: Ensures AI pair-programming sessions always update `README.md` / documentation and push changes to Git before completing a task.
+- Work on a feature branch and open a pull request into `main`; CI (`.github/workflows/test.yml`) must pass. `main` deploys to production on Vercel, so nothing is pushed to it directly.
+- A behaviour change needs a test (a bug fix needs a failing `regression:` test first) and an update to this README, `scripts/README.md` and the module docstring it touches.
+- Use one product name, **Guinness Guide**, in the UI and the docs, and Guinness-only wording (no other beers or countries yet).

@@ -83,7 +83,7 @@ export function ApiKeyModal({
               {mode === 'demo' && <CheckCircle2 size={15} color="#34d399" />}
             </div>
             <div style={{ fontSize: '0.72rem', color: '#b8ab99' }}>
-              No API key needed. Explore Dublin, London, NYC & Chicago with live menu scanner.
+              No API key needed. Browse the bundled Swiss venues and scan their menus.
             </div>
           </button>
 
