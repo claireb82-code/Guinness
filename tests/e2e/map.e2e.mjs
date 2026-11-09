@@ -87,3 +87,44 @@ test('regression: the same holds on the standalone page', { skip: skip() }, asyn
   await page.waitForSelector('.modal-card, [role="dialog"], .modal-backdrop, #add-venue-form', { timeout: 3000 });
   await context.close();
 });
+
+// Leaflet's panes and controls use z-index 400-1000; a dialog has to paint above all of them.
+async function dialogIsOnTop(page) {
+  return page.evaluate(() => {
+    const card = document.querySelector('.modal-card');
+    const backdrop = document.querySelector('.modal-backdrop');
+    const r = card.getBoundingClientRect();
+    const centre = document.elementFromPoint(r.left + r.width / 2, r.top + 24);
+    // the map's own zoom buttons must be covered by the backdrop, not painted over it
+    const zoom = document.querySelector('.leaflet-control-zoom-in').getBoundingClientRect();
+    const overZoom = document.elementFromPoint(zoom.left + zoom.width / 2, zoom.top + zoom.height / 2);
+    // and so must the scan buttons / legend / map switcher that float on the map
+    const floating = [...document.querySelectorAll('.map-legend, .map-scan-buttons, #map-style-switcher')]
+      .map((el) => el.getBoundingClientRect())
+      .filter((b) => b.width > 0)
+      .map((b) => document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2));
+    const covered = (el) => !!el && !!el.closest('.modal-backdrop');
+    return { cardOnTop: !!centre && !!centre.closest('.modal-card'), zoomCovered: covered(overZoom), floatingCovered: floating.every(covered), hasBackdrop: !!backdrop };
+  });
+}
+
+test('regression: the "Add / Check Venue" form opens in front of the map, not behind it', { skip: skip() }, async () => {
+  const { page, context } = await open();
+  await page.locator('button:has-text("Add / Check Venue")').first().click();
+  await page.waitForSelector('.modal-card');
+  assert.deepEqual(await dialogIsOnTop(page), { cardOnTop: true, zoomCovered: true, floatingCovered: true, hasBackdrop: true });
+  await context.close();
+});
+
+test('regression: the same on the standalone page', { skip: skip() }, async () => {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+  const page = await context.newPage();
+  await routeOffline(page);
+  await page.goto(`${app.standalone}/`);
+  await page.waitForSelector('.leaflet-tile', { state: 'attached', timeout: 20000 });
+  await page.waitForTimeout(1000);
+  await page.locator('#btn-open-add').click();
+  await page.waitForSelector('.modal-card');
+  assert.deepEqual(await dialogIsOnTop(page), { cardOnTop: true, zoomCovered: true, floatingCovered: true, hasBackdrop: true });
+  await context.close();
+});
