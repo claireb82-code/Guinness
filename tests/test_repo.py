@@ -55,3 +55,50 @@ class NamingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EnvFileTests(unittest.TestCase):
+    """The Node server used to read .env (dotenv); the Python server now does it itself."""
+
+    def write(self, text):
+        import tempfile
+
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        path = os.path.join(d, ".env")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
+        return path
+
+    def test_reads_values_and_skips_comments_blanks_and_empty_values(self):
+        import app_server
+
+        env = {}
+        path = self.write("# comment\n\nGOOGLE_MAPS_BROWSER_KEY=abc\nGOOGLE_PLACES_API_KEY=\nPORT = 3001\nQUOTED=\"hello world\"\nSINGLE='x'\nnot a line\n")
+        names = app_server.load_env_file(path, env)
+        self.assertEqual(env, {"GOOGLE_MAPS_BROWSER_KEY": "abc", "PORT": "3001", "QUOTED": "hello world", "SINGLE": "x"})
+        self.assertEqual(sorted(names), sorted(env))
+
+    def test_existing_environment_variables_win(self):
+        import app_server
+
+        env = {"PORT": "4000"}
+        app_server.load_env_file(self.write("PORT=3001\nOTHER=1\n"), env)
+        self.assertEqual(env, {"PORT": "4000", "OTHER": "1"})
+
+    def test_a_missing_file_is_fine(self):
+        import app_server
+
+        self.assertEqual(app_server.load_env_file("/nonexistent/.env", {}), [])
+
+
+class NoSecondServerTests(unittest.TestCase):
+    def test_the_python_server_is_the_only_api_server(self):
+        """There used to be a second, Express copy of the API that nothing deployed; every change had to be made twice."""
+        import json
+
+        self.assertFalse(os.path.exists(os.path.join(ROOT, "server", "index.js")))
+        deps = json.load(open(os.path.join(ROOT, "package.json"), encoding="utf-8"))["dependencies"]
+        self.assertEqual(set(deps) & {"express", "cors", "cheerio", "dotenv"}, set())
+        scripts = json.load(open(os.path.join(ROOT, "package.json"), encoding="utf-8"))["scripts"]
+        self.assertEqual(scripts["start"], "python3 app_server.py")

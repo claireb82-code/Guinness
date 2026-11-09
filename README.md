@@ -9,7 +9,7 @@ A full-stack application that maps **hotels, bars, pubs, and restaurants across 
 ### 1. Three-Pillar Guinness Verification Engine
 - **Pillar 1 — Online Menu & Website Scraper ([`server/services/menuScraper.js`](server/services/menuScraper.js) & [`app_server.py`](app_server.py))**: Crawls a venue's homepage and discovered drink/menu subpages (`/menu`, `/drinks`, `/getraenke`, `/karte`, `/bar`, `/boissons`, etc.) to strictly detect Guinness variants (*Guinness Draught*, *Guinness 0.0*, *Guinness Foreign Extra Stout*, *Guinness Extra Cold*, *Guinness Surger*) and extract CHF pint prices.
 - **Pillar 2 — OpenStreetMap & Google Places Verification ([`server/services/googlePlaces.js`](server/services/googlePlaces.js) & [`scripts/crawl_switzerland.py`](scripts/crawl_switzerland.py))**: Evaluates OpenStreetMap `brewery`/`beer`/`cuisine` metadata across **26,613 Swiss hospitality venues** (`840` pubs, `2,843` bars, `18,950` restaurants, `3,980` hotels; `9,459` with websites, `1,912` live venue websites / `1,823` unique domains crawled — covering **100% of Swiss pubs & bars with websites**) via the Swiss OpenStreetMap Association Overpass server (`overpass.osm.ch`) and scans Google Places reviews/editorial summaries specifically for `"guinness"` mentions.
-- **Pillar 3 — Community Crowdsourcing & Pint Quality ([`server/index.js`](server/index.js) & [`app_server.py`](app_server.py))**: Users can confirm or deny Guinness availability, log serving format (`On Draught` vs `Cans / Bottles` vs `No Guinness`), rate pint quality (1.0–5.0), record pint prices in CHF, and flag `Guinness 0.0` availability.
+- **Pillar 3 — Community Crowdsourcing & Pint Quality ([`app_server.py`](app_server.py))**: Users can confirm or deny Guinness availability, log serving format (`On Draught` vs `Cans / Bottles` vs `No Guinness`), rate pint quality (1.0–5.0), record pint prices in CHF, and flag `Guinness 0.0` availability.
 
 ### 2. Nationwide Swiss Coverage & Interactive Map
 - **Regional Presets Across All 26 Cantons**:
@@ -32,21 +32,19 @@ A full-stack application that maps **hotels, bars, pubs, and restaurants across 
 
 ## Quick Start
 
-### Option A: Zero-Dependency Instant Start (Python 3 — Recommended)
-Runs immediately using only the Python 3 standard library on `http://localhost:3000`:
+### Run it locally
+Needs only Python 3 (standard library). The API and the standalone page start on `http://localhost:3000`:
 ```bash
 python3 app_server.py
 ```
 
-### Option B: Node.js + Vite + Express Development Server
+To work on the React app (the UI deployed at `/` on Vercel) with hot reload, run the API as above and, in a second terminal:
 ```bash
 npm install
-npm run dev
+npm run dev      # http://localhost:5173, proxies /api to the Python server on port 3000
 ```
 
-Then open **http://localhost:3000** in your browser.
-
-**Optional Google keys (local development)**: copy [`.env.example`](.env.example) to `.env`. Locally the single legacy `GOOGLE_MAPS_API_KEY` still works for everything; for anything deployed, use the two separate keys described in [Deploying to Vercel](#deploying-to-vercel).
+**Optional Google keys (local development)**: copy [`.env.example`](.env.example) to `.env` (the Python server reads it when started by hand). Locally the single legacy `GOOGLE_MAPS_API_KEY` still works for everything; for anything deployed, use the two separate keys described in [Deploying to Vercel](#deploying-to-vercel).
 
 ---
 
@@ -153,7 +151,6 @@ What the Python API ([`app_server.py`](app_server.py) + [`guard.py`](guard.py)) 
 
 **Not covered / known limitations**
 
-- The **Node dev server** (`server/index.js`) shares the key-handling and SSRF fixes (`server/services/safeFetch.js`) but **not** the database, validation, rate limiting or scan-poisoning protection. It is for local development; deploy the Python API.
 - Rate limits are per client IP; a determined attacker with many IPs is not stopped. They bound accidental and casual abuse and your Google bill together with a budget alert.
 - Community submissions are unauthenticated by design. Capped list sizes bound the damage; add moderation or sign-in before relying on them.
 - The **"Check Google Maps" importer without an API key** (`/api/check-google-maps` with only a name/link) invents placeholder ratings/review counts for the venue it creates, and a failed menu fetch is reported as "Verified cached menu snapshot". Both are pre-existing behaviours that overstate certainty; they are not changed here.
@@ -166,7 +163,7 @@ What the Python API ([`app_server.py`](app_server.py) + [`guard.py`](guard.py)) 
 ```bash
 npm test            # everything below except the browser tests (no network, no browser needed)
 npm run test:py     # python3 -m unittest   (stdlib only; ~150 tests)
-npm run test:js     # node --test           (Node dev server + UI helper; ~30 tests)
+npm run test:js     # node --test           (UI helpers: distance, price, map clicks, layout, safe URLs)
 npm run test:e2e    # builds the React app, then drives real pages in Chromium (needs Playwright; skipped automatically if it is missing)
 ```
 
@@ -183,10 +180,10 @@ npm run test:e2e    # builds the React app, then drives real pages in Chromium (
 | `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
 | `tests/test_evidence.py`, `tests/e2e/evidence.e2e.mjs` | **honest evidence**: the bundled data files and every importer carry no invented ratings, review counts, quotes or visitor reports (checked over all ~230 real venues); a tag or a name is a labelled hint, never "confirmed" or "found on a menu"; an unreadable website is *unknown*, not *no Guinness*; "On Tap" only when the page says so; the header counts confirmed and likely apart; the venue panel explains a hint; **prices**: the one printed after "Guinness" (not a neighbouring beer's) is extracted from a scan, starter-list prices stay visible but marked "unchecked" |
 | `tests/test_geocode.py`, `tests/e2e/location.e2e.mjs` | **venues land at their address**: the geocoder against a fake Nominatim (Switzerland only, polite User-Agent, cache, busy vs not-found, malformed answers), `/api/geocode`, `/api/relocate-venue` (only a venue's own stored address is used, bundled venues are never moved, errors), and the form in both UIs (the address is looked up when no spot was clicked, a clicked spot is kept, an unknown address blocks the submit, a venue saved in the wrong place can be moved) |
-| `tests/test_repo.py` | repository hygiene: nothing that `.gitignore` excludes is tracked, the old product name is gone, city fallbacks name cities that exist, the UI mentions no other countries |
+| `tests/test_repo.py` | repository hygiene: nothing that `.gitignore` excludes is tracked, the old product name is gone, city fallbacks name cities that exist, the UI mentions no other countries, the Python server is the only API server, and the `.env` reader |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
-| `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
-| `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
+| `tests/js/*.test.js` | UI helpers: distance maths, price display, map click timing, phone layout rules, `safeHttpUrl` parity between both UIs, href lint |
+| `tests/fixtures/shared_cases.json` | a table of Guinness-status and Google-Maps-link scenarios that `tests/test_core.py` runs through the Python server |
 | `tests/e2e/nearme.e2e.mjs`, `tests/js/geo.test.js` | the Near me filter with emulated geolocation (Zürich, London, denied permission), including the on-by-default behaviour (starts at 500 m, widens and says so, stays on Anywhere far from every venue, silent when denied, remembers the choice, user clicks win, no request carries the position, phone): the right venues, nearest first, distances, tighter radii, Anywhere restoring the list, the map position/circle, the details distance, the header button, the explained denial, **no request carries the position**, city chips turning it off, the empty state with the nearest match and its three actions, *Scan around me* (sends the position exactly once) and a busy-server message, plus the phone filter sheet; the unit tests cover the haversine distance (known city pairs, antimeridian, invalid input), formatting, filtering/sorting, boundaries and error messages |
 | `tests/e2e/map.e2e.mjs`, `tests/js/mapClick.test.js` | map gestures in both UIs with real Leaflet: **a double-click zooms and does not open the add-venue form**; a lone click on empty map still offers to add a venue there (after a 300 ms wait to rule out a double-click); **dialogs open in front of the map's zoom buttons and floating controls**; the click/double-click timing logic with a fake clock |
 | `tests/e2e/mobile.e2e.mjs` | the **phone / tablet / desktop layouts** of the built React app (plus the standalone page) with real Leaflet and the real API: no sideways scroll on iPhone SE / 13, Pixel 5, landscape and iPad; the list comes first and no sheet covers it; Leaflet markers do not swallow taps; List / Map tabs; the filters sheet; every control ≥ 44 px and fields ≥ 16 px; the full-width add-venue sheet; and a desktop regression check at 1024 / 1280 / 1920 px. Against the old stylesheet all 16 fail. `tests/js/mobileLayout.test.js` keeps the breakpoint identical in the CSS, the React app and the standalone page |
@@ -252,10 +249,10 @@ Guinness/
 ├── storage.py                       # File + Upstash/Vercel-KV persistence for community data (stdlib only)
 ├── overture.py                      # Fills missing venue websites from the Overture extract (stdlib only)
 ├── overpass.py                      # Overpass API access: backup servers, retries, cache, friendly errors (stdlib only)
-├── tests/                           # python3 -m unittest suites; tests/js (Node), tests/e2e (browser), tests/fixtures
+├── tests/                           # python3 -m unittest suites; tests/js (UI helpers), tests/e2e (browser), tests/fixtures
 ├── .github/workflows/test.yml       # CI: runs every test suite on push / PR
 ├── index.html                       # Vite React entry HTML
-├── package.json                     # Node.js dependencies and scripts
+├── package.json                     # React/Vite build and test scripts (no Node server)
 ├── public/
 │   └── standalone.html              # Self-contained React + Leaflet UI served by app_server.py
 ├── scripts/
@@ -265,13 +262,7 @@ Guinness/
 │   ├── check_google_maps.py         # Google Maps venue & review verifier / importer
 │   └── crawl_switzerland.py         # Nationwide Swiss OSM Overpass + website menu crawler
 ├── server/
-│   ├── index.js                     # Express API backend (dev server, same status rules as app_server.py)
-│   ├── data/
-│   │   └── demoVenues.js            # Curated Swiss venue dataset for Express server
-│   └── services/
-│       ├── googlePlaces.js          # Google Places API v1 client & Guinness review analyzer
-│       ├── menuScraper.js           # Live website & menu subpage Guinness scraper
-│       └── safeFetch.js             # SSRF-safe page fetching for the Node dev server
+│   └── data/                        # swiss_crawl_results.json (website scans), overture_ch.json (websites), attribution
 └── src/
     ├── App.jsx                      # Main React application component
     ├── main.jsx                     # React DOM bootstrap
