@@ -11,7 +11,7 @@
     "test": "python3 -m unittest && npm run test:js",
     "test:py": "python3 -m unittest",
     "test:js": "node --test \"tests/js/*.test.js\"",
-    "test:e2e": "node --test tests/e2e/ui.e2e.mjs"
+    "test:e2e": "vite build && node --test \"tests/e2e/*.e2e.mjs\""
   },
   "dependencies": {
     "cheerio": "^1.0.0",
@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.2",
+    "leaflet": "1.9.4",
     "vite": "^5.4.8"
   }
 }

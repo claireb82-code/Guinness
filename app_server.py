@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 import guard
+import overture
 import storage
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1779,6 +1780,19 @@ def clean_public_url(value):
         return None
 
 
+def fill_from_overture(name, lat, lng, website, menu_url, phone):
+    """OpenStreetMap often has no website for a venue. Borrow it from the bundled Overture Maps extract
+    when the same venue is there (similar name, within ~75 m); see overture.py.
+    Returns (website, menu_url, phone, website_source) where website_source is "openstreetmap",
+    "overture" or None."""
+    if website:
+        return website, menu_url, phone, "openstreetmap"
+    hit = overture.find_match(name, lat, lng)
+    if not hit:
+        return website, menu_url, phone, None
+    return hit["website"], menu_url or hit["website"], phone or hit.get("phone"), "overture"
+
+
 def scrape_menu_url(url, existing_check=None):
     """Fetch a venue's website/menu page and look for Guinness.
 
@@ -2087,6 +2101,7 @@ def fetch_osm_overpass_live(lat, lng, radius=1500, scrape_menus=False):
         website = clean_public_url(tags.get("website") or tags.get("contact:website") or tags.get("url"))
         menu_url = clean_public_url(tags.get("url:menu")) or website
         phone = tags.get("phone") or tags.get("contact:phone")
+        website, menu_url, phone, website_source = fill_from_overture(name, v_lat, v_lng, website, menu_url, phone)
 
         # Check OSM tags & name for Irish / Guinness signals
         cuisine = (tags.get("cuisine") or "").lower()
@@ -2136,6 +2151,7 @@ def fetch_osm_overpass_live(lat, lng, radius=1500, scrape_menus=False):
             "website": website,
             "menuUrl": menu_url,
             "phone": phone,
+            "websiteSource": website_source,
             "openNow": True,
             "editorialSummary": (
                 f"Live venue discovered via free OpenStreetMap data ({category.title()})."
@@ -2231,6 +2247,7 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
         website = clean_public_url(tags.get("website") or tags.get("contact:website") or tags.get("url"))
         menu_url = clean_public_url(tags.get("url:menu")) or website
         phone = tags.get("phone") or tags.get("contact:phone")
+        website, menu_url, phone, website_source = fill_from_overture(name, v_lat, v_lng, website, menu_url, phone)
         brewery = (tags.get("brewery") or tags.get("drink:beer") or "").lower()
 
         menu_check = {
@@ -2258,6 +2275,7 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
             "website": website,
             "menuUrl": menu_url,
             "phone": phone,
+            "websiteSource": website_source,
             "openNow": True,
             "editorialSummary": f"Discovered in nationwide Switzerland Guinness scan ({city_name}).",
             "menuCheck": menu_check,

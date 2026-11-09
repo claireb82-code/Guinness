@@ -30,3 +30,12 @@ test('header statistics are computed over all venues in the area, not the alread
   assert.match(read('public/standalone.html'), /statsPool/);
   assert.match(read('src/App.jsx'), /const pool = venues\.filter\(\(v\) => matchesFilters\(v, 'all'\)\)/);
 });
+
+test('both UIs credit Overture Maps when a venue website came from it', () => {
+  for (const file of ['public/standalone.html', 'src/components/VenueDetailPanel.jsx']) {
+    const text = read(file);
+    assert.match(text, /websiteSource === 'overture'/, file);
+    assert.match(text, /overturemaps\.org/, file);
+    assert.match(text, /CDLA-Permissive-2\.0/, file);
+  }
+});
