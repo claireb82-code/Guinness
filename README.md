@@ -102,13 +102,30 @@ What the Python API ([`app_server.py`](app_server.py) + [`guard.py`](guard.py)) 
 ## Testing
 
 ```bash
-npm test          # everything below
-npm run test:py   # python3 -m unittest   (stdlib only, no network; ~100 tests)
-npm run test:js   # node --test           (Node dev server + UI helper; ~20 tests)
+npm test            # everything below except the browser tests (no network, no browser needed)
+npm run test:py     # python3 -m unittest   (stdlib only; ~150 tests)
+npm run test:js     # node --test           (Node dev server + UI helper; ~30 tests)
+npm run test:e2e    # real page in Chromium (needs Playwright; skipped automatically if it is missing)
 ```
+
+[`.github/workflows/test.yml`](.github/workflows/test.yml) runs all of these on every push and pull request.
 
 | File | Covers |
 | :--- | :--- |
+| `tests/test_core.py` | **the app's core logic**: Guinness status scoring (every branch, "unchecked is never *no*"), venue enrichment & community-report merging, Google Places and OpenStreetMap mappings against realistic fake responses, bundled-data integrity (unique ids, Swiss coordinates, valid categories, plain-http(s) websites), HTTP routes (static pages, no file exposure, venue modes, error paths) |
+| `tests/test_guard.py` | URL normalisation, public-address rules, SSRF-safe fetching against real local servers (redirect hops, DNS pinning, size/time caps, slow-drip & slow-header attacks), input validation, rate limiter |
+| `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
+| `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
+| `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
+| `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
+| `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
+| `tests/e2e/ui.e2e.mjs` | the real `standalone.html` in a browser: no `javascript:` links, hostile text stays inert, server errors and rate limits are shown to the user |
+
+**Not covered:** the React UI (`src/`) has no browser test (only a build check in CI and the `safeHttpUrl` lint); map rendering is replaced by a stub; live Google, Overpass and Upstash are never called (fakes of their documented response shapes are used instead).
+
+When fixing a bug, add a failing test first (name it `regression: ...`). Tests never call Google or any external site.
+
+--- | :--- |
 | `tests/test_guard.py` | URL normalisation, public-address rules, SSRF-safe fetching against real local servers (redirect hops, DNS pinning, size/time caps, slow-drip & slow-header attacks), input validation, rate limiter |
 | `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
 | `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
@@ -167,7 +184,8 @@ Guinness/
 ├── app_server.py                    # Zero-dependency Python 3 server + embedded Swiss dataset
 ├── guard.py                         # SSRF-safe fetching, input validation, rate limiting (stdlib only)
 ├── storage.py                       # File + Upstash/Vercel-KV persistence for community data (stdlib only)
-├── tests/                           # python3 -m unittest suites (+ tests/js for Node)
+├── tests/                           # python3 -m unittest suites; tests/js (Node), tests/e2e (browser), tests/fixtures
+├── .github/workflows/test.yml       # CI: runs every test suite on push / PR
 ├── index.html                       # Vite React entry HTML
 ├── package.json                     # Node.js dependencies and scripts
 ├── public/

@@ -1752,6 +1752,16 @@ def _not_scanned(now_iso, reason):
     }
 
 
+def clean_public_url(value):
+    """A website taken from third-party data. OpenStreetMap tags can be edited by anyone, so keep a
+    value only if it is a plain http(s) URL (normalised, e.g. "www.pub.ch" -> "https://www.pub.ch");
+    otherwise None. Rendering is protected too (safeHttpUrl in the UIs); this keeps junk out of storage."""
+    try:
+        return guard.normalize_http_url(value) if value else None
+    except guard.UnsafeURL:
+        return None
+
+
 def scrape_menu_url(url, existing_check=None):
     """Fetch a venue's website/menu page and look for Guinness.
 
@@ -2057,8 +2067,8 @@ def fetch_osm_overpass_live(lat, lng, radius=1500, scrape_menus=False):
         address_parts = [f"{street} {housenumber}".strip(), f"{postcode} {city_name}".strip()]
         address = ", ".join([p for p in address_parts if p]) or "Switzerland (OpenStreetMap)"
 
-        website = tags.get("website") or tags.get("contact:website") or tags.get("url")
-        menu_url = tags.get("url:menu") or website
+        website = clean_public_url(tags.get("website") or tags.get("contact:website") or tags.get("url"))
+        menu_url = clean_public_url(tags.get("url:menu")) or website
         phone = tags.get("phone") or tags.get("contact:phone")
 
         # Check OSM tags & name for Irish / Guinness signals
@@ -2201,8 +2211,8 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
         address_parts = [f"{street} {housenumber}".strip(), f"{postcode} {city_name}".strip()]
         address = ", ".join([p for p in address_parts if p]) or f"{city_name}, Switzerland (OpenStreetMap)"
 
-        website = tags.get("website") or tags.get("contact:website") or tags.get("url")
-        menu_url = tags.get("url:menu") or website
+        website = clean_public_url(tags.get("website") or tags.get("contact:website") or tags.get("url"))
+        menu_url = clean_public_url(tags.get("url:menu")) or website
         phone = tags.get("phone") or tags.get("contact:phone")
         brewery = (tags.get("brewery") or tags.get("drink:beer") or "").lower()
 
@@ -2395,7 +2405,9 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             return self.send_static_file(os.path.join("public", "standalone.html"), "text/html; charset=utf-8")
         if parsed.path == "/src/styles.css":
             return self.send_static_file(os.path.join("src", "styles.css"), "text/css; charset=utf-8")
-        return super().do_GET()
+        # Only the routes above exist. (This used to fall through to SimpleHTTPRequestHandler, which
+        # served any file in the project directory: source code, .git, and a .env holding API keys.)
+        return self.send_json({"error": "Not found"}, 404)
 
     def do_POST(self):
         """Never let an exception escape as a dropped connection; answer with a JSON error."""
