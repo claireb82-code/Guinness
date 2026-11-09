@@ -43,7 +43,8 @@ export default function App() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [guinnessFilter, setGuinnessFilter] = useState('all');
+  // Default: only venues that serve Guinness ("Show All" is one click away).
+  const [guinnessFilter, setGuinnessFilter] = useState('serves_any');
 
   // Google Maps & Mode State
   const [googleApiKey, setGoogleApiKey] = useState(() => localStorage.getItem('stoutscout_gmaps_key') || '');
@@ -229,63 +230,67 @@ export default function App() {
   };
 
   // Filtered Venues
-  const filteredVenues = useMemo(() => {
-    return venues.filter((v) => {
-      // Category Filter
-      if (categoryFilter !== 'all' && v.category !== categoryFilter) {
-        return false;
-      }
+  const matchesFilters = (v, guinnessMode) => {
+    // Category Filter
+    if (categoryFilter !== 'all' && v.category !== categoryFilter) return false;
 
-      // Guinness Availability Filter
-      const status = v.guinnessSummary?.status;
-      if (guinnessFilter === 'serves_any') {
-        if (status === 'no_guinness' || status === 'unverified') return false;
-      } else if (guinnessFilter === 'draught_only') {
-        if (status !== 'confirmed_draught') return false;
-      } else if (guinnessFilter === 'on_menu') {
-        if (!v.menuCheck?.foundOnMenu) return false;
-      } else if (guinnessFilter === 'in_reviews') {
-        if (!(v.reviewCheck?.mentionCount > 0)) return false;
-      } else if (guinnessFilter === 'guinness_zero') {
-        const hasZero =
-          v.crowdCheck?.hasZero ||
-          v.menuCheck?.typesFound?.some((t) => /0\.0|zero/i.test(t));
-        if (!hasZero) return false;
-      }
+    // Guinness Availability Filter
+    const status = v.guinnessSummary?.status;
+    if (guinnessMode === 'serves_any') {
+      if (status === 'no_guinness' || status === 'unverified') return false;
+    } else if (guinnessMode === 'draught_only') {
+      if (status !== 'confirmed_draught') return false;
+    } else if (guinnessMode === 'on_menu') {
+      if (!v.menuCheck?.foundOnMenu) return false;
+    } else if (guinnessMode === 'in_reviews') {
+      if (!(v.reviewCheck?.mentionCount > 0)) return false;
+    } else if (guinnessMode === 'guinness_zero') {
+      const hasZero = v.crowdCheck?.hasZero || v.menuCheck?.typesFound?.some((t) => /0\.0|zero/i.test(t));
+      if (!hasZero) return false;
+    }
 
-      // Search Query Filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const inName = v.name?.toLowerCase().includes(q);
-        const inAddr = v.address?.toLowerCase().includes(q);
-        const inMenu = v.menuCheck?.snippets?.some((s) => s.toLowerCase().includes(q));
-        const inSummary = v.editorialSummary?.toLowerCase().includes(q);
-        if (!inName && !inAddr && !inMenu && !inSummary) return false;
-      }
+    // Search Query Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const inName = v.name?.toLowerCase().includes(q);
+      const inAddr = v.address?.toLowerCase().includes(q);
+      const inMenu = v.menuCheck?.snippets?.some((s) => s.toLowerCase().includes(q));
+      const inSummary = v.editorialSummary?.toLowerCase().includes(q);
+      if (!inName && !inAddr && !inMenu && !inSummary) return false;
+    }
 
-      return true;
-    });
-  }, [venues, categoryFilter, guinnessFilter, searchQuery]);
+    return true;
+  };
+
+  const filteredVenues = useMemo(
+    () => venues.filter((v) => matchesFilters(v, guinnessFilter)),
+    [venues, categoryFilter, guinnessFilter, searchQuery]
+  );
+
+  // Venues hidden only because the default "Serves Guinness" filter is on (not by type or search).
+  const hiddenByGuinnessFilter = useMemo(
+    () => (guinnessFilter === 'all' ? 0 : venues.filter((v) => matchesFilters(v, 'all')).length - filteredVenues.length),
+    [venues, categoryFilter, guinnessFilter, searchQuery, filteredVenues]
+  );
 
   const selectedVenue = useMemo(
     () => venues.find((v) => v.id === selectedVenueId) || null,
     [venues, selectedVenueId]
   );
 
+  // Header stats count every venue matching the type/search filters, so they stay meaningful
+  // while the (default) "Serves Guinness" filter hides the rest of the list.
   const stats = useMemo(() => {
-    const serving = filteredVenues.filter(
+    const pool = venues.filter((v) => matchesFilters(v, 'all'));
+    const serving = pool.filter(
       (v) =>
         v.guinnessSummary?.status === 'confirmed_draught' ||
         v.guinnessSummary?.status === 'cans_or_bottles' ||
         v.guinnessSummary?.status === 'likely_serves'
     ).length;
-    const onMenuCount = filteredVenues.filter((v) => v.menuCheck?.foundOnMenu).length;
-    return {
-      total: filteredVenues.length,
-      serving,
-      onMenuCount,
-    };
-  }, [filteredVenues]);
+    const onMenuCount = pool.filter((v) => v.menuCheck?.foundOnMenu).length;
+    return { total: pool.length, serving, onMenuCount };
+  }, [venues, categoryFilter, searchQuery]);
 
   return (
     <div className="app-shell">
@@ -479,7 +484,20 @@ export default function App() {
               </div>
             ) : filteredVenues.length === 0 ? (
               <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#b8ab99', fontSize: '0.84rem' }}>
-                No venues match your current filters. Try switching to "Show All" or another category.
+                {hiddenByGuinnessFilter > 0 ? (
+                  <>
+                    No venues here are confirmed to serve Guinness yet.
+                    <br />
+                    {hiddenByGuinnessFilter} other venue{hiddenByGuinnessFilter === 1 ? ' is' : 's are'} hidden because{' '}
+                    {hiddenByGuinnessFilter === 1 ? "it hasn't" : "they haven't"} been checked or reported as serving it.
+                    <br />
+                    <button type="button" className="filter-pill" style={{ marginTop: '0.8rem' }} onClick={() => setGuinnessFilter('all')}>
+                      Show all venues
+                    </button>
+                  </>
+                ) : (
+                  'No venues match your current filters. Try another category or clear the search.'
+                )}
               </div>
             ) : (
               filteredVenues.map((venue) => {

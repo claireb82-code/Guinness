@@ -24,6 +24,7 @@ A full-stack application that maps **hotels, bars, pubs, and restaurants across 
   - **Alpine Resorts & Ticino** (`alps` — Interlaken, Grindelwald, Zermatt, Verbier, Davos, St. Moritz, Lugano, Locarno)
 - **Interactive Basemap Switcher**: Defaults to **OpenStreetMap** standard street tiles, with instant switching to **Swiss Topo / Light (CARTO)** and **Dark Map (CARTO)**, or **Google Maps JavaScript SDK** when a Google Maps API key is configured.
 - **Strict Guinness-Only Filtering**: Excludes generic non-Guinness stouts so every verified venue and menu highlight specifically refers to Guinness.
+- **Shows venues that serve Guinness by default**: both UIs open with the **✓ Serves Guinness** filter on (confirmed on tap, cans/bottles, or mentioned in reviews). Venues that are *unchecked* or reported as *not serving* it are hidden, but never deleted: press **Show All** to see them. If the default hides everything (for example a freshly scanned area whose menus haven't been checked yet), the list says how many venues are hidden and offers a **Show all venues** button. The header count ("N of M Venues Serve Guinness") always counts every venue matching the type/search filters.
 
 ---
 

@@ -22,11 +22,16 @@ for (const spec of [process.env.PLAYWRIGHT_PATH, 'playwright'].filter(Boolean)) 
 
 const freePort = () => new Promise((resolve) => { const s = net.createServer().listen(0, () => { const { port } = s.address(); s.close(() => resolve(port)); }); });
 
+const summary = (status, label) => ({ status, statusLabel: label, confidence: 80, servingFormat: status === 'no_guinness' ? 'none' : 'draught' });
 const evil = { id: 'evil-1', city: 'zurich', name: 'Evil Pub <img src=x onerror=window.pwned=1>', category: 'pub', address: '1 Bad St', lat: 47.37, lng: 8.54,
   website: 'javascript:window.pwned=1', menuUrl: 'javascript:window.pwned=1', googleRating: 4.5, googleReviewCount: 3,
-  menuCheck: { checked: true, foundOnMenu: true, typesFound: ['Guinness Draught (On Tap)'], snippets: ['<b>Guinness</b> <script>window.pwned=1</script>'] }, crowdCheck: {}, reviewCheck: {} };
+  menuCheck: { checked: true, foundOnMenu: true, typesFound: ['Guinness Draught (On Tap)'], snippets: ['<b>Guinness</b> <script>window.pwned=1</script>'] }, crowdCheck: {}, reviewCheck: {},
+  guinnessSummary: summary('confirmed_draught', 'Confirmed Guinness On Tap') };
 const good = { ...evil, id: 'good-1', name: 'Good Pub', website: 'https://good-pub.example/', menuUrl: 'https://good-pub.example/menu', lat: 47.38,
-  menuCheck: { checked: false, foundOnMenu: false, typesFound: [], snippets: [] } };
+  menuCheck: { checked: false, foundOnMenu: false, typesFound: [], snippets: [] }, guinnessSummary: summary('likely_serves', 'Mentioned in Reviews') };
+// Not confirmed to serve Guinness: hidden by the default filter.
+const quiet = { ...good, id: 'quiet-1', name: 'Quiet Cafe', category: 'restaurant', lat: 47.39, website: null, menuUrl: null, guinnessSummary: summary('unverified', 'Needs Menu / Crowd Check') };
+const none = { ...good, id: 'none-1', name: 'Pasta Place', category: 'restaurant', lat: 47.40, website: null, menuUrl: null, guinnessSummary: summary('no_guinness', 'No Guinness Served') };
 
 const leafletStub = `
   const chain = () => new Proxy(function () {}, { get: (t, p) => (p === Symbol.toPrimitive ? () => '' : p === 'then' ? undefined : chain()), apply: () => chain(), construct: () => chain() });
@@ -50,7 +55,8 @@ test.after(async () => {
   server?.kill();
 });
 
-async function openPage({ dialogs = [] } = {}) {
+// `venues`: what the API returns (default: evil, good, quiet, none); `real: true` keeps the server's own data.
+async function openPage({ dialogs = [], venues = [evil, good, quiet, none], real = false } = {}) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -60,20 +66,74 @@ async function openPage({ dialogs = [] } = {}) {
   await page.route('**/api/venues*', async (route) => {
     const resp = await route.fetch();
     const json = await resp.json();
-    json.venues = [evil, good, ...json.venues.slice(0, 3)];
+    if (!real) json.venues = venues;
     route.fulfill({ response: resp, json });
   });
   await page.goto(`${base}/`);
-  await page.waitForSelector('.venue-card', { timeout: 15000 });
+  await page.waitForSelector(venues.length || real ? '.venue-card, #btn-show-all' : '#sidebar-mount', { timeout: 15000 });
   return { page, errors, dialogs };
 }
 
 const skip = () => !chromium && 'Playwright is not installed';
 
-test('the page loads real data without script errors', { skip: skip() }, async () => {
-  const { page, errors } = await openPage();
+test('the page loads the real bundled data without script errors', { skip: skip() }, async () => {
+  const { page, errors } = await openPage({ real: true });
   assert.ok((await page.locator('.venue-card').count()) >= 3);
+  assert.match(await page.locator('#sidebar-mount').textContent(), /\d+ of \d+ Venues Serve Guinness/);
   assert.deepEqual(errors, []);
+  await page.close();
+});
+
+const cardIds = (page) => page.$$eval('.venue-card', (cards) => cards.map((c) => c.dataset.vid).sort());
+const activeFilter = (page) => page.$$eval('[data-gf].active', (b) => b.map((x) => x.dataset.gf));
+
+test('by default only venues that serve Guinness are shown', { skip: skip() }, async () => {
+  const { page } = await openPage();
+  assert.deepEqual(await activeFilter(page), ['serves_any']);
+  assert.deepEqual(await cardIds(page), ['evil-1', 'good-1']); // the unverified and the "no Guinness" venues are hidden
+  await page.close();
+});
+
+test('the header counts every venue in the area, not just the visible ones', { skip: skip() }, async () => {
+  const { page } = await openPage();
+  assert.match(await page.locator('#sidebar-mount').textContent(), /2 of 4 Venues Serve Guinness/);
+  await page.close();
+});
+
+test('"Show All" reveals the hidden venues and "Serves Guinness" hides them again', { skip: skip() }, async () => {
+  const { page } = await openPage();
+  await page.click('[data-gf="all"]');
+  assert.deepEqual(await cardIds(page), ['evil-1', 'good-1', 'none-1', 'quiet-1']);
+  assert.deepEqual(await activeFilter(page), ['all']);
+  await page.click('[data-gf="serves_any"]');
+  assert.deepEqual(await cardIds(page), ['evil-1', 'good-1']);
+  await page.close();
+});
+
+test('when nothing is confirmed yet, the list explains why and offers "Show all venues"', { skip: skip() }, async () => {
+  const { page } = await openPage({ venues: [quiet, none] });
+  const text = await page.locator('#sidebar-mount').textContent();
+  assert.match(text, /No venues here are confirmed to serve Guinness yet/);
+  assert.match(text, /2 other venues are hidden because they haven't been checked/);
+  assert.equal(await page.locator('.venue-card').count(), 0);
+  await page.click('#btn-show-all');
+  assert.deepEqual(await cardIds(page), ['none-1', 'quiet-1']);
+  assert.deepEqual(await activeFilter(page), ['all']);
+  await page.close();
+});
+
+test('the empty-state wording is grammatical for a single hidden venue', { skip: skip() }, async () => {
+  const { page } = await openPage({ venues: [quiet] });
+  assert.match(await page.locator('#sidebar-mount').textContent(), /1 other venue is hidden because it hasn't been checked/);
+  await page.close();
+});
+
+test('an empty result caused by the type filter alone gets the generic message, not "Show all"', { skip: skip() }, async () => {
+  const { page } = await openPage();
+  await page.click('[data-cat="hotel"]'); // no hotels at all in the fixtures
+  const text = await page.locator('#sidebar-mount').textContent();
+  assert.match(text, /No venues match your current filters/);
+  assert.equal(await page.locator('#btn-show-all').count(), 0);
   await page.close();
 });
 
