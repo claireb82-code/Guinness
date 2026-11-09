@@ -3,7 +3,7 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
-      "includeFiles": "{app_server.py,guard.py,storage.py,overture.py,public/**,src/styles.css,server/data/swiss_crawl_results.json,server/data/overture_ch.json}"
+      "includeFiles": "{app_server.py,guard.py,storage.py,overture.py,overpass.py,public/**,src/styles.css,server/data/swiss_crawl_results.json,server/data/overture_ch.json}"
     }
   },
   "rewrites": [
