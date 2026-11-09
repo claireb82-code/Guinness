@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 Zero-dependency HTTP & API Server for Guinness Guide — Switzerland Venue & Menu Finder.
-Provides the exact same REST API as server/index.js (/api/config, /api/venues,
-/api/scan-menu, /api/crowd-report, /api/add-venue, /api/scan-switzerland) using
-Python 3 standard library, covering all 26 cantons of Switzerland.
+Serves the REST API (/api/config, /api/venues, /api/scan-menu, /api/crowd-report, /api/add-venue,
+/api/geocode, ...) using only the Python 3 standard library, covering all 26 cantons of Switzerland.
+This is the server that is deployed (api/index.py wraps it for Vercel).
 """
 
 import json
@@ -17,6 +17,38 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+
+
+def load_env_file(path, environ=None):
+    """Read KEY=VALUE lines from a local ``.env`` into the environment (stdlib replacement for dotenv).
+
+    Existing environment variables win, blank values and comments are skipped, and surrounding quotes are removed.
+    Returns the names that were set. Used only when the server is started by hand, never on Vercel or in tests.
+    """
+    environ = os.environ if environ is None else environ
+    names = []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return names
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+            value = value[1:-1]
+        if key and value and key not in environ:
+            environ[key] = value
+            names.append(key)
+    return names
+
+
+if __name__ == "__main__" and not os.environ.get("VERCEL") and not os.environ.get("GUINNESS_NO_DOTENV"):
+    load_env_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 import evidence
 import geocode

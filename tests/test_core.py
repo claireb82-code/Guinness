@@ -95,8 +95,7 @@ class ComputeGuinnessStatusTests(unittest.TestCase):
 
 
 class SharedFixtureTests(unittest.TestCase):
-    """The same scenarios are run against the Node server (tests/js/googlePlaces.test.js) so the two
-    implementations of the API cannot drift apart again."""
+    """Status and link-parsing scenarios kept as data (tests/fixtures/shared_cases.json) so they are easy to read and extend."""
 
     @classmethod
     def setUpClass(cls):
