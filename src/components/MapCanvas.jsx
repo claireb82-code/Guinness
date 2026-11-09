@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createMarkerSvgDataUrl } from './PintIcon.jsx';
 import { markerSize } from '../layout.js';
+import { createSingleClickHandler } from '../mapClick.js';
 
 const GUINNESS_GOOGLE_MAP_STYLES = [
   { elementType: 'geometry', stylers: [{ color: '#171310' }] },
@@ -50,6 +51,8 @@ export function MapCanvas({
   const nearLayersRef = useRef([]);
   const googleMapRef = useRef(null);
   const googleMarkersRef = useRef([]);
+  const onMapClickRef = useRef(onMapClickForNewVenue);
+  onMapClickRef.current = onMapClickForNewVenue;
   const [googleSdkReady, setGoogleSdkReady] = useState(false);
   const [googleSdkError, setGoogleSdkError] = useState(null);
 
@@ -110,14 +113,14 @@ export function MapCanvas({
         fullscreenControl: false,
       });
 
+      // A double-click zooms; only a lone click offers to add a venue (see mapClick.js).
+      const singleClick = createSingleClickHandler((coords) => onMapClickRef.current?.(coords));
       googleMapRef.current.addListener('click', (e) => {
-        if (onMapClickForNewVenue && e.latLng) {
-          onMapClickForNewVenue({
-            lat: Number(e.latLng.lat().toFixed(5)),
-            lng: Number(e.latLng.lng().toFixed(5)),
-          });
+        if (e.latLng) {
+          singleClick.click({ lat: Number(e.latLng.lat().toFixed(5)), lng: Number(e.latLng.lng().toFixed(5)) });
         }
       });
+      for (const evt of ['dblclick', 'zoom_changed', 'dragstart']) googleMapRef.current.addListener(evt, singleClick.cancel);
     } else {
       googleMapRef.current.panTo({ lat: center.lat, lng: center.lng });
       googleMapRef.current.setZoom(zoom);
@@ -184,14 +187,14 @@ export function MapCanvas({
         maxZoom: 19,
       }).addTo(map);
 
+      // A double-click zooms; only a lone click offers to add a venue (see mapClick.js).
+      const singleClick = createSingleClickHandler((coords) => onMapClickRef.current?.(coords));
       map.on('click', (e) => {
-        if (onMapClickForNewVenue && e.latlng) {
-          onMapClickForNewVenue({
-            lat: Number(e.latlng.lat.toFixed(5)),
-            lng: Number(e.latlng.lng.toFixed(5)),
-          });
+        if (e.latlng) {
+          singleClick.click({ lat: Number(e.latlng.lat.toFixed(5)), lng: Number(e.latlng.lng.toFixed(5)) });
         }
       });
+      map.on('dblclick zoomstart movestart', singleClick.cancel);
 
       leafletMapRef.current = map;
     } else if (!(userLocation && radiusKm)) {
