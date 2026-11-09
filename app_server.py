@@ -2289,7 +2289,7 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
     return venues
 
 
-class StoutScoutHandler(SimpleHTTPRequestHandler):
+class GuinnessHandler(SimpleHTTPRequestHandler):
     def send_json(self, payload, status=200, retry_after=None):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
@@ -2685,7 +2685,7 @@ if __name__ == "__main__":
     chosen_port = base_port
     for candidate in range(base_port, base_port + 10):
         try:
-            server = ReusableThreadingHTTPServer(("127.0.0.1", candidate), StoutScoutHandler)
+            server = ReusableThreadingHTTPServer(("127.0.0.1", candidate), GuinnessHandler)
             chosen_port = candidate
             break
         except OSError:

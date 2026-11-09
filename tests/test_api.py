@@ -1,4 +1,4 @@
-"""End-to-end tests of the real request handler (app_server.StoutScoutHandler) on a real socket."""
+"""End-to-end tests of the real request handler (app_server.GuinnessHandler) on a real socket."""
 
 import http.client
 import json
@@ -38,12 +38,12 @@ class ApiTestCase(unittest.TestCase):
             mock.patch.object(app_server, "ON_VERCEL", self.vercel),
             mock.patch.dict(os.environ, {"RATE_LIMIT_DISABLED": "1", **self.env}, clear=False),
             mock.patch.object(app_server, "get_all_combined_venues", lambda store: [dict(KNOWN)]),
-            mock.patch.object(app_server.StoutScoutHandler, "log_message", lambda *a, **k: None),
+            mock.patch.object(app_server.GuinnessHandler, "log_message", lambda *a, **k: None),
         ]
         for p in patches:
             p.start()
             self.addCleanup(p.stop)
-        self.server = ThreadingHTTPServer(("127.0.0.1", 0), app_server.StoutScoutHandler)
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), app_server.GuinnessHandler)
         threading.Thread(target=lambda: self.server.serve_forever(poll_interval=0.02), daemon=True).start()
         self.addCleanup(stop, self.server)
 

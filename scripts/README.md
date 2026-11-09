@@ -25,22 +25,6 @@ Google Maps hospitality venue checker and importer:
 python3 scripts/check_google_maps.py
 ```
 
-### 3. [`sync_to_git.sh`](sync_to_git.sh)
-Stages all tracked/untracked repository changes, commits them with a descriptive message, and pushes to `origin/main`.
-
-**Usage:**
-```bash
-./scripts/sync_to_git.sh "Update venue dataset and documentation"
-```
-
-### 4. [`install_git_hooks.sh`](install_git_hooks.sh)
-Configures `.git/hooks/post-commit` so that every local `git commit` automatically pushes to `origin/main`.
-
-**Usage:**
-```bash
-./scripts/install_git_hooks.sh
-```
-
 ---
 
 ## Note on API keys

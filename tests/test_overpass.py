@@ -99,7 +99,7 @@ class SingleServerTests(OverpassTestCase):
         self.assertEqual((len(primary.requests), len(backup.requests)), (1, 0))
         request = primary.requests[0]
         self.assertEqual(request["form"]["data"], [QUERY])
-        self.assertIn("StoutScout", request["headers"]["User-Agent"])
+        self.assertIn("GuinnessGuide", request["headers"]["User-Agent"])
 
 
 class FailoverTests(OverpassTestCase):

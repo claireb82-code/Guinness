@@ -32,7 +32,7 @@ import urllib.request
 
 MAX_BODY_BYTES = 20_000
 MAX_PAGE_BYTES = 1_500_000
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) StoutScout/1.0"
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) GuinnessGuide/1.0"
 
 # Switzerland (incl. Liechtenstein border margin). Community-added venues must fall inside.
 CH_BOUNDS = {"south": 45.7, "north": 47.95, "west": 5.9, "east": 10.65}

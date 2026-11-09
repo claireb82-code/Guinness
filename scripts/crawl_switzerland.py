@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Comprehensive Switzerland Hospitality Venue & Website Menu Crawler for StoutScout.
+Comprehensive Switzerland Hospitality Venue & Website Menu Crawler for the Guinness Guide.
 Queries the dedicated Swiss OpenStreetMap Association Overpass server
 (https://overpass.osm.ch/api/interpreter) across 12 regional tiles covering all 26
 Swiss cantons, then crawls live Swiss venue websites and drink menu subpages in
@@ -128,7 +128,7 @@ def query_swiss_overpass(query_str, label, max_time=18):
                     "--connect-timeout",
                     "4",
                     "-A",
-                    "StoutScoutSwitzerland/2.0",
+                    "GuinnessGuideSwitzerland/2.0",
                     "--data-urlencode",
                     f"data={query_str}",
                     endpoint,

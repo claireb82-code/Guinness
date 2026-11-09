@@ -46,7 +46,7 @@ DEFAULT_URLS = (
     "https://overpass.private.coffee/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
 )
-USER_AGENT = "StoutScoutSwitzerland/1.0 (https://openstreetmap.org)"
+USER_AGENT = "GuinnessGuideSwitzerland/1.0 (venue finder; https://guinness-pi.vercel.app)"
 FRIENDLY_MESSAGE = "OpenStreetMap's public search servers are busy right now. Please try again in a minute."
 
 RETRYABLE_STATUS = {408, 425, 429, 500, 502, 503, 504}

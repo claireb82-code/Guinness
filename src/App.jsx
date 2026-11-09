@@ -141,7 +141,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    const preset = cities[activeCity] || DEFAULT_CITIES.dublin;
+    const preset = cities[activeCity] || DEFAULT_CITIES.all;
     setMapCenter({ lat: preset.lat, lng: preset.lng, zoom: preset.zoom || 14 });
     loadVenues({
       cityKey: activeCity,
