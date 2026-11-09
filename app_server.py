@@ -1542,6 +1542,23 @@ def browser_maps_key():
     return key
 
 
+def deployment_info():
+    """Which build is serving this request. None of it is secret (the repository is public), and it
+    lets you check that a git push really went live: compare ``commit`` with the commit you pushed
+    (see scripts/check_deploy.py). Values come from variables Vercel sets for every deployment;
+    anything malformed is dropped so a bad value can never reach clients."""
+    sha = os.environ.get("VERCEL_GIT_COMMIT_SHA", "").strip().lower()
+    ref = os.environ.get("VERCEL_GIT_COMMIT_REF", "").strip()
+    env = os.environ.get("VERCEL_ENV", "").strip()
+    valid_sha = bool(re.fullmatch(r"[0-9a-f]{7,40}", sha))
+    return {
+        "commit": sha if valid_sha else None,
+        "commitShort": sha[:7] if valid_sha else None,
+        "branch": ref if re.fullmatch(r"[A-Za-z0-9_./\-]{1,100}", ref) else None,
+        "environment": env if env in ("production", "preview", "development") else ("unknown" if ON_VERCEL else "local"),
+    }
+
+
 def resolve_places_key(headers):
     """Key for a server-side Google Places call: the visitor's own key (their quota), else the
     server key if allowed. Returns "" when no key may be used."""
@@ -2322,6 +2339,7 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                     "cities": CITY_PRESETS,
                     "swissCrawlStats": load_crawl_stats(),
                     "communitySubmissions": get_backend().accepts_submissions,
+                    "deployment": deployment_info(),
                 }
             )
 

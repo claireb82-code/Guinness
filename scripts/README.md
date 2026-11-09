@@ -46,3 +46,15 @@ Configures `.git/hooks/post-commit` so that every local `git commit` automatical
 ## Note on API keys
 
 These command-line scripts run on your own machine and keep using `GOOGLE_MAPS_API_KEY` (or `--api-key`). The web app deployed to Vercel uses separate browser/server keys (`GOOGLE_MAPS_BROWSER_KEY`, `GOOGLE_PLACES_API_KEY`); see the main [README](../README.md#deploying-to-vercel). The scripts maintain their own local `server/data/user_store.json` and do not use the app's database or rate limits.
+
+---
+
+## `check_deploy.py` — did my push go live?
+
+```bash
+python3 scripts/check_deploy.py https://guinness-pi.vercel.app --head
+python3 scripts/check_deploy.py https://guinness-pi.vercel.app --commit a1b2c3d --wait 300 --environment production
+```
+
+Reads `deployment.commit` from the deployment's `/api/config` and compares it with the expected commit (`--head` = current git HEAD; short or full SHAs). Exit `0` live, `1` different/older commit, `2` unreachable or bad usage. Details in the main [README](../README.md#checking-that-a-git-push-really-went-live).
+

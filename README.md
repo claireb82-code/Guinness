@@ -78,6 +78,26 @@ On a Vercel deployment the legacy `GOOGLE_MAPS_API_KEY` is **ignored** (it used 
 
 Over-limit requests get `429` with a `Retry-After` header; both UIs show the message. Set `RATE_LIMIT_DISABLED=1` only for local debugging.
 
+### Checking that a git push really went live
+
+Vercel deploys automatically when the repository is connected: a push to the **Production Branch** (`main`) updates the live site, any other branch or PR gets its own **preview** URL. To confirm a deploy, the app reports the commit it is running in `/api/config`:
+
+```json
+"deployment": { "commit": "0123456789abcdef…", "commitShort": "0123456", "branch": "main", "environment": "production" }
+```
+
+(`environment` is `production`, `preview`, `development` or `local`; the values come from variables Vercel sets for every deployment, and only these four fields are exposed.) Compare it with the commit you pushed:
+
+```bash
+python3 scripts/check_deploy.py https://guinness-pi.vercel.app --head                       # is my current commit live?
+python3 scripts/check_deploy.py https://guinness-pi.vercel.app --commit a1b2c3d --wait 300  # wait up to 5 min for the build
+python3 scripts/check_deploy.py https://<preview-url> --head --environment preview          # check a preview
+```
+
+Exit status: `0` the commit is live · `1` a different commit (or an older deployment without this feature) is live · `2` bad usage or unreachable. Preview URLs are behind Vercel login by default, so check previews from the Vercel dashboard or disable protection for them. Tests: `tests/test_deploy_info.py`.
+
+If a push does not deploy: the Vercel GitHub app may not have access to the repository (GitHub → Settings → Applications → Vercel → Configure), the Production Branch may not be `main` (Project → Settings → Git), or the connection may have broken when the repository was renamed. Environment variables are scoped per environment (Production / Preview / Development) and only apply to *new* deployments.
+
 ---
 
 ## Security Notes
@@ -118,6 +138,7 @@ npm run test:e2e    # real page in Chromium (needs Playwright; skipped automatic
 | `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
 | `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
 | `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
+| `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 | `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
 | `tests/e2e/ui.e2e.mjs` | the real `standalone.html` in a browser: no `javascript:` links, hostile text stays inert, server errors and rate limits are shown to the user |
@@ -131,6 +152,7 @@ When fixing a bug, add a failing test first (name it `regression: ...`). Tests n
 | `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
 | `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
 | `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
+| `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 
 When fixing a bug, add a failing test first. Tests never call Google or any external site.
@@ -192,6 +214,7 @@ Guinness/
 ├── public/
 │   └── standalone.html              # Self-contained React + Leaflet UI served by app_server.py
 ├── scripts/
+│   ├── check_deploy.py              # Checks which commit is live on a deployment (git push -> Vercel)
 │   ├── README.md                    # Documentation for scripts & automation utilities
 │   ├── check_google_maps.py         # Google Maps venue & review verifier / importer
 │   ├── crawl_switzerland.py         # Nationwide Swiss OSM Overpass + website menu crawler
