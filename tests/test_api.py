@@ -209,6 +209,15 @@ class AddVenueTests(ApiTestCase):
         self.assertEqual((v["name"], v["category"], v["crowdCheck"]["reportedPrice"]), ("New Pub", "bar", "CHF 9.00"))
         self.assertEqual(self.backend.load()["customVenues"][0]["id"], v["id"])
 
+    def test_regression_a_community_venue_carries_only_the_visitors_own_report(self):
+        """It used to get an invented 4.7 Google rating and a made-up review mention."""
+        v = self.post("/api/add-venue", self.OK)[1]["venue"]
+        self.assertEqual((v["googleRating"], v["googleReviewCount"], v["priceLevel"]), (None, 0, None))
+        self.assertEqual(v["reviewCheck"]["mentionCount"], 0)
+        self.assertFalse(v["menuCheck"]["foundOnMenu"], "no website was read")
+        self.assertEqual(v["crowdCheck"]["confirmedCount"], 1, "the visitor's own report is real evidence")
+        self.assertEqual((v["guinnessSummary"]["status"], v["guinnessSummary"]["statusLabel"]), ("likely_serves", "Reported by 1 visitor"))
+
     def test_dangerous_or_internal_websites_are_rejected(self):
         for site in ["javascript:alert(document.cookie)", "data:text/html,<script>alert(1)</script>", "http://localhost:8080/admin",
                      "http://169.254.169.254/latest/meta-data/", "file:///etc/passwd"]:

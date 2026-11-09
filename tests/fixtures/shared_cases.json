@@ -1,430 +1,522 @@
 {
- "status": [
-  {
-   "name": "menu mention -> confirmed on tap",
-   "venue": {
-    "category": "restaurant",
-    "menuCheck": {
-     "checked": true,
-     "foundOnMenu": true
-    }
-   },
-   "expected": {
-    "status": "confirmed_draught",
-    "servingFormat": "draught",
-    "confidence": 78
-   }
-  },
-  {
-   "name": "menu lists only cans/bottles",
-   "venue": {
-    "category": "restaurant",
-    "menuCheck": {
-     "checked": true,
-     "foundOnMenu": true,
-     "typesFound": [
-      "Guinness Cans",
-      "Guinness Bottle"
-     ]
-    }
-   },
-   "expected": {
-    "status": "cans_or_bottles",
-    "servingFormat": "cans_bottles",
-    "confidence": 78
-   }
-  },
-  {
-   "name": "menu lists draught and cans",
-   "venue": {
-    "category": "restaurant",
-    "menuCheck": {
-     "foundOnMenu": true,
-     "typesFound": [
-      "Guinness Draught (On Tap)",
-      "Guinness Cans"
-     ]
-    }
-   },
-   "expected": {
-    "status": "confirmed_draught",
-    "servingFormat": "draught",
-    "confidence": 78
-   }
-  },
-  {
-   "name": "community says cans/bottles, menu mentions it",
-   "venue": {
-    "category": "restaurant",
-    "menuCheck": {
-     "foundOnMenu": true
+  "status": [
+    {
+      "name": "menu mention -> confirmed on tap",
+      "venue": {
+        "category": "restaurant",
+        "menuCheck": {
+          "checked": true,
+          "foundOnMenu": true
+        }
+      },
+      "expected": {
+        "status": "confirmed_draught",
+        "servingFormat": "unknown",
+        "confidence": 78
+      }
     },
-    "crowdCheck": {
-     "servingFormat": "cans_bottles"
-    }
-   },
-   "expected": {
-    "status": "cans_or_bottles",
-    "servingFormat": "cans_bottles",
-    "confidence": 78
-   }
-  },
-  {
-   "name": "two community confirmations",
-   "venue": {
-    "category": "restaurant",
-    "crowdCheck": {
-     "confirmedCount": 2
-    }
-   },
-   "expected": {
-    "status": "confirmed_draught",
-    "servingFormat": "draught",
-    "confidence": 78
-   }
-  },
-  {
-   "name": "five review mentions",
-   "venue": {
-    "category": "restaurant",
-    "reviewCheck": {
-     "mentionCount": 5
-    }
-   },
-   "expected": {
-    "status": "confirmed_draught",
-    "servingFormat": "draught",
-    "confidence": 78
-   }
-  },
-  {
-   "name": "one review mention only",
-   "venue": {
-    "category": "restaurant",
-    "reviewCheck": {
-     "mentionCount": 1
-    }
-   },
-   "expected": {
-    "status": "likely_serves",
-    "servingFormat": "draught",
-    "confidence": 55
-   }
-  },
-  {
-   "name": "two review mentions only",
-   "venue": {
-    "category": "restaurant",
-    "reviewCheck": {
-     "mentionCount": 2
-    }
-   },
-   "expected": {
-    "status": "likely_serves",
-    "servingFormat": "draught",
-    "confidence": 55
-   }
-  },
-  {
-   "name": "one community confirmation only",
-   "venue": {
-    "category": "restaurant",
-    "crowdCheck": {
-     "confirmedCount": 1
-    }
-   },
-   "expected": {
-    "status": "likely_serves",
-    "servingFormat": "draught",
-    "confidence": 55
-   }
-  },
-  {
-   "name": "no evidence at all",
-   "venue": {
-    "category": "restaurant"
-   },
-   "expected": {
-    "status": "unverified",
-    "servingFormat": "unknown",
-    "confidence": 15
-   }
-  },
-  {
-   "name": "empty venue object",
-   "venue": {},
-   "expected": {
-    "status": "unverified",
-    "servingFormat": "unknown",
-    "confidence": 15
-   }
-  },
-  {
-   "name": "three denials, no support",
-   "venue": {
-    "category": "restaurant",
-    "crowdCheck": {
-     "deniedCount": 3
-    }
-   },
-   "expected": {
-    "status": "no_guinness",
-    "servingFormat": "none",
-    "confidence": 92
-   }
-  },
-  {
-   "name": "menu checked and community says none",
-   "venue": {
-    "category": "restaurant",
-    "menuCheck": {
-     "checked": true,
-     "foundOnMenu": false
+    {
+      "name": "menu lists only cans/bottles",
+      "venue": {
+        "category": "restaurant",
+        "menuCheck": {
+          "checked": true,
+          "foundOnMenu": true,
+          "typesFound": [
+            "Guinness Cans",
+            "Guinness Bottle"
+          ]
+        }
+      },
+      "expected": {
+        "status": "cans_or_bottles",
+        "servingFormat": "cans_bottles",
+        "confidence": 78
+      }
     },
-    "crowdCheck": {
-     "servingFormat": "none"
-    }
-   },
-   "expected": {
-    "status": "no_guinness",
-    "servingFormat": "none",
-    "confidence": 92
-   }
-  },
-  {
-   "name": "menu NOT checked, community says none, two denials",
-   "venue": {
-    "category": "restaurant",
-    "menuCheck": {
-     "checked": false
+    {
+      "name": "menu lists draught and cans",
+      "venue": {
+        "category": "restaurant",
+        "menuCheck": {
+          "foundOnMenu": true,
+          "typesFound": [
+            "Guinness Draught (On Tap)",
+            "Guinness Cans"
+          ]
+        }
+      },
+      "expected": {
+        "status": "confirmed_draught",
+        "servingFormat": "draught",
+        "confidence": 78
+      }
     },
-    "crowdCheck": {
-     "servingFormat": "none",
-     "deniedCount": 2
-    }
-   },
-   "expected": {
-    "status": "unverified",
-    "servingFormat": "unknown",
-    "confidence": 15
-   }
-  },
-  {
-   "name": "menu mention beats nine denials",
-   "venue": {
-    "category": "restaurant",
-    "menuCheck": {
-     "foundOnMenu": true
+    {
+      "name": "community says cans/bottles, menu mentions it",
+      "venue": {
+        "category": "restaurant",
+        "menuCheck": {
+          "foundOnMenu": true
+        },
+        "crowdCheck": {
+          "servingFormat": "cans_bottles"
+        }
+      },
+      "expected": {
+        "status": "cans_or_bottles",
+        "servingFormat": "cans_bottles",
+        "confidence": 78
+      }
     },
-    "crowdCheck": {
-     "deniedCount": 9
-    }
-   },
-   "expected": {
-    "status": "confirmed_draught",
-    "servingFormat": "draught",
-    "confidence": 78
-   }
-  },
-  {
-   "name": "a confirmation beats nine denials",
-   "venue": {
-    "category": "restaurant",
-    "crowdCheck": {
-     "deniedCount": 9,
-     "confirmedCount": 1
-    }
-   },
-   "expected": {
-    "status": "likely_serves",
-    "servingFormat": "draught",
-    "confidence": 55
-   }
-  },
-  {
-   "name": "pub with one review",
-   "venue": {
-    "category": "pub",
-    "reviewCheck": {
-     "mentionCount": 1
-    }
-   },
-   "expected": {
-    "status": "likely_serves",
-    "servingFormat": "draught",
-    "confidence": 55
-   }
-  },
-  {
-   "name": "pub with one confirmation",
-   "venue": {
-    "category": "pub",
-    "crowdCheck": {
-     "confirmedCount": 1
-    }
-   },
-   "expected": {
-    "status": "likely_serves",
-    "servingFormat": "draught",
-    "confidence": 55
-   }
-  },
-  {
-   "name": "everything maxed out (confidence cap)",
-   "venue": {
-    "category": "pub",
-    "menuCheck": {
-     "foundOnMenu": true
+    {
+      "name": "two community confirmations",
+      "venue": {
+        "category": "restaurant",
+        "crowdCheck": {
+          "confirmedCount": 2
+        }
+      },
+      "expected": {
+        "status": "confirmed_draught",
+        "servingFormat": "unknown",
+        "confidence": 78
+      }
     },
-    "crowdCheck": {
-     "confirmedCount": 500
+    {
+      "name": "five review mentions",
+      "venue": {
+        "category": "restaurant",
+        "reviewCheck": {
+          "mentionCount": 5
+        }
+      },
+      "expected": {
+        "status": "confirmed_draught",
+        "servingFormat": "unknown",
+        "confidence": 78
+      }
     },
-    "reviewCheck": {
-     "mentionCount": 1000000
+    {
+      "name": "one review mention only",
+      "venue": {
+        "category": "restaurant",
+        "reviewCheck": {
+          "mentionCount": 1
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 55
+      }
+    },
+    {
+      "name": "two review mentions only",
+      "venue": {
+        "category": "restaurant",
+        "reviewCheck": {
+          "mentionCount": 2
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 55
+      }
+    },
+    {
+      "name": "one community confirmation only",
+      "venue": {
+        "category": "restaurant",
+        "crowdCheck": {
+          "confirmedCount": 1
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 55
+      }
+    },
+    {
+      "name": "no evidence at all",
+      "venue": {
+        "category": "restaurant"
+      },
+      "expected": {
+        "status": "unverified",
+        "servingFormat": "unknown",
+        "confidence": 15
+      }
+    },
+    {
+      "name": "empty venue object",
+      "venue": {},
+      "expected": {
+        "status": "unverified",
+        "servingFormat": "unknown",
+        "confidence": 15
+      }
+    },
+    {
+      "name": "three denials, no support",
+      "venue": {
+        "category": "restaurant",
+        "crowdCheck": {
+          "deniedCount": 3
+        }
+      },
+      "expected": {
+        "status": "no_guinness",
+        "servingFormat": "none",
+        "confidence": 85
+      }
+    },
+    {
+      "name": "menu checked and community says none",
+      "venue": {
+        "category": "restaurant",
+        "menuCheck": {
+          "checked": true,
+          "foundOnMenu": false
+        },
+        "crowdCheck": {
+          "servingFormat": "none"
+        }
+      },
+      "expected": {
+        "status": "no_guinness",
+        "servingFormat": "none",
+        "confidence": 60
+      }
+    },
+    {
+      "name": "menu NOT checked, community says none, two denials",
+      "venue": {
+        "category": "restaurant",
+        "menuCheck": {
+          "checked": false
+        },
+        "crowdCheck": {
+          "servingFormat": "none",
+          "deniedCount": 2
+        }
+      },
+      "expected": {
+        "status": "unverified",
+        "servingFormat": "unknown",
+        "confidence": 15
+      }
+    },
+    {
+      "name": "menu mention beats nine denials",
+      "venue": {
+        "category": "restaurant",
+        "menuCheck": {
+          "foundOnMenu": true
+        },
+        "crowdCheck": {
+          "deniedCount": 9
+        }
+      },
+      "expected": {
+        "status": "confirmed_draught",
+        "servingFormat": "unknown",
+        "confidence": 78
+      }
+    },
+    {
+      "name": "a confirmation beats nine denials",
+      "venue": {
+        "category": "restaurant",
+        "crowdCheck": {
+          "deniedCount": 9,
+          "confirmedCount": 1
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 55
+      }
+    },
+    {
+      "name": "pub with one review",
+      "venue": {
+        "category": "pub",
+        "reviewCheck": {
+          "mentionCount": 1
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 55
+      }
+    },
+    {
+      "name": "pub with one confirmation",
+      "venue": {
+        "category": "pub",
+        "crowdCheck": {
+          "confirmedCount": 1
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 55
+      }
+    },
+    {
+      "name": "everything maxed out (confidence cap)",
+      "venue": {
+        "category": "pub",
+        "menuCheck": {
+          "foundOnMenu": true
+        },
+        "crowdCheck": {
+          "confirmedCount": 500
+        },
+        "reviewCheck": {
+          "mentionCount": 1000000
+        }
+      },
+      "expected": {
+        "status": "confirmed_draught",
+        "servingFormat": "unknown",
+        "confidence": 99
+      }
+    },
+    {
+      "name": "null counts from JSON",
+      "venue": {
+        "category": "restaurant",
+        "crowdCheck": {
+          "confirmedCount": null,
+          "deniedCount": null
+        },
+        "reviewCheck": {
+          "mentionCount": null
+        }
+      },
+      "expected": {
+        "status": "unverified",
+        "servingFormat": "unknown",
+        "confidence": 15
+      }
+    },
+    {
+      "name": "menu + moderate reviews + confirmations",
+      "venue": {
+        "category": "pub",
+        "menuCheck": {
+          "foundOnMenu": true
+        },
+        "crowdCheck": {
+          "confirmedCount": 3
+        },
+        "reviewCheck": {
+          "mentionCount": 9
+        }
+      },
+      "expected": {
+        "status": "confirmed_draught",
+        "servingFormat": "unknown",
+        "confidence": 93
+      }
+    },
+    {
+      "name": "one review, community format draught",
+      "venue": {
+        "category": "restaurant",
+        "crowdCheck": {
+          "servingFormat": "draught"
+        },
+        "reviewCheck": {
+          "mentionCount": 1
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "draught",
+        "confidence": 55
+      }
+    },
+    {
+      "name": "one review, community format cans",
+      "venue": {
+        "category": "restaurant",
+        "crowdCheck": {
+          "servingFormat": "cans_bottles"
+        },
+        "reviewCheck": {
+          "mentionCount": 1
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "cans_bottles",
+        "confidence": 55
+      }
+    },
+    {
+      "name": "OpenStreetMap tag only is likely, never confirmed",
+      "venue": {
+        "category": "pub",
+        "tagCheck": {
+          "kind": "osm_tag"
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 50
+      }
+    },
+    {
+      "name": "Irish-sounding name only is a weak guess",
+      "venue": {
+        "category": "pub",
+        "tagCheck": {
+          "kind": "irish_name"
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 35
+      }
+    },
+    {
+      "name": "starter list entry is unverified",
+      "venue": {
+        "category": "pub",
+        "tagCheck": {
+          "kind": "starter_list"
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 35
+      }
+    },
+    {
+      "name": "a website with no Guinness does not override a tag",
+      "venue": {
+        "category": "pub",
+        "menuCheck": {
+          "checked": true,
+          "foundOnMenu": false
+        },
+        "tagCheck": {
+          "kind": "osm_tag"
+        }
+      },
+      "expected": {
+        "status": "likely_serves",
+        "servingFormat": "unknown",
+        "confidence": 50
+      }
+    },
+    {
+      "name": "website read, no Guinness, no other evidence",
+      "venue": {
+        "category": "restaurant",
+        "menuCheck": {
+          "checked": true,
+          "foundOnMenu": false
+        }
+      },
+      "expected": {
+        "status": "no_guinness",
+        "servingFormat": "none",
+        "confidence": 60
+      }
+    },
+    {
+      "name": "website says draught Guinness",
+      "venue": {
+        "category": "pub",
+        "menuCheck": {
+          "foundOnMenu": true,
+          "snippets": [
+            "Guinness Draught 5dl CHF 9.80"
+          ]
+        }
+      },
+      "expected": {
+        "status": "confirmed_draught",
+        "servingFormat": "draught",
+        "confidence": 78
+      }
     }
-   },
-   "expected": {
-    "status": "confirmed_draught",
-    "servingFormat": "draught",
-    "confidence": 99
-   }
-  },
-  {
-   "name": "null counts from JSON",
-   "venue": {
-    "category": "restaurant",
-    "crowdCheck": {
-     "confirmedCount": null,
-     "deniedCount": null
+  ],
+  "parse": [
+    {
+      "input": "",
+      "expected": {
+        "name": "",
+        "lat": null,
+        "lng": null,
+        "isUrl": false
+      }
     },
-    "reviewCheck": {
-     "mentionCount": null
+    {
+      "input": "  Kennedy's Irish Pub  ",
+      "expected": {
+        "name": "Kennedy's Irish Pub",
+        "lat": null,
+        "lng": null,
+        "isUrl": false
+      }
+    },
+    {
+      "input": "https://www.google.com/maps/place/The+Old+Stand/@47.3769,8.5417,17z/data=x",
+      "expected": {
+        "name": "The Old Stand",
+        "lat": 47.3769,
+        "lng": 8.5417,
+        "isUrl": true
+      }
+    },
+    {
+      "input": "https://maps.app.goo.gl/abc123",
+      "expected": {
+        "name": "",
+        "lat": null,
+        "lng": null,
+        "isUrl": true
+      }
+    },
+    {
+      "input": "https://www.google.com/maps?q=46.2044,6.1432",
+      "expected": {
+        "name": "",
+        "lat": 46.2044,
+        "lng": 6.1432,
+        "isUrl": true
+      }
+    },
+    {
+      "input": "https://www.google.com/maps/place/Caf%C3%A9+Z%C3%BCrich/@47.37,8.54,15z",
+      "expected": {
+        "name": "Café Zürich",
+        "lat": 47.37,
+        "lng": 8.54,
+        "isUrl": true
+      }
+    },
+    {
+      "input": "Hotel Schweizerhof, Bern",
+      "expected": {
+        "name": "Hotel Schweizerhof, Bern",
+        "lat": null,
+        "lng": null,
+        "isUrl": false
+      }
     }
-   },
-   "expected": {
-    "status": "unverified",
-    "servingFormat": "unknown",
-    "confidence": 15
-   }
-  },
-  {
-   "name": "menu + moderate reviews + confirmations",
-   "venue": {
-    "category": "pub",
-    "menuCheck": {
-     "foundOnMenu": true
-    },
-    "crowdCheck": {
-     "confirmedCount": 3
-    },
-    "reviewCheck": {
-     "mentionCount": 9
-    }
-   },
-   "expected": {
-    "status": "confirmed_draught",
-    "servingFormat": "draught",
-    "confidence": 99
-   }
-  },
-  {
-   "name": "one review, community format draught",
-   "venue": {
-    "category": "restaurant",
-    "crowdCheck": {
-     "servingFormat": "draught"
-    },
-    "reviewCheck": {
-     "mentionCount": 1
-    }
-   },
-   "expected": {
-    "status": "likely_serves",
-    "servingFormat": "draught",
-    "confidence": 55
-   }
-  },
-  {
-   "name": "one review, community format cans",
-   "venue": {
-    "category": "restaurant",
-    "crowdCheck": {
-     "servingFormat": "cans_bottles"
-    },
-    "reviewCheck": {
-     "mentionCount": 1
-    }
-   },
-   "expected": {
-    "status": "likely_serves",
-    "servingFormat": "cans_bottles",
-    "confidence": 55
-   }
-  }
- ],
- "parse": [
-  {
-   "input": "",
-   "expected": {
-    "name": "",
-    "lat": null,
-    "lng": null,
-    "isUrl": false
-   }
-  },
-  {
-   "input": "  Kennedy's Irish Pub  ",
-   "expected": {
-    "name": "Kennedy's Irish Pub",
-    "lat": null,
-    "lng": null,
-    "isUrl": false
-   }
-  },
-  {
-   "input": "https://www.google.com/maps/place/The+Old+Stand/@47.3769,8.5417,17z/data=x",
-   "expected": {
-    "name": "The Old Stand",
-    "lat": 47.3769,
-    "lng": 8.5417,
-    "isUrl": true
-   }
-  },
-  {
-   "input": "https://maps.app.goo.gl/abc123",
-   "expected": {
-    "name": "",
-    "lat": null,
-    "lng": null,
-    "isUrl": true
-   }
-  },
-  {
-   "input": "https://www.google.com/maps?q=46.2044,6.1432",
-   "expected": {
-    "name": "",
-    "lat": 46.2044,
-    "lng": 6.1432,
-    "isUrl": true
-   }
-  },
-  {
-   "input": "https://www.google.com/maps/place/Caf%C3%A9+Z%C3%BCrich/@47.37,8.54,15z",
-   "expected": {
-    "name": "Café Zürich",
-    "lat": 47.37,
-    "lng": 8.54,
-    "isUrl": true
-   }
-  },
-  {
-   "input": "Hotel Schweizerhof, Bern",
-   "expected": {
-    "name": "Hotel Schweizerhof, Bern",
-    "lat": null,
-    "lng": null,
-    "isUrl": false
-   }
-  }
- ]
+  ]
 }

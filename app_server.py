@@ -18,6 +18,7 @@ import urllib.request
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
+import evidence
 import guard
 import overpass
 import overture
@@ -1600,12 +1601,29 @@ def load_crawl_stats():
     return {}
 
 
+def fix_legacy_community_venue(venue):
+    """Community venues saved before the evidence clean-up carry an invented 4.7 Google rating and one
+    invented review mention. Drop exactly those values; real visitor reports (crowdCheck) stay."""
+    if not isinstance(venue, dict):
+        return venue
+    v = dict(venue)
+    if v.get("googleRating") == 4.7 and v.get("googleReviewCount") == 1:
+        v["googleRating"], v["googleReviewCount"] = None, 0
+    if (v.get("reviewCheck") or {}).get("mentionCount") == 1 and not (v["reviewCheck"].get("excerpts")):
+        v["reviewCheck"] = evidence.no_reviews()
+    if v.get("priceLevel") == "CHF ··":
+        v["priceLevel"] = None
+    return v
+
+
 def get_all_combined_venues(store):
-    crawl_venues = load_crawl_venues()
+    # The bundled files were generated with invented ratings, counts and quotes: strip them (see evidence.py).
+    crawl_venues = [evidence.sanitise_static_venue(v) for v in load_crawl_venues()]
+    starter_venues = [evidence.sanitise_static_venue(v) for v in DEMO_VENUES]
     raw_list = (
-        (store.get("customVenues") or [])
+        [fix_legacy_community_venue(v) for v in (store.get("customVenues") or [])]
         + (store.get("googleMapsVenues") or [])
-        + DEMO_VENUES
+        + starter_venues
         + crawl_venues
     )
     seen_ids = set()
@@ -1664,18 +1682,43 @@ def parse_google_maps_url_or_query(raw_input):
 
 
 def compute_guinness_status(venue):
-    menu_found = bool(venue.get("menuCheck", {}).get("foundOnMenu"))
-    review_mentions = venue.get("reviewCheck", {}).get("mentionCount", 0) or 0
-    crowd_confirmed = venue.get("crowdCheck", {}).get("confirmedCount", 0) or 0
-    crowd_denied = venue.get("crowdCheck", {}).get("deniedCount", 0) or 0
-    serving_format = venue.get("crowdCheck", {}).get("servingFormat") or ("draught" if menu_found else "unknown")
+    """How sure are we that a venue serves Guinness, and on what evidence.
 
-    menu_checked = bool(venue.get("menuCheck", {}).get("checked"))
-    if not menu_found and crowd_confirmed == 0 and (crowd_denied >= 3 or (menu_checked and serving_format == "none")):
+    Confirmed needs real evidence: a website that says so (with serving wording), two visitor reports, or
+    five Google review mentions. One mention, one report, an OpenStreetMap tag or an Irish-sounding name
+    only make a venue "likely". Each label says which of those it is, so a guess never reads as a fact.
+    """
+    menu = venue.get("menuCheck") or {}
+    menu_found = bool(menu.get("foundOnMenu"))
+    menu_checked = bool(menu.get("checked"))
+    review_mentions = (venue.get("reviewCheck") or {}).get("mentionCount", 0) or 0
+    crowd = venue.get("crowdCheck") or {}
+    crowd_confirmed = crowd.get("confirmedCount", 0) or 0
+    crowd_denied = crowd.get("deniedCount", 0) or 0
+    tag = (venue.get("tagCheck") or {}).get("kind")
+    serving_format = crowd.get("servingFormat") or "unknown"
+
+    menu_text = " ".join((menu.get("snippets") or []) + (menu.get("typesFound") or []))
+    menu_says_draught = bool(evidence.DRAUGHT_RE.search(menu_text))
+    menu_says_cans = bool(evidence.CAN_RE.search(menu_text)) and not menu_says_draught
+    # How it is served is only ever what a visitor reported or the website said, never assumed.
+    if serving_format in ("draught", "cans_bottles"):
+        known_format = serving_format
+    elif menu_found and menu_says_draught:
+        known_format = "draught"
+    elif menu_found and menu_says_cans:
+        known_format = "cans_bottles"
+    else:
+        known_format = "unknown"
+
+    # Negative: only when nothing points the other way. A website that does not mention Guinness is not proof
+    # that none is served, so that case says exactly that and stays at modest confidence.
+    if not menu_found and crowd_confirmed == 0 and review_mentions == 0 and not tag and (crowd_denied >= 3 or menu_checked):
+        reported = crowd_denied >= 3
         return {
             "status": "no_guinness",
-            "statusLabel": "No Guinness Served",
-            "confidence": 92,
+            "statusLabel": "Reported not served" if reported else "No Guinness found on website",
+            "confidence": 85 if reported else 60,
             "servingFormat": "none",
         }
 
@@ -1686,30 +1729,32 @@ def compute_guinness_status(venue):
         score += min(30, 12 + math.log10(review_mentions + 1) * 10)
     if crowd_confirmed > 0:
         score += min(25, 10 + crowd_confirmed * 2)
-    if venue.get("category") == "pub":
-        score += 8
-
     confidence = min(99, int(round(score)))
 
     if menu_found or crowd_confirmed >= 2 or review_mentions >= 5:
-        types_found = venue.get("menuCheck", {}).get("typesFound") or []
-        is_cans = serving_format == "cans_bottles" or (
-            len(types_found) > 0 and all(re.search(r"bottle|can", t, re.I) for t in types_found)
-        )
-        return {
-            "status": "cans_or_bottles" if is_cans else "confirmed_draught",
-            "statusLabel": "Confirmed (Bottles / Cans)" if is_cans else "Confirmed Guinness On Tap",
-            "confidence": max(78, confidence),
-            "servingFormat": "cans_bottles" if is_cans else "draught",
-        }
+        if known_format == "cans_bottles":
+            status, label = "cans_or_bottles", "Confirmed (Bottles / Cans)"
+        elif known_format == "draught":
+            status, label = "confirmed_draught", "Confirmed Guinness On Tap"
+        else:
+            status = "confirmed_draught"
+            label = (
+                "Guinness confirmed on website" if menu_found
+                else "Confirmed by visitor reports" if crowd_confirmed >= 2
+                else "Mentioned in several Google reviews"
+            )
+        return {"status": status, "statusLabel": label, "confidence": max(78, confidence), "servingFormat": known_format}
 
-    if review_mentions >= 1 or crowd_confirmed == 1:
-        return {
-            "status": "likely_serves",
-            "statusLabel": "Mentioned in Reviews",
-            "confidence": max(55, confidence),
-            "servingFormat": serving_format if serving_format != "unknown" else "draught",
-        }
+    if review_mentions >= 1:
+        return {"status": "likely_serves", "statusLabel": "Mentioned in Google reviews", "confidence": max(55, confidence), "servingFormat": known_format}
+    if crowd_confirmed == 1:
+        return {"status": "likely_serves", "statusLabel": "Reported by 1 visitor", "confidence": max(55, confidence), "servingFormat": known_format}
+    if tag == evidence.TAG_OSM:
+        return {"status": "likely_serves", "statusLabel": "Listed on OpenStreetMap (unverified)", "confidence": 50, "servingFormat": "unknown"}
+    if tag == evidence.TAG_NAME:
+        return {"status": "likely_serves", "statusLabel": "Irish pub by name (unverified)", "confidence": 35, "servingFormat": "unknown"}
+    if tag == evidence.TAG_STARTER:
+        return {"status": "likely_serves", "statusLabel": "Starter list (unverified)", "confidence": 35, "servingFormat": "unknown"}
 
     return {
         "status": "unverified",
@@ -1828,7 +1873,7 @@ def scrape_menu_url(url, existing_check=None):
             "checked": True,
             "lastChecked": now_iso,
             "foundOnMenu": found,
-            "typesFound": ["Guinness Draught (On Tap)"] if found else [],
+            "typesFound": evidence.serving_types(snippets) if found else [],
             "extractedPrice": None,
             "snippets": snippets
             if found
@@ -1839,14 +1884,8 @@ def scrape_menu_url(url, existing_check=None):
     except Exception:
         if existing_check and existing_check.get("checked"):
             return {**existing_check, "lastChecked": now_iso}
-        return {
-            "checked": True,
-            "lastChecked": now_iso,
-            "foundOnMenu": False,
-            "typesFound": [],
-            "extractedPrice": None,
-            "snippets": [f"Verified cached menu snapshot for {url}."],
-        }
+        # We could not read the page: that is "unknown", never "no Guinness".
+        return _not_scanned(now_iso, f"could not read {url}")
 
 
 def fetch_google_places_live(api_key, lat, lng, radius=3500, scrape_menus=True, query="", city="all"):
@@ -1976,7 +2015,7 @@ def fetch_google_places_live(api_key, lat, lng, radius=3500, scrape_menus=True, 
             (rev_sum, "Google Maps Review Summary"),
         ]:
             if s_txt and re.search(r"\bguinness\b", s_txt, re.I):
-                mentions += 3
+                mentions += 1  # a Google summary that names Guinness counts once, not as several reviews
                 excerpts.append({"author": s_lbl, "rating": 5, "date": "Google Maps", "text": s_txt[:230]})
         for r in reviews:
             txt = r.get("text", {}).get("text", "")
@@ -2014,7 +2053,7 @@ def fetch_google_places_live(api_key, lat, lng, radius=3500, scrape_menus=True, 
             "lng": p.get("location", {}).get("longitude"),
             "googleRating": p.get("rating"),
             "googleReviewCount": p.get("userRatingCount", 0),
-            "priceLevel": "CHF ··",
+            "priceLevel": None,
             "website": website,
             "menuUrl": website,
             "googleMapsUri": gmaps_uri,
@@ -2029,15 +2068,8 @@ def fetch_google_places_live(api_key, lat, lng, radius=3500, scrape_menus=True, 
                 "sentiment": "exceptional" if mentions >= 5 else ("positive" if mentions >= 1 else "none"),
                 "excerpts": excerpts[:4],
             },
-            "crowdCheck": {
-                "confirmedCount": 2 if menu_check.get("foundOnMenu") else (1 if mentions > 0 else 0),
-                "deniedCount": 0,
-                "servingFormat": "draught" if found_any else "unknown",
-                "avgPintRating": 4.6 if found_any else None,
-                "reportedPrice": menu_check.get("extractedPrice"),
-                "hasZero": any("0.0" in t for t in (menu_check.get("typesFound") or [])),
-                "recentReports": [],
-            },
+            # Visitor reports only: nothing a scan finds is a visitor report.
+            "crowdCheck": {**evidence.no_crowd(), "reportedPrice": menu_check.get("extractedPrice")},
         })
     return venues
 
@@ -2101,23 +2133,12 @@ def fetch_osm_overpass_live(lat, lng, radius=1500, scrape_menus=False):
         # Check OSM tags & name for Irish / Guinness signals
         cuisine = (tags.get("cuisine") or "").lower()
         brewery = (tags.get("brewery") or tags.get("drink:beer") or "").lower()
-        is_irish_or_guinness_tagged = (
-            "guinness" in brewery
-            or "irish" in cuisine
-            or bool(re.search(r"\b(irish|guinness|shamrock|pickwick|paddy|mulligan|flanagan|kelly|celtic|dublin|o'|\bpub\b)\b", name, re.I))
-        )
+        osm_says_guinness = "guinness" in brewery
+        looks_irish = "irish" in cuisine or evidence.is_irish_name(name)
+        is_irish_or_guinness_tagged = osm_says_guinness or looks_irish
 
         if scrape_menus and menu_url and len(venues) < 6:
             menu_check = scrape_menu_url(menu_url)
-        elif "guinness" in brewery:
-            menu_check = {
-                "checked": True,
-                "lastChecked": datetime.now(timezone.utc).isoformat(),
-                "foundOnMenu": True,
-                "typesFound": ["Guinness Draught (OSM Brewery Tag Confirmed)"],
-                "extractedPrice": None,
-                "snippets": [f"OpenStreetMap tag confirms brewery/beer: {tags.get('brewery') or tags.get('drink:beer')}"],
-            }
         else:
             menu_check = {
                 "checked": False,
@@ -2142,40 +2163,21 @@ def fetch_osm_overpass_live(lat, lng, radius=1500, scrape_menus=False):
             "lng": float(v_lng),
             "googleRating": None,
             "googleReviewCount": 0,
-            "priceLevel": "CHF ··",
+            "priceLevel": None,
             "website": website,
             "menuUrl": menu_url,
             "phone": phone,
             "websiteSource": website_source,
             "openNow": True,
-            "editorialSummary": (
-                f"Live venue discovered via free OpenStreetMap data ({category.title()})."
-                + (" Tagged as Irish/Pub venue in OpenStreetMap." if is_irish_or_guinness_tagged else "")
-            ),
+            "editorialSummary": f"Live venue discovered via free OpenStreetMap data ({category.title()}).",
             "menuCheck": menu_check,
-            "reviewCheck": {
-                "mentionCount": 3 if is_irish_or_guinness_tagged else 0,
-                "sentiment": "positive" if is_irish_or_guinness_tagged else "none",
-                "excerpts": [
-                    {
-                        "author": "OpenStreetMap Tags",
-                        "rating": 5,
-                        "date": "Live OSM Data",
-                        "text": f"Matched pub/Irish characteristics in OpenStreetMap ({name}). Click 'Scan Menu' to inspect website.",
-                    }
-                ]
+            "reviewCheck": evidence.no_reviews(),
+            "crowdCheck": evidence.no_crowd(),
+            **(
+                {"tagCheck": evidence.tag_check(evidence.TAG_OSM if osm_says_guinness else evidence.TAG_NAME)}
                 if is_irish_or_guinness_tagged
-                else [],
-            },
-            "crowdCheck": {
-                "confirmedCount": 1 if "guinness" in brewery else 0,
-                "deniedCount": 0,
-                "servingFormat": "draught" if is_irish_or_guinness_tagged else "unknown",
-                "avgPintRating": None,
-                "reportedPrice": None,
-                "hasZero": False,
-                "recentReports": [],
-            },
+                else {}
+            ),
         })
 
     return venues
@@ -2239,16 +2241,9 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
         website, menu_url, phone, website_source = fill_from_overture(name, v_lat, v_lng, website, menu_url, phone)
         brewery = (tags.get("brewery") or tags.get("drink:beer") or "").lower()
 
-        menu_check = {
-            "checked": True,
-            "lastChecked": datetime.now(timezone.utc).isoformat(),
-            "foundOnMenu": True,
-            "typesFound": ["Guinness Draught (On Tap)"],
-            "extractedPrice": "CHF 9.50",
-            "snippets": [
-                f"Confirmed via nationwide Switzerland OpenStreetMap scan ({tags.get('brewery') or tags.get('cuisine') or 'Guinness / Irish Pub Venue'})."
-            ],
-        }
+        # Nothing was fetched here: the venue matched an OpenStreetMap tag or name search, which is a hint only.
+        menu_check = evidence.not_checked()
+        osm_says_guinness = "guinness" in brewery
 
         venues.append({
             "id": f"osm-ch-{el.get('id')}",
@@ -2258,37 +2253,19 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
             "address": address,
             "lat": float(v_lat),
             "lng": float(v_lng),
-            "googleRating": 4.5,
-            "googleReviewCount": 40,
-            "priceLevel": "CHF ··",
+            "googleRating": None,
+            "googleReviewCount": 0,
+            "priceLevel": None,
             "website": website,
             "menuUrl": menu_url,
             "phone": phone,
             "websiteSource": website_source,
             "openNow": True,
-            "editorialSummary": f"Discovered in nationwide Switzerland Guinness scan ({city_name}).",
+            "editorialSummary": f"Found in OpenStreetMap ({city_name}).",
             "menuCheck": menu_check,
-            "reviewCheck": {
-                "mentionCount": 5 if "guinness" in brewery else 3,
-                "sentiment": "positive",
-                "excerpts": [
-                    {
-                        "author": "Switzerland OSM Directory",
-                        "rating": 5,
-                        "date": "Verified Tag",
-                        "text": f"Matched nationwide Switzerland Guinness / Irish pub criteria in {city_name}.",
-                    }
-                ],
-            },
-            "crowdCheck": {
-                "confirmedCount": 3,
-                "deniedCount": 0,
-                "servingFormat": "draught",
-                "avgPintRating": 4.6,
-                "reportedPrice": "CHF 9.50",
-                "hasZero": False,
-                "recentReports": [],
-            },
+            "reviewCheck": evidence.no_reviews(),
+            "crowdCheck": evidence.no_crowd(),
+            "tagCheck": evidence.tag_check(evidence.TAG_OSM if osm_says_guinness else evidence.TAG_NAME),
         })
 
     return venues
@@ -2493,21 +2470,8 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                         if "hotel" in lower_n
                         else ("pub" if "pub" in lower_n else ("bar" if "bar" in lower_n else "restaurant"))
                     )
-                    is_irish = bool(
-                        re.search(r"\b(guinness|irish|pickwick|paddy|mulligan|flanagan|shamrock)\b", lower_n)
-                    )
-                    menu_check = (
-                        scrape_menu_url(website)
-                        if website
-                        else {
-                            "checked": False,
-                            "lastChecked": datetime.now(timezone.utc).isoformat(),
-                            "foundOnMenu": is_irish,
-                            "typesFound": ["Guinness Draught (On Tap)"] if is_irish else [],
-                            "extractedPrice": None,
-                            "snippets": [f"Checked via Google Maps importer ({v_name})."],
-                        }
-                    )
+                    is_irish = evidence.is_irish_name(v_name)
+                    menu_check = scrape_menu_url(website) if website else evidence.not_checked("No website to read.")
                     # Only keep a user-supplied link if it is really an https Google Maps URL.
                     gmaps_uri = (
                         guard.safe_google_maps_uri(line) if pq["isUrl"] else None
@@ -2520,33 +2484,22 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                         "city": "zurich" if city == "all" else city,
                         "name": v_name,
                         "category": v_cat,
-                        "address": "Switzerland (Google Maps Verified)",
+                        "address": "Switzerland",
                         "lat": float(v_lat),
                         "lng": float(v_lng),
-                        "googleRating": 4.5,
-                        "googleReviewCount": 25,
-                        "priceLevel": "CHF ··",
+                        "googleRating": None,
+                        "googleReviewCount": 0,
+                        "priceLevel": None,
                         "website": website or None,
                         "menuUrl": website or None,
                         "googleMapsUri": gmaps_uri,
                         "googleMapsChecked": True,
                         "openNow": True,
-                        "editorialSummary": f"Checked on Google Maps & imported into Guinness Finder ({v_cat.title()}).",
+                        "editorialSummary": f"Added from a name or link entered by a visitor ({v_cat.title()}). Location and details are not verified.",
                         "menuCheck": menu_check,
-                        "reviewCheck": {
-                            "mentionCount": 3 if menu_check.get("foundOnMenu") else 0,
-                            "sentiment": "positive" if menu_check.get("foundOnMenu") else "none",
-                            "excerpts": [],
-                        },
-                        "crowdCheck": {
-                            "confirmedCount": 1 if menu_check.get("foundOnMenu") else 0,
-                            "deniedCount": 0,
-                            "servingFormat": "draught" if menu_check.get("foundOnMenu") else "unknown",
-                            "avgPintRating": 4.6 if menu_check.get("foundOnMenu") else None,
-                            "reportedPrice": menu_check.get("extractedPrice"),
-                            "hasZero": False,
-                            "recentReports": [],
-                        },
+                        "reviewCheck": evidence.no_reviews(),
+                        "crowdCheck": {**evidence.no_crowd(), "reportedPrice": menu_check.get("extractedPrice")},
+                        **({"tagCheck": evidence.tag_check(evidence.TAG_NAME)} if is_irish else {}),
                     })
             else:
                 try:
@@ -2628,14 +2581,7 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             menu_check = (
                 scrape_menu_url(website)
                 if website
-                else {
-                    "checked": False,
-                    "lastChecked": None,
-                    "foundOnMenu": s_format != "none",
-                    "typesFound": ["Guinness Draught (On Tap)"] if s_format == "draught" else [],
-                    "extractedPrice": clean["price"],
-                    "snippets": [f"Reported by scout: {clean['note'] or 'Serves Guinness'}"],
-                }
+                else evidence.not_checked("No website to read. The only evidence is the visitor's own report.")
             )
             new_venue = {
                 "id": vid,
@@ -2645,19 +2591,16 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                 "address": clean["address"],
                 "lat": clean["lat"],
                 "lng": clean["lng"],
-                "googleRating": 4.7,
-                "googleReviewCount": 1,
-                "priceLevel": "CHF ··",
+                "googleRating": None,
+                "googleReviewCount": 0,
+                "priceLevel": None,
                 "website": website,
                 "menuUrl": website,
                 "openNow": True,
-                "editorialSummary": clean["note"] or "Community-added Swiss venue checked for Guinness availability.",
+                "editorialSummary": clean["note"] or "Venue added by a visitor.",
                 "menuCheck": menu_check,
-                "reviewCheck": {
-                    "mentionCount": 1 if s_format != "none" else 0,
-                    "sentiment": "positive" if s_format != "none" else "none",
-                    "excerpts": [],
-                },
+                "reviewCheck": evidence.no_reviews(),
+                # The one report that came with the venue is a real visitor report.
                 "crowdCheck": {
                     "confirmedCount": 1 if s_format != "none" else 0,
                     "deniedCount": 1 if s_format == "none" else 0,

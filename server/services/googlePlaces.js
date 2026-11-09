@@ -89,7 +89,7 @@ export function analyzeReviewsForGuinness(
     [reviewSummary, 'Google Maps Review Summary'],
   ]) {
     if (summaryText && GUINNESS_REVIEW_REGEX.test(summaryText)) {
-      mentionCount += 3;
+      mentionCount += 1; // a Google summary that names Guinness counts once, not as several reviews
       excerpts.push({
         author: label,
         rating: 5,
@@ -167,20 +167,32 @@ export function parseGoogleMapsUrlOrQuery(input = '') {
  * combining Menu Scraper, Google Reviews, and Community Crowdsourcing.
  */
 export function computeGuinnessStatus(venue) {
-  const menuFound = Boolean(venue.menuCheck?.foundOnMenu);
+  // Same rules as compute_guinness_status() in app_server.py (tests/fixtures/shared_cases.json keeps them in sync).
+  const menu = venue.menuCheck || {};
+  const menuFound = Boolean(menu.foundOnMenu);
+  const menuChecked = Boolean(menu.checked);
   const reviewMentions = venue.reviewCheck?.mentionCount || 0;
   const crowdConfirmed = venue.crowdCheck?.confirmedCount || 0;
   const crowdDenied = venue.crowdCheck?.deniedCount || 0;
-  const servingFormat = venue.crowdCheck?.servingFormat || (menuFound ? 'draught' : 'unknown');
+  const tag = venue.tagCheck?.kind;
+  const reported = venue.crowdCheck?.servingFormat || 'unknown';
 
-  // Same rule as compute_guinness_status() in app_server.py (tests/fixtures/shared_cases.json keeps them in sync):
-  // "no" needs a checked menu or repeated denials, never just a missing check.
-  const menuChecked = Boolean(venue.menuCheck?.checked);
-  if (!menuFound && crowdConfirmed === 0 && (crowdDenied >= 3 || (menuChecked && servingFormat === 'none'))) {
+  const menuText = [...(menu.snippets || []), ...(menu.typesFound || [])].join(' ');
+  const saysDraught = /draught|draft|on tap|\btap\b|vom fass|\bfass\b|pression|alla spina|\bpint\b|zapfen/i.test(menuText);
+  const saysCans = /\bcans?\b|bottles?|flasche|dose|bouteille|bottiglia/i.test(menuText) && !saysDraught;
+  // How it is served is only ever what a visitor reported or the website said, never assumed.
+  let known = 'unknown';
+  if (reported === 'draught' || reported === 'cans_bottles') known = reported;
+  else if (menuFound && saysDraught) known = 'draught';
+  else if (menuFound && saysCans) known = 'cans_bottles';
+
+  // "No" needs a website that was really read (or repeated denials) and nothing pointing the other way.
+  if (!menuFound && crowdConfirmed === 0 && reviewMentions === 0 && !tag && (crowdDenied >= 3 || menuChecked)) {
+    const byVisitors = crowdDenied >= 3;
     return {
       status: 'no_guinness',
-      statusLabel: 'No Guinness Served',
-      confidence: 92,
+      statusLabel: byVisitors ? 'Reported not served' : 'No Guinness found on website',
+      confidence: byVisitors ? 85 : 60,
       servingFormat: 'none',
     };
   }
@@ -189,32 +201,29 @@ export function computeGuinnessStatus(venue) {
   if (menuFound) score += 55;
   if (reviewMentions > 0) score += Math.min(30, 12 + Math.log10(reviewMentions + 1) * 10);
   if (crowdConfirmed > 0) score += Math.min(25, 10 + crowdConfirmed * 2);
-  if (venue.category === 'pub') score += 8;
-
   const confidence = Math.min(99, Math.round(score));
 
   if (menuFound || crowdConfirmed >= 2 || reviewMentions >= 5) {
-    const isCansOnly =
-      servingFormat === 'cans_bottles' ||
-      (venue.menuCheck?.typesFound?.length > 0 &&
-        venue.menuCheck.typesFound.every((t) => /bottle|can/i.test(t)));
-
-    return {
-      status: isCansOnly ? 'cans_or_bottles' : 'confirmed_draught',
-      statusLabel: isCansOnly ? 'Confirmed (Bottles / Cans)' : 'Confirmed Guinness On Tap',
-      confidence: Math.max(78, confidence),
-      servingFormat: isCansOnly ? 'cans_bottles' : 'draught',
-    };
+    let status = 'confirmed_draught';
+    let statusLabel = 'Confirmed Guinness On Tap';
+    if (known === 'cans_bottles') {
+      status = 'cans_or_bottles';
+      statusLabel = 'Confirmed (Bottles / Cans)';
+    } else if (known !== 'draught') {
+      statusLabel = menuFound
+        ? 'Guinness confirmed on website'
+        : crowdConfirmed >= 2
+          ? 'Confirmed by visitor reports'
+          : 'Mentioned in several Google reviews';
+    }
+    return { status, statusLabel, confidence: Math.max(78, confidence), servingFormat: known };
   }
 
-  if (reviewMentions >= 1 || crowdConfirmed === 1) {
-    return {
-      status: 'likely_serves',
-      statusLabel: 'Mentioned in Reviews',
-      confidence: Math.max(55, confidence),
-      servingFormat: servingFormat !== 'unknown' ? servingFormat : 'draught',
-    };
-  }
+  if (reviewMentions >= 1) return { status: 'likely_serves', statusLabel: 'Mentioned in Google reviews', confidence: Math.max(55, confidence), servingFormat: known };
+  if (crowdConfirmed === 1) return { status: 'likely_serves', statusLabel: 'Reported by 1 visitor', confidence: Math.max(55, confidence), servingFormat: known };
+  if (tag === 'osm_tag') return { status: 'likely_serves', statusLabel: 'Listed on OpenStreetMap (unverified)', confidence: 50, servingFormat: 'unknown' };
+  if (tag === 'irish_name') return { status: 'likely_serves', statusLabel: 'Irish pub by name (unverified)', confidence: 35, servingFormat: 'unknown' };
+  if (tag === 'starter_list') return { status: 'likely_serves', statusLabel: 'Starter list (unverified)', confidence: 35, servingFormat: 'unknown' };
 
   return {
     status: 'unverified',
@@ -256,8 +265,6 @@ async function mapPlaceToVenue(p, city = 'all', scrapeMenus = true) {
     p.googleMapsUri ||
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name} ${address}`)}`;
 
-  const foundAny = Boolean(menuCheck.foundOnMenu) || reviewCheck.mentionCount > 0;
-
   return {
     id: `gplace-${p.id}`,
     googlePlaceId: p.id,
@@ -269,7 +276,7 @@ async function mapPlaceToVenue(p, city = 'all', scrapeMenus = true) {
     lng: p.location?.longitude,
     googleRating: p.rating || null,
     googleReviewCount: p.userRatingCount || 0,
-    priceLevel: 'CHF ··',
+    priceLevel: null,
     website: p.websiteUri || null,
     menuUrl: p.websiteUri || null,
     googleMapsUri,
@@ -284,11 +291,12 @@ async function mapPlaceToVenue(p, city = 'all', scrapeMenus = true) {
       `Checked on Google Maps (${category}) — ${address}`,
     menuCheck,
     reviewCheck,
+    // Visitor reports only: nothing a scan finds is a visitor report.
     crowdCheck: {
-      confirmedCount: menuCheck.foundOnMenu ? 2 : reviewCheck.mentionCount > 0 ? 1 : 0,
+      confirmedCount: 0,
       deniedCount: 0,
-      servingFormat: foundAny ? 'draught' : 'unknown',
-      avgPintRating: foundAny ? 4.6 : null,
+      servingFormat: 'unknown',
+      avgPintRating: null,
       reportedPrice: menuCheck.extractedPrice || null,
       hasZero: Boolean(menuCheck.typesFound?.some((t) => /0\.0|zero/i.test(t))),
       recentReports: [],

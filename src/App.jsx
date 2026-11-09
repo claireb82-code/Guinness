@@ -441,14 +441,13 @@ export default function App() {
   // while the (default) "Serves Guinness" filter hides the rest of the list.
   const stats = useMemo(() => {
     const pool = venues.filter((v) => matchesFilters(v, 'all'));
-    const serving = pool.filter(
-      (v) =>
-        v.guinnessSummary?.status === 'confirmed_draught' ||
-        v.guinnessSummary?.status === 'cans_or_bottles' ||
-        v.guinnessSummary?.status === 'likely_serves'
+    // "Confirmed" is real evidence only; guesses (an Irish-sounding name, an OpenStreetMap tag) are counted apart as "likely".
+    const confirmed = pool.filter(
+      (v) => v.guinnessSummary?.status === 'confirmed_draught' || v.guinnessSummary?.status === 'cans_or_bottles'
     ).length;
+    const likely = pool.filter((v) => v.guinnessSummary?.status === 'likely_serves').length;
     const onMenuCount = pool.filter((v) => v.menuCheck?.foundOnMenu).length;
-    return { total: pool.length, serving, onMenuCount };
+    return { total: pool.length, confirmed, likely, onMenuCount };
   }, [venues, categoryFilter, searchQuery, nearbyKm, userLocation]);
 
   return (
@@ -661,10 +660,10 @@ export default function App() {
           >
             <div>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f5efe6' }}>
-                {stats.serving} of {stats.total} Venues Serve Guinness
+                {stats.confirmed} of {stats.total} venues confirmed to serve Guinness
               </div>
               <div style={{ fontSize: '0.7rem', color: '#9c8e7b' }}>
-                {stats.onMenuCount} confirmed directly via online menu scan
+                {stats.likely} more are likely (unverified) · {stats.onMenuCount} mention it on their website
               </div>
             </div>
 
