@@ -48,12 +48,12 @@ test('regression: names merely containing "inn" are not hotels', () => {
   assert.equal(classifyCategory([], 'Inn am See'), 'hotel');
 });
 
-test('analyzeReviewsForGuinness counts summaries (3) and reviews (1), caps excerpts and sets sentiment', () => {
+test('analyzeReviewsForGuinness counts a summary once and each review once, caps excerpts and sets sentiment', () => {
   const r = analyzeReviewsForGuinness(
     [{ text: { text: 'Best Guinness in town' }, authorAttribution: { displayName: 'Anna' }, rating: 4, relativePublishTimeDescription: 'a week ago' }, { text: { text: 'nice staff' } }],
     'Irish pub pouring Guinness',
   );
-  assert.equal(r.mentionCount, 4);
+  assert.equal(r.mentionCount, 2);
   assert.equal(r.sentiment, 'positive');
   assert.deepEqual(r.excerpts.map((e) => e.author), ['Google Maps Editorial Summary', 'Anna']);
   assert.equal(r.excerpts[1].rating, 4);
@@ -116,6 +116,7 @@ test('fetchGooglePlacesVenues: failed Google responses yield no venues rather th
 test('fetchGooglePlacesVenues: summaries mentioning Guinness raise the review evidence', () =>
   withFakeFetch({ searchNearby: { places: [place({ reviews: [], editorialSummary: { text: 'Famous for its Guinness' } })] }, searchText: { places: [] } }, async () => {
     const [v] = await fetchGooglePlacesVenues({ apiKey: 'K', lat: 1, lng: 2, scrapeMenus: false });
-    assert.equal(v.reviewCheck.mentionCount, 3);
+    assert.equal(v.reviewCheck.mentionCount, 1);
     assert.equal(computeGuinnessStatus(v).status, 'likely_serves');
+    assert.deepEqual([v.crowdCheck.confirmedCount, v.crowdCheck.avgPintRating], [0, null], 'a scan is not a visitor report');
   }));

@@ -26,7 +26,7 @@ A full-stack application that maps **hotels, bars, pubs, and restaurants across 
 - **Strict Guinness-Only Filtering**: Excludes generic non-Guinness stouts so every verified venue and menu highlight specifically refers to Guinness.
 - **Phone friendly**: on screens up to 768 px wide (and on landscape phones) the React app shows **one pane at a time** instead of three squeezed side by side. The **map opens first**; a bottom bar switches between **List** (with the venue count), **Map** and **Filters**, and map markers are larger (44 px) so they are easy to tap; filters open as a bottom sheet, venue details and the add-venue / API-key forms open as full-width sheets with a large close button; the city chips swipe sideways; touch targets are at least 44 px and form fields 16 px (so iOS does not zoom in); the bottom bar respects the notch / home indicator. Opening the app on a phone no longer auto-opens the first venue over the list. Desktop keeps the three-pane layout (and a header bug at laptop widths, where the search box and the last cities were pushed off-screen, is fixed). `public/standalone.html` gets a lighter version of the same (map on top, list below, details full-screen). The phone rules live in `src/styles.css` (scoped to `.m-ui` / `.standalone-ui`, so nothing changes on desktop).
 - **Near me filter, on by default** (React app): when the page opens it quietly asks the browser for your location (no error is shown if you say no) and, once the venues are in, shows only venues within **500 m** of you, **nearest first**, each with a distance badge (`📍 240 m`, `📍 1.2 km`); the venue panel says how far it is, and the map frames the 500 m circle around your position. If nothing matching is that close it widens step by step (1 / 5 / 10 / 25 km) to the first radius that has a venue and says so; if you are not near any venue (for example abroad) it stays on *Anywhere* with a short notice. The **NEAR ME** row (also in the phone filter sheet) has **Anywhere / 500 m / 1 / 5 / 10 / 25 km**; anything you pick yourself (a radius, *Anywhere*, a city chip, the header **Near Me** button, *Scan around me*) wins over the automatic choice, and your last radius or *Anywhere* is remembered in this browser (just that preference, never the location) for the next visit. If nothing is within range the list names the nearest match and offers *Try a bigger radius*, *Show everywhere* and *Scan around me* (an OpenStreetMap scan of your area). Picking a city chip turns Near me off; Near me from a single-city view switches to the whole country first. **Privacy:** your location is used only in your browser to filter and sort and is never stored or sent; the only time it is sent to the server is if you press *Scan around me* (or have a Google key and use the header button). The distance maths is in `src/geo.js`, the remembered preference in `src/nearMePref.js`. (The standalone page keeps its older "Near Me" button that only recentres the map; the radius map layer is for the OpenStreetMap map, not the optional Google map.)
-- **Shows venues that serve Guinness by default**: both UIs open with the **✓ Serves Guinness** filter on (confirmed on tap, cans/bottles, or mentioned in reviews). Venues that are *unchecked* or reported as *not serving* it are hidden, but never deleted: press **Show All** to see them. If the default hides everything (for example a freshly scanned area whose menus haven't been checked yet), the list says how many venues are hidden and offers a **Show all venues** button. The header count ("N of M Venues Serve Guinness") always counts every venue matching the type/search filters.
+- **Shows venues that serve Guinness by default**: both UIs open with the **✓ Serves Guinness** filter on (confirmed, or *likely*: mentioned in Google reviews, reported by a visitor, listed on OpenStreetMap, or an Irish-sounding name). Venues that are *unchecked* or reported as *not serving* it are hidden, but never deleted: press **Show All** to see them. If the default hides everything (for example a freshly scanned area whose menus haven't been checked yet), the list says how many venues are hidden and offers a **Show all venues** button. The header count ("N of M venues confirmed to serve Guinness", plus how many more are *likely*) always counts every venue matching the type/search filters, and only real evidence counts as confirmed.
 
 ---
 
@@ -79,6 +79,20 @@ On a Vercel deployment the legacy `GOOGLE_MAPS_API_KEY` is **ignored** (it used 
 | `RATE_LIMIT_HEAVY_PER_10MIN` | `3` | nationwide Overpass scan (`mode=osm_ch`) |
 
 Over-limit requests get `429` with a `Retry-After` header; both UIs show the message. Set `RATE_LIMIT_DISABLED=1` only for local debugging.
+
+### How the app labels its evidence
+
+A venue only gets the evidence it really has; nothing is filled in to look complete (code in [`evidence.py`](evidence.py), `compute_guinness_status()` in `app_server.py`). Each field holds one kind of evidence or is empty:
+
+| Field | Means | Never |
+| :--- | :--- | :--- |
+| `menuCheck` | we fetched the venue's website and read it; `foundOnMenu` is true only if the page text says "Guinness". A page that cannot be read is *not checked*, never "no Guinness" | set from a tag or a name |
+| `reviewCheck` | Google review/summary text that really mentions Guinness (a summary counts once) | invented counts or quotes |
+| `crowdCheck` | reports submitted by visitors of this app | filled from a scan or a guess |
+| `tagCheck` | a weaker hint, not a check: `osm_tag` (a volunteer-edited OpenStreetMap tag names Guinness), `irish_name`, or `starter_list` (this app's hand-written list, never checked) | counts as "confirmed" |
+| `googleRating` / `priceLevel` | only what Google returned | a placeholder (they are empty otherwise) |
+
+The labels follow from that: **Confirmed** needs a website that says so, two visitor reports or five Google review mentions (it says "On Tap" only if the page or a visitor said so); **Mentioned in Google reviews**, **Reported by 1 visitor**, **Guinness mentioned on website** and the unverified hints (*Listed on OpenStreetMap*, *Irish pub by name*, *Starter list*) are "likely"; **No Guinness found on website** (60% confidence) means a page was read and did not mention it, which is weaker than proof, and it never overrides a hint or a report; **Reported not served** needs three visitor denials. The venue panel explains a hint in a line of text. The bundled data files (`swiss_crawl_results.json`, the starter list) were originally generated with invented ratings, review counts and review quotes: `evidence.sanitise_static_venue()` strips those when they are loaded and the crawler now writes only what it observed.
 
 ### Live area scans and the public Overpass servers
 
@@ -162,6 +176,7 @@ npm run test:e2e    # builds the React app, then drives real pages in Chromium (
 | `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
 | `tests/test_overpass.py` | failover across real local HTTP servers that play busy/broken mirrors: every retryable status, timeouts, HTML/garbage/JSON-array answers, HTTP 200 with a timeout remark, dead servers, HTTP 400 stops at once, giving up with a friendly error, the overall deadline, pauses between passes, the cache (hit, expiry, off, stale-if-error, bounded), and the scan functions + API (503 + `Retry-After`) |
 | `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
+| `tests/test_evidence.py`, `tests/e2e/evidence.e2e.mjs` | **honest evidence**: the bundled data files and every importer carry no invented ratings, review counts, quotes or visitor reports (checked over all ~230 real venues); a tag or a name is a labelled hint, never "confirmed" or "found on a menu"; an unreadable website is *unknown*, not *no Guinness*; "On Tap" only when the page says so; the header counts confirmed and likely apart; the venue panel explains a hint |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 | `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
@@ -173,17 +188,6 @@ npm run test:e2e    # builds the React app, then drives real pages in Chromium (
 
 When fixing a bug, add a failing test first (name it `regression: ...`). Tests never call Google or any external site.
 
---- | :--- |
-| `tests/test_guard.py` | URL normalisation, public-address rules, SSRF-safe fetching against real local servers (redirect hops, DNS pinning, size/time caps, slow-drip & slow-header attacks), input validation, rate limiter |
-| `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
-| `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
-| `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
-| `tests/test_overpass.py` | failover across real local HTTP servers that play busy/broken mirrors: every retryable status, timeouts, HTML/garbage/JSON-array answers, HTTP 200 with a timeout remark, dead servers, HTTP 400 stops at once, giving up with a friendly error, the overall deadline, pauses between passes, the cache (hit, expiry, off, stale-if-error, bounded), and the scan functions + API (503 + `Retry-After`) |
-| `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
-| `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
-| `tests/js/*.test.js` | Node SSRF guard & scraper, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
-
-When fixing a bug, add a failing test first. Tests never call Google or any external site.
 
 ---
 
@@ -234,6 +238,7 @@ Guinness/
 │   └── index.py                     # Vercel Python Serverless Function entrypoint
 ├── app_server.py                    # Zero-dependency Python 3 server + embedded Swiss dataset
 ├── guard.py                         # SSRF-safe fetching, input validation, rate limiting (stdlib only)
+├── evidence.py                      # What counts as evidence for a venue; strips invented data from the bundled files (stdlib only)
 ├── storage.py                       # File + Upstash/Vercel-KV persistence for community data (stdlib only)
 ├── overture.py                      # Fills missing venue websites from the Overture extract (stdlib only)
 ├── overpass.py                      # Overpass API access: backup servers, retries, cache, friendly errors (stdlib only)
@@ -252,7 +257,7 @@ Guinness/
 │   ├── install_git_hooks.sh         # Installs local Git hooks (auto-push on commit)
 │   └── sync_to_git.sh               # Stages, commits, and pushes changes to origin/main
 ├── server/
-│   ├── index.js                     # Express API backend
+│   ├── index.js                     # Express API backend (dev server, same status rules as app_server.py)
 │   ├── data/
 │   │   └── demoVenues.js            # Curated Swiss venue dataset for Express server
 │   └── services/

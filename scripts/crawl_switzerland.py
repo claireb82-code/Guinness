@@ -21,6 +21,8 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT_DIR)
+import evidence  # noqa: E402 - the crawler writes only evidence it really has (see evidence.py)
 DATA_DIR = os.path.join(ROOT_DIR, "server", "data")
 RESULTS_PATH = os.path.join(DATA_DIR, "swiss_crawl_results.json")
 RAW_OSM_CACHE_PATH = os.path.join(DATA_DIR, "swiss_osm_raw_cache.json")
@@ -736,10 +738,11 @@ def main():
         "byRegion": by_region_stats,
     }
 
+    # The records above are built with placeholder ratings/counts/quotes; keep only what was really observed.
     payload = {
         "stats": stats,
-        "confirmedVenues": confirmed_venues_output,
-        "verifiedNoGuinnessSample": verified_no_guinness_sample,
+        "confirmedVenues": [evidence.sanitise_static_venue(v) for v in confirmed_venues_output],
+        "verifiedNoGuinnessSample": [evidence.sanitise_static_venue(v) for v in verified_no_guinness_sample],
     }
 
     with open(RESULTS_PATH, "w", encoding="utf-8") as f:

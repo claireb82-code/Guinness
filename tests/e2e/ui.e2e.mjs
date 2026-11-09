@@ -28,10 +28,10 @@ const evil = { id: 'evil-1', city: 'zurich', name: 'Evil Pub <img src=x onerror=
   menuCheck: { checked: true, foundOnMenu: true, typesFound: ['Guinness Draught (On Tap)'], snippets: ['<b>Guinness</b> <script>window.pwned=1</script>'] }, crowdCheck: {}, reviewCheck: {},
   guinnessSummary: summary('confirmed_draught', 'Confirmed Guinness On Tap') };
 const good = { ...evil, id: 'good-1', name: 'Good Pub', website: 'https://good-pub.example/', menuUrl: 'https://good-pub.example/menu', lat: 47.38,
-  menuCheck: { checked: false, foundOnMenu: false, typesFound: [], snippets: [] }, guinnessSummary: summary('likely_serves', 'Mentioned in Reviews') };
+  menuCheck: { checked: false, foundOnMenu: false, typesFound: [], snippets: [] }, tagCheck: { kind: 'irish_name', text: 'The name suggests an Irish pub. Nothing was checked, so this is a guess.' }, guinnessSummary: summary('likely_serves', 'Irish pub by name (unverified)') };
 // Not confirmed to serve Guinness: hidden by the default filter.
 const quiet = { ...good, id: 'quiet-1', name: 'Quiet Cafe', category: 'restaurant', lat: 47.39, website: null, menuUrl: null, guinnessSummary: summary('unverified', 'Needs Menu / Crowd Check') };
-const none = { ...good, id: 'none-1', name: 'Pasta Place', category: 'restaurant', lat: 47.40, website: null, menuUrl: null, guinnessSummary: summary('no_guinness', 'No Guinness Served') };
+const none = { ...good, id: 'none-1', name: 'Pasta Place', category: 'restaurant', lat: 47.40, website: null, menuUrl: null, guinnessSummary: summary('no_guinness', 'No Guinness found on website') };
 
 const leafletStub = `
   const chain = () => new Proxy(function () {}, { get: (t, p) => (p === Symbol.toPrimitive ? () => '' : p === 'then' ? undefined : chain()), apply: () => chain(), construct: () => chain() });
@@ -79,7 +79,7 @@ const skip = () => !chromium && 'Playwright is not installed';
 test('the page loads the real bundled data without script errors', { skip: skip() }, async () => {
   const { page, errors } = await openPage({ real: true });
   assert.ok((await page.locator('.venue-card').count()) >= 3);
-  assert.match(await page.locator('#sidebar-mount').textContent(), /\d+ of \d+ Venues Serve Guinness/);
+  assert.match(await page.locator('#sidebar-mount').textContent(), /\d+ of \d+ venues confirmed to serve Guinness/);
   assert.deepEqual(errors, []);
   await page.close();
 });
@@ -96,7 +96,9 @@ test('by default only venues that serve Guinness are shown', { skip: skip() }, a
 
 test('the header counts every venue in the area, not just the visible ones', { skip: skip() }, async () => {
   const { page } = await openPage();
-  assert.match(await page.locator('#sidebar-mount').textContent(), /2 of 4 Venues Serve Guinness/);
+  const text = await page.locator('#sidebar-mount').textContent();
+  assert.match(text, /1 of 4 venues confirmed to serve Guinness/);
+  assert.match(text, /1 more are likely \(unverified\)/, 'guesses are counted apart from confirmed venues');
   await page.close();
 });
 

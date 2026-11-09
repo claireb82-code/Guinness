@@ -28,10 +28,15 @@ class ComputeGuinnessStatusTests(unittest.TestCase):
     def status(self, **kw):
         return app.compute_guinness_status(venue(**kw))
 
-    def test_menu_mention_means_confirmed_on_tap(self):
+    def test_menu_mention_means_confirmed_but_not_necessarily_on_tap(self):
         r = self.status(menuCheck={"checked": True, "foundOnMenu": True})
-        self.assertEqual((r["status"], r["servingFormat"]), ("confirmed_draught", "draught"))
+        self.assertEqual((r["status"], r["servingFormat"]), ("confirmed_draught", "unknown"))
+        self.assertEqual(r["statusLabel"], "Guinness confirmed on website")  # "On Tap" only when the page says so
         self.assertGreaterEqual(r["confidence"], 78)
+
+    def test_menu_wording_decides_whether_it_is_on_tap(self):
+        r = self.status(menuCheck={"foundOnMenu": True, "snippets": ["Guinness vom Fass 5dl CHF 9.80"]})
+        self.assertEqual((r["servingFormat"], r["statusLabel"]), ("draught", "Confirmed Guinness On Tap"))
 
     def test_menu_with_only_bottles_or_cans_is_not_draught(self):
         r = self.status(menuCheck={"checked": True, "foundOnMenu": True, "typesFound": ["Guinness Cans", "Guinness Bottle"]})
@@ -306,7 +311,7 @@ class GooglePlacesMappingTests(unittest.TestCase):
 
     def test_counts_guinness_in_summaries_and_reviews(self):
         rc = self.run_live([OLD_STAND])["A"]["reviewCheck"]
-        self.assertEqual(rc["mentionCount"], 4)  # editorial summary (3) + one review (1)
+        self.assertEqual(rc["mentionCount"], 2)  # the editorial summary counts once, plus one review
         self.assertEqual(rc["sentiment"], "positive")
         self.assertEqual([e["author"] for e in rc["excerpts"]], ["Google Maps Editorial Summary", "Anna"])
 
@@ -389,12 +394,14 @@ class OverpassMappingTests(unittest.TestCase):
         self.assertEqual(out["Cocktail Corner"]["menuUrl"], "https://corner.example/drinks")
         self.assertEqual(out["Pasta Place"]["address"], "Switzerland")  # no address tags at all
 
-    def test_a_guinness_brewery_tag_confirms_without_scraping(self):
+    def test_a_guinness_brewery_tag_is_a_hint_not_a_menu_check(self):
         with mock.patch.object(app, "scrape_menu_url") as scrape:
             out = {v["name"]: v for v in self.run_osm(OSM_ELEMENTS, app.fetch_osm_overpass_live, 47.37, 8.54)}
         brew = out["Brew House"]
-        self.assertTrue(brew["menuCheck"]["foundOnMenu"] and brew["menuCheck"]["checked"])
-        self.assertEqual(app.enrich_venue(brew, NO_STORE)["guinnessSummary"]["status"], "confirmed_draught")
+        self.assertEqual((brew["menuCheck"]["checked"], brew["menuCheck"]["foundOnMenu"]), (False, False))
+        self.assertEqual(brew["tagCheck"]["kind"], "osm_tag")
+        summary = app.enrich_venue(brew, NO_STORE)["guinnessSummary"]
+        self.assertEqual((summary["status"], summary["statusLabel"]), ("likely_serves", "Listed on OpenStreetMap (unverified)"))
         scrape.assert_not_called()
 
     def test_untouched_websites_are_not_scanned_by_default(self):

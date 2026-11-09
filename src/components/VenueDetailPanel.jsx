@@ -221,6 +221,12 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
             </span>
           </div>
 
+          {venue.tagCheck?.text && (
+            <p className="evidence-note" style={{ fontSize: '0.74rem', color: '#9c8e7b', lineHeight: 1.4, marginBottom: '0.6rem' }}>
+              {venue.tagCheck.text}
+            </p>
+          )}
+
           {venue.editorialSummary && (
             <p style={{ fontSize: '0.8rem', color: '#d7cbb8', lineHeight: 1.45, marginBottom: '0.75rem' }}>
               {highlightGuinnessText(venue.editorialSummary)}
