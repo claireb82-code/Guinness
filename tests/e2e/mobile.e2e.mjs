@@ -28,7 +28,7 @@ async function open(base, { device, viewport, waitFor = '.venue-card' } = {}) {
   page.on('pageerror', (e) => errors.push(e.message));
   await routeOffline(page);
   await page.goto(`${base}/`);
-  await page.waitForSelector(waitFor, { timeout: 20000 });
+  await page.waitForSelector(waitFor, { timeout: 20000, state: 'attached' }); // list cards exist but are hidden while the map tab shows
   await page.waitForTimeout(300);
   return { page, context, errors, tap: (target, options) => (device ? page.locator(target).first().tap(options) : page.locator(target).first().click(options)) };
 }
@@ -47,18 +47,25 @@ for (const device of ['iPhone SE', 'iPhone 13', 'Pixel 5', 'iPhone 13 landscape'
   });
 }
 
-test('phone: the venue list comes first and nothing covers it', { skip: skip() }, async () => {
-  const { page, context } = await open(app.react, { device: 'iPhone 13' });
-  assert.equal(await page.locator('.sidebar-list').isVisible(), true);
+test('phone: the map opens first, the list is one tap away, and nothing covers either', { skip: skip() }, async () => {
+  const { page, context, tap } = await open(app.react, { device: 'iPhone 13' });
+  assert.equal(await page.getAttribute('.mobile-nav button:has-text("Map")', 'aria-current'), 'page', 'the Map tab is the default');
+  const map = await box(page, '.leaflet-container');
+  assert.ok(map.width >= 300 && map.height >= 300, `map is ${map.width}x${map.height}`);
+  assert.equal(await page.locator('.sidebar-list').isVisible(), false);
   assert.equal(await page.locator('.detail-drawer').count(), 0, 'the details sheet must not open by itself on a phone');
   assert.equal(await page.locator('.mobile-nav').isVisible(), true);
   assert.deepEqual(await page.$$eval('.mobile-nav button', (b) => b.map((x) => x.querySelector('span').textContent)), ['List', 'Map', 'Filters']);
   assert.equal(await page.locator('.toolbar-strip').isVisible(), false, 'filters live in a sheet until opened');
+  await tap('.mobile-nav button:has-text("List")');
+  assert.equal(await page.locator('.sidebar-list').isVisible(), true);
+  assert.equal(await page.locator('.detail-drawer').count(), 0);
   await context.close();
 });
 
 test('phone: tapping a venue opens a full-screen sheet, and closing it returns to the list', { skip: skip() }, async () => {
   const { page, context, tap } = await open(app.react, { device: 'iPhone 13' });
+  await tap('.mobile-nav button:has-text("List")');
   await tap('.venue-card >> nth=0'); // fails if Leaflet markers sit on top of the list and swallow the tap
   await page.waitForSelector('.detail-drawer');
   await page.waitForTimeout(350); // let the 0.2s slide-up finish before measuring
@@ -73,21 +80,34 @@ test('phone: tapping a venue opens a full-screen sheet, and closing it returns t
   await context.close();
 });
 
-test('phone: the Map tab shows a working map and the List tab brings the list back', { skip: skip() }, async () => {
+test('phone: markers open the details, and the Map and List tabs switch back and forth', { skip: skip() }, async () => {
   const { page, context, tap } = await open(app.react, { device: 'iPhone 13' });
+  assert.ok((await page.locator('.leaflet-marker-icon').count()) > 5, 'markers are drawn');
+  await tap('.leaflet-marker-icon', { force: true }); // markers overlap near Zurich; whichever is on top opens its venue
+  await page.waitForSelector('.detail-drawer');
+  await tap('.drawer-close');
+  assert.equal(await page.locator('.sidebar-list').isVisible(), false, 'closing the details returns to the map');
+  await tap('.mobile-nav button:has-text("List")');
+  assert.equal(await page.locator('.sidebar-list').isVisible(), true);
+  assert.equal(await page.getAttribute('.mobile-nav button:has-text("List")', 'aria-current'), 'page');
   await tap('.mobile-nav button:has-text("Map")');
   assert.equal(await page.locator('.sidebar-list').isVisible(), false);
   const map = await box(page, '.leaflet-container');
   assert.ok(map.width >= 300 && map.height >= 300, `map is ${map.width}x${map.height}`);
   assert.equal(await page.getAttribute('.mobile-nav button:has-text("Map")', 'aria-current'), 'page');
-  assert.ok((await page.locator('.leaflet-marker-icon').count()) > 5, 'markers are drawn');
-  await tap('.leaflet-marker-icon', { force: true }); // markers overlap near Zurich; whichever is on top opens its venue
-  await page.waitForSelector('.detail-drawer');
-  await tap('.drawer-close');
-  await tap('.mobile-nav button:has-text("List")');
-  assert.equal(await page.locator('.sidebar-list').isVisible(), true);
-  assert.equal(await page.getAttribute('.mobile-nav button:has-text("List")', 'aria-current'), 'page');
   await context.close();
+});
+
+test('phone: map markers are big enough to tap; desktop markers keep their size', { skip: skip() }, async () => {
+  const phone = await open(app.react, { device: 'iPhone 13' });
+  const sizes = (page) => page.$$eval('.leaflet-marker-icon', (els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().width)))].sort((a, b) => a - b));
+  const onPhone = await sizes(phone.page);
+  assert.ok(onPhone.length > 0 && onPhone[0] >= 44, `phone marker widths: ${onPhone}`);
+  await phone.context.close();
+  const desktop = await open(app.react, { viewport: { width: 1280, height: 720 } });
+  const onDesktop = await sizes(desktop.page);
+  assert.ok(onDesktop[0] <= 36, `desktop marker widths: ${onDesktop}`);
+  await desktop.context.close();
 });
 
 test('phone: the filters sheet opens from the bottom bar and changes the list', { skip: skip() }, async () => {
@@ -127,6 +147,8 @@ test('phone: every visible control is at least 44px, and form fields are 16px (n
         .filter(({ r, e }) => r.height < 43.5 || (e.tagName === 'BUTTON' && r.width < 43.5))
         .map(({ e, r }) => `${e.tagName}.${e.className} ${Math.round(r.width)}x${Math.round(r.height)} "${(e.textContent || e.getAttribute('aria-label') || '').trim().slice(0, 24)}"`),
     );
+  assert.deepEqual(await tooSmall(), [], 'map view');
+  await tap('.mobile-nav button:has-text("List")');
   assert.deepEqual(await tooSmall(), [], 'list view');
   await tap('.header-actions .btn-outline');
   await page.waitForSelector('.modal-card');
@@ -153,10 +175,13 @@ test('phone: the add-venue form is a full-width bottom sheet with a single colum
   await context.close();
 });
 
-test('landscape phone gets the phone layout, not the cramped desktop one', { skip: skip() }, async () => {
+test('landscape phone gets the phone layout (map first), not the cramped desktop one', { skip: skip() }, async () => {
   const { page, context } = await open(app.react, { device: 'iPhone 13 landscape' });
   assert.equal(await page.locator('.mobile-nav').isVisible(), true);
   assert.equal(await page.locator('.detail-drawer').count(), 0);
+  const map = await box(page, '.leaflet-container');
+  assert.ok(map.height >= 200, `map is only ${map.height}px tall`);
+  await page.tap('.mobile-nav button:has-text("List")');
   const list = await box(page, '.sidebar-list');
   assert.ok(list.height >= 200, `list is only ${list.height}px tall`);
   await context.close();

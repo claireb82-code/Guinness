@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createMarkerSvgDataUrl } from './PintIcon.jsx';
+import { markerSize } from '../layout.js';
 
 const GUINNESS_GOOGLE_MAP_STYLES = [
   { elementType: 'geometry', stylers: [{ color: '#171310' }] },
@@ -137,7 +138,7 @@ export function MapCanvas({
       const isSelected = selectedVenue?.id === venue.id;
       const status = venue.guinnessSummary?.status || 'unverified';
       const iconUrl = createMarkerSvgDataUrl(status, isSelected);
-      const size = isSelected ? 44 : 36;
+      const size = markerSize(isSelected);
 
       const imgEl = document.createElement('img');
       imgEl.src = iconUrl;
@@ -211,7 +212,7 @@ export function MapCanvas({
       const isSelected = selectedVenue?.id === venue.id;
       const status = venue.guinnessSummary?.status || 'unverified';
       const iconUrl = createMarkerSvgDataUrl(status, isSelected);
-      const size = isSelected ? 44 : 36;
+      const size = markerSize(isSelected);
 
       const customIcon = window.L.icon({
         iconUrl,

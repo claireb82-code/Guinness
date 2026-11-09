@@ -18,14 +18,11 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { PintIcon, formatCategoryLabel } from './components/PintIcon.jsx';
+import { isPhoneLayout } from './layout.js';
 import { MapCanvas } from './components/MapCanvas.jsx';
 import { VenueDetailPanel } from './components/VenueDetailPanel.jsx';
 import { ApiKeyModal } from './components/ApiKeyModal.jsx';
 import { AddVenueModal } from './components/AddVenueModal.jsx';
-
-// Must match the phone breakpoint in styles.css (one pane at a time, full-screen details).
-const PHONE_QUERY = '(max-width: 768px), (max-height: 500px) and (orientation: landscape)';
-const isPhoneLayout = () => typeof window !== 'undefined' && window.matchMedia(PHONE_QUERY).matches;
 
 const DEFAULT_CITIES = {
   all: { id: 'all', name: 'All Switzerland 🇨🇭', lat: 46.8182, lng: 8.2275, zoom: 8 },
@@ -52,8 +49,8 @@ export default function App() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   // Default: only venues that serve Guinness ("Show All" is one click away).
   const [guinnessFilter, setGuinnessFilter] = useState('serves_any');
-  // Phone layout: one pane at a time (list or map) plus a bottom "Filters" sheet. Desktop ignores these.
-  const [mobileView, setMobileView] = useState('list');
+  // Phone layout: one pane at a time (map or list) plus a bottom "Filters" sheet. The map comes first. Desktop ignores these.
+  const [mobileView, setMobileView] = useState('map');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Google Maps & Mode State
