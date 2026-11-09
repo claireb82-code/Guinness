@@ -80,6 +80,17 @@ On a Vercel deployment the legacy `GOOGLE_MAPS_API_KEY` is **ignored** (it used 
 
 Over-limit requests get `429` with a `Retry-After` header; both UIs show the message. Set `RATE_LIMIT_DISABLED=1` only for local debugging.
 
+### Live area scans and the public Overpass servers
+
+"Scan this area" asks OpenStreetMap's free **Overpass API** for venues. Those servers are shared and often busy (HTTP 429/502/503/504, timeouts, or HTTP 200 with a "query timed out" remark and no results), and the app used to try one server once. `overpass.py` now:
+
+- tries **backup servers** in order (`overpass-api.de`, then two community mirrors) for up to two passes, inside a 40 s overall deadline that fits a Vercel function;
+- moves on for overload-style failures but stops immediately on HTTP 400 (a malformed query would be rejected everywhere);
+- **caches** results for 5 minutes (so re-scanning an area is free) and, if every server is down, serves a copy up to an hour old rather than failing;
+- when everything fails, the API answers **503 with a readable message** ("OpenStreetMap's public search servers are busy right now. Please try again in a minute.") and a `Retry-After` header instead of a raw "HTTP Error 502". The nationwide scan still falls back to the bundled data.
+
+Tunable with `OVERPASS_URLS` (comma-separated, tried in order), `OVERPASS_ATTEMPT_SECONDS`, `OVERPASS_DEADLINE_SECONDS`, `OVERPASS_ROUNDS`, `OVERPASS_RETRY_PAUSE_SECONDS`, `OVERPASS_CACHE_SECONDS` (0 = off) and `OVERPASS_STALE_SECONDS`. The two backup mirrors are public community servers that I could not reach from my sandbox, so they are untested against the real services; a dead mirror just costs one failed attempt (set `OVERPASS_URLS` if you prefer your own).
+
 ### Where venue websites come from (OpenStreetMap + Overture Maps)
 
 The Guinness scanner reads a venue's own website, so a venue without one cannot be checked. OpenStreetMap lists a website for only about a third of Swiss venues. [Overture Maps](https://overturemaps.org) (an open dataset) lists one for roughly half, so the app fills gaps from it:
@@ -149,6 +160,7 @@ npm run test:e2e    # builds the React app, then drives real pages in Chromium (
 | `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
 | `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
 | `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
+| `tests/test_overpass.py` | failover across real local HTTP servers that play busy/broken mirrors: every retryable status, timeouts, HTML/garbage/JSON-array answers, HTTP 200 with a timeout remark, dead servers, HTTP 400 stops at once, giving up with a friendly error, the overall deadline, pauses between passes, the cache (hit, expiry, off, stale-if-error, bounded), and the scan functions + API (503 + `Retry-After`) |
 | `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
@@ -166,6 +178,7 @@ When fixing a bug, add a failing test first (name it `regression: ...`). Tests n
 | `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
 | `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
 | `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
+| `tests/test_overpass.py` | failover across real local HTTP servers that play busy/broken mirrors: every retryable status, timeouts, HTML/garbage/JSON-array answers, HTTP 200 with a timeout remark, dead servers, HTTP 400 stops at once, giving up with a friendly error, the overall deadline, pauses between passes, the cache (hit, expiry, off, stale-if-error, bounded), and the scan functions + API (503 + `Retry-After`) |
 | `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
@@ -223,6 +236,7 @@ Guinness/
 ├── guard.py                         # SSRF-safe fetching, input validation, rate limiting (stdlib only)
 ├── storage.py                       # File + Upstash/Vercel-KV persistence for community data (stdlib only)
 ├── overture.py                      # Fills missing venue websites from the Overture extract (stdlib only)
+├── overpass.py                      # Overpass API access: backup servers, retries, cache, friendly errors (stdlib only)
 ├── tests/                           # python3 -m unittest suites; tests/js (Node), tests/e2e (browser), tests/fixtures
 ├── .github/workflows/test.yml       # CI: runs every test suite on push / PR
 ├── index.html                       # Vite React entry HTML
