@@ -265,7 +265,7 @@ export function MapCanvas({
       zIndexOffset: 1000,
     }).addTo(map);
     nearLayersRef.current = [circle, dot];
-    map.fitBounds(circle.getBounds(), { padding: [24, 24], maxZoom: 16 });
+    map.fitBounds(circle.getBounds(), { padding: [24, 24], maxZoom: 17 });
   }, [userLocation?.lat, userLocation?.lng, radiusKm, googleApiKey, googleSdkReady]);
 
   // Pan to selected venue smoothly

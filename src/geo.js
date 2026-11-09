@@ -1,7 +1,9 @@
 // Distance helpers for the "Near me" filter. Pure functions (no browser APIs), unit-tested in tests/js/geo.test.js.
 
-export const RADII_KM = [1, 5, 10, 25];
-export const DEFAULT_RADIUS_KM = 5;
+export const RADII_KM = [0.5, 1, 5, 10, 25];
+// Where Near me starts (and what the map first frames): 500 m around the visitor. The automatic default widens
+// from here until it finds a venue, so it never starts on an empty list.
+export const DEFAULT_RADIUS_KM = 0.5;
 
 const EARTH_RADIUS_KM = 6371.0088;
 const toRad = (deg) => (deg * Math.PI) / 180;
@@ -14,6 +16,11 @@ export function distanceKm(a, b) {
   const dLng = toRad(b.lng - a.lng);
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** "500 m", "1 km", "25 km" - labels for the radius pills. */
+export function formatRadius(km) {
+  return km < 1 ? `${Math.round(km * 1000)} m` : `${km} km`;
 }
 
 /** "450 m", "1.2 km", "12 km", "312 km" - short enough for a badge. */
@@ -45,6 +52,19 @@ export function nearest(venues, origin) {
     if (Number.isFinite(d) && (best === null || d < best.distanceKm)) best = { ...v, distanceKm: d };
   }
   return best;
+}
+
+/**
+ * The smallest radius (>= ``minKm``) that has at least one venue in range, or null if none does.
+ * Used for the automatic Near me default: never start on an empty list.
+ */
+export function pickRadius(venues, origin, minKm = DEFAULT_RADIUS_KM, radii = RADII_KM) {
+  if (!isCoord(origin)) return null;
+  for (const r of [...radii].sort((a, b) => a - b)) {
+    if (r < minKm) continue;
+    if (venues.some((v) => distanceKm(origin, v) <= r)) return r;
+  }
+  return null;
 }
 
 /** A friendly message for a geolocation failure (the browser's GeolocationPositionError codes). */

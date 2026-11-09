@@ -180,8 +180,10 @@ body {
   border: 1px solid rgba(74, 163, 255, 0.35);
 }
 .near-status,
+.near-notice,
 .near-error { font-size: 0.74rem; }
-.near-status { color: var(--cream-muted); }
+.near-status,
+.near-notice { color: var(--cream-muted); }
 .near-error { color: var(--crimson-no); }
 .near-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-top: 0.9rem; }
 .user-location-marker span {

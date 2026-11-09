@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { distanceKm, formatDistance, nearby, nearest, locationErrorMessage, RADII_KM, DEFAULT_RADIUS_KM } from '../../src/geo.js';
+import { distanceKm, formatDistance, nearby, nearest, locationErrorMessage, RADII_KM, DEFAULT_RADIUS_KM, formatRadius } from '../../src/geo.js';
 
 const ZURICH = { lat: 47.3769, lng: 8.5417 };
 const BERN = { lat: 46.948, lng: 7.4474 };
@@ -91,4 +91,64 @@ test('locationErrorMessage covers permission, timeout, unavailable and unsupport
   assert.match(locationErrorMessage({ code: 2 }), /could not work out/i);
   assert.match(locationErrorMessage(new Error('unsupported')), /https/i);
   assert.match(locationErrorMessage(undefined), /https/i);
+});
+
+import { pickRadius } from '../../src/geo.js';
+import { readNearMePref, writeNearMePref, NEAR_ME_PREF_KEY } from '../../src/nearMePref.js';
+
+test('pickRadius: the smallest radius at or above the minimum that has a venue, else null', () => {
+  const near = { lat: 47.3779, lng: 8.5403 };
+  const at = (km) => ({ id: `v${km}`, lat: 47.3779 + km / 111.19, lng: 8.5403 }); // km due north
+  assert.equal(pickRadius([at(2)], near), 5);
+  assert.equal(pickRadius([at(7)], near), 10);
+  assert.equal(pickRadius([at(20)], near), 25);
+  assert.equal(pickRadius([at(40)], near), null, 'nothing within 25 km: do not start on an empty list');
+  assert.equal(pickRadius([at(0.5)], near, 1), 1, 'a saved smaller radius is respected when it has results');
+  assert.equal(pickRadius([at(2)], near, 1), 5, '...and widened when it has none');
+  assert.equal(pickRadius([at(2)], near, 10), 10, 'never narrower than the minimum');
+  assert.equal(pickRadius([], near), null);
+  assert.equal(pickRadius([at(2)], null), null);
+  assert.equal(pickRadius([{ id: 'x' }], near), null, 'venues without coordinates never count');
+});
+
+function fakeStorage(initial) {
+  const data = { ...initial };
+  return { data, getItem: (k) => (k in data ? data[k] : null), setItem: (k, v) => { data[k] = String(v); } };
+}
+
+test('near-me preference: round trip, and only well-formed values survive', () => {
+  const s = fakeStorage();
+  assert.deepEqual(readNearMePref(s), {});
+  assert.equal(writeNearMePref(s, { mode: 'on', km: 10 }), true);
+  assert.deepEqual(readNearMePref(s), { mode: 'on', km: 10 });
+  assert.deepEqual(readNearMePref(fakeStorage({ [NEAR_ME_PREF_KEY]: '{"mode":"off","km":3,"evil":"x"}' })), { mode: 'off' }, 'unknown radius and fields are dropped');
+  for (const junk of ['{nope', 'null', '5', '"on"', '[]', '{"mode":"maybe"}']) {
+    assert.deepEqual(readNearMePref(fakeStorage({ [NEAR_ME_PREF_KEY]: junk })), {}, junk);
+  }
+});
+
+test('near-me preference: broken or blocked storage never throws', () => {
+  const blocked = { getItem() { throw new Error('SecurityError'); }, setItem() { throw new Error('QuotaExceededError'); } };
+  assert.deepEqual(readNearMePref(blocked), {});
+  assert.equal(writeNearMePref(blocked, { mode: 'off' }), false);
+  assert.deepEqual(readNearMePref(undefined), {});
+});
+
+test('the default Near me radius is 500 m, the smallest option', () => {
+  assert.equal(DEFAULT_RADIUS_KM, 0.5);
+  assert.equal(RADII_KM[0], DEFAULT_RADIUS_KM);
+});
+
+test('formatRadius: metres below 1 km, kilometres from there', () => {
+  assert.equal(formatRadius(0.5), '500 m');
+  assert.equal(formatRadius(1), '1 km');
+  assert.equal(formatRadius(25), '25 km');
+});
+
+test('pickRadius starts at 500 m by default and widens step by step', () => {
+  const near = { lat: 47.3779, lng: 8.5403 };
+  const at = (km) => ({ id: `v${km}`, lat: 47.3779 + km / 111.19, lng: 8.5403 });
+  assert.equal(pickRadius([at(0.3)], near), 0.5);
+  assert.equal(pickRadius([at(0.7)], near), 1);
+  assert.equal(pickRadius([at(0.3), at(7)], near, 1), 1);
 });

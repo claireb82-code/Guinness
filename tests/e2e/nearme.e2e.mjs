@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPlaywright, startApp, routeOffline, haveLeaflet, haveBuild } from './helpers.mjs';
-import { distanceKm } from '../../src/geo.js';
+import { distanceKm, RADII_KM } from '../../src/geo.js';
 
 const pw = loadPlaywright();
 const unavailable = !pw ? 'Playwright is not installed' : !haveLeaflet() ? 'leaflet dev dependency missing (npm install)' : !haveBuild() ? 'dist/ missing (npm run build)' : false;
@@ -34,10 +34,13 @@ const expectedWithin = (origin, km) =>
     .filter((v) => v.d <= km)
     .sort((a, b) => a.d - b.d);
 
-async function open({ geolocation, device, viewport = { width: 1280, height: 720 } } = {}) {
+// auto: false (default) switches the automatic Near me off, so the tests below can start from "Anywhere" and click;
+// the "default on" tests pass auto: true to get the real first-visit behaviour.
+async function open({ geolocation, device, auto = false, viewport = { width: 1280, height: 720 } } = {}) {
   const options = device ? { ...pw.devices[device], deviceScaleFactor: 1 } : { viewport, deviceScaleFactor: 1 };
   if (geolocation) Object.assign(options, { geolocation, permissions: ['geolocation'] });
   const context = await browser.newContext(options);
+  if (!auto) await context.addInitScript(() => localStorage.setItem('guinness.nearMe', '{"mode":"off"}'));
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -116,11 +119,11 @@ test('the map shows your position and the radius; the details sheet shows the di
   await context.close();
 });
 
-test('the header "Near Me" button turns the filter on (5 km by default)', { skip: skip() }, async () => {
+test('the header "Near Me" button turns the filter on (500 m by default)', { skip: skip() }, async () => {
   const { page, context, tap } = await open({ geolocation: ZURICH_HB });
   await tap('.header-search .filter-pill:has-text("Near Me")');
-  await page.waitForSelector('.distance-badge');
-  assert.equal(await page.getAttribute(radiusPill('5 km'), 'aria-pressed'), 'true');
+  await page.waitForSelector(`${radiusPill('500 m')}.active`);
+  assert.equal(await page.getAttribute(radiusPill('500 m'), 'aria-pressed'), 'true');
   await context.close();
 });
 
@@ -242,5 +245,107 @@ test('phone: Near me lives in the filters sheet; the list is sorted by distance 
   assert.ok(distances.length >= 3 && distances.every((d, i) => i === 0 || d >= distances[i - 1] - 0.051), `ascending: ${distances}`);
   const { scrollW, clientW } = await page.evaluate(() => ({ scrollW: document.documentElement.scrollWidth, clientW: document.documentElement.clientWidth }));
   assert.equal(scrollW, clientW);
+  await context.close();
+});
+
+// ---- Near me is the default: on load the app asks for the position and starts at 500 m ----------------------------
+
+const smallestRadiusWithVenues = (origin) => RADII_KM.find((r) => expectedWithin(origin, r).length > 0);
+const pressedRadius = (page) => page.$$eval('.near-me-group .filter-pill[aria-pressed="true"]', (b) => b.map((x) => x.textContent.trim()));
+
+test('default: on load Near me is on, starting at 500 m and widening to the first radius that has a venue', { skip: skip() }, async () => {
+  const want = smallestRadiusWithVenues(ZURICH_HB);
+  const { page, context, errors } = await open({ geolocation: ZURICH_HB, auto: true });
+  await page.waitForSelector('.distance-badge');
+  const label = want < 1 ? `📍 ${want * 1000} m` : `📍 ${want} km`;
+  assert.deepEqual(await pressedRadius(page), [label]);
+  const distances = await cardDistances(page);
+  assert.ok(distances.length > 0 && distances.every((d) => d <= want + 0.06), `all within ${want} km: ${distances}`);
+  assert.deepEqual(distances, [...distances].sort((a, b) => a - b), 'nearest first');
+  assert.equal(await page.locator('path.near-me-circle').count(), 1, 'the radius is drawn on the map');
+  assert.equal(await page.locator('.near-notice').count(), want === RADII_KM[0] ? 0 : 1, 'a notice only when it had to widen');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('default: the radius widens when nothing is within 500 m, and says so', { skip: skip() }, async () => {
+  // a point 3 km north of a venue that serves Guinness, so the first radius with a venue is wider than 500 m
+  const v = all.filter(serves)[0];
+  const origin = { latitude: v.lat + 3 / 111.19, longitude: v.lng };
+  const want = smallestRadiusWithVenues(origin);
+  assert.ok(want > RADII_KM[0], `the test data should have nothing within 500 m of this point (first radius ${want})`);
+  const { page, context } = await open({ geolocation: origin, auto: true });
+  await page.waitForSelector('.distance-badge');
+  assert.equal((await pressedRadius(page)).length, 1);
+  assert.match(await page.textContent('.near-notice'), /Nothing within 500 m of you/);
+  const distances = await cardDistances(page);
+  assert.ok(distances.every((d) => d <= want + 0.06), `all within ${want} km: ${distances}`);
+  await context.close();
+});
+
+test('default: a visitor far from every venue (London) stays on Anywhere, with a notice and no empty list', { skip: skip() }, async () => {
+  const { page, context } = await open({ geolocation: LONDON, auto: true });
+  await page.waitForSelector('.near-notice');
+  assert.match(await page.textContent('.near-notice'), /nearest venue is .* from you.*everywhere in Switzerland/i);
+  assert.ok((await cardNames(page)).length > 0, 'venues are still listed');
+  assert.equal(await page.locator('.venue-cards-scroll >> text=No matching venues').count(), 0);
+  assert.equal(await page.locator('.distance-badge').count(), 0);
+  await context.close();
+});
+
+test('default: a denied permission is silent and the app stays on Anywhere', { skip: skip() }, async () => {
+  const { page, context } = await open({ auto: true });
+  assert.equal(await page.locator('.near-error').count(), 0, 'no error nag on load');
+  assert.equal(await page.locator('.near-notice').count(), 0);
+  assert.equal(await page.locator(radiusPill('Anywhere')).evaluate((e) => e.classList.contains('active')), true);
+  assert.ok((await cardNames(page)).length > 0);
+  await context.close();
+});
+
+test('default: the visitor\'s choice is remembered (the preference, never the location)', { skip: skip() }, async () => {
+  const { page, context, tap } = await open({ geolocation: ZURICH_HB, auto: true });
+  await page.waitForSelector('.distance-badge');
+  await tap(radiusPill('Anywhere'));
+  await page.reload();
+  await page.waitForSelector('.venue-card', { state: 'attached' });
+  await page.waitForTimeout(500);
+  assert.equal(await page.locator('.distance-badge').count(), 0, 'Anywhere stays chosen after a reload');
+  await tap(radiusPill('10 km'));
+  await page.waitForSelector('.distance-badge');
+  await page.reload();
+  await page.waitForSelector('.distance-badge');
+  assert.deepEqual(await pressedRadius(page), ['📍 10 km'], 'the saved radius is used on the next visit');
+  const stored = await page.evaluate(() => JSON.stringify(localStorage));
+  assert.ok(!/47\.3|8\.54|latitude|lat"/i.test(stored), `no coordinates in storage: ${stored}`);
+  await context.close();
+});
+
+test('default: a click made before the position arrives wins over the automatic choice', { skip: skip() }, async () => {
+  const { page, context } = await open({ geolocation: ZURICH_HB, auto: true });
+  await page.locator('.header-search .filter-pill:has-text("Zurich")').first().click();
+  await page.waitForTimeout(800);
+  assert.equal(await page.locator('.distance-badge').count(), 0, 'picking a city means browsing that city');
+  await context.close();
+});
+
+test('default: the position is not sent to the server by the automatic Near me', { skip: skip() }, async () => {
+  const { context, page } = await (async () => {
+    const o = await open({ geolocation: ZURICH_HB, auto: true });
+    return o;
+  })();
+  const urls = [];
+  page.on('request', (r) => urls.push(r.url()));
+  await page.reload();
+  await page.waitForSelector('.distance-badge');
+  assert.ok(urls.some((u) => u.includes('/api/venues')), 'venues were requested');
+  assert.ok(!urls.some((u) => /47\.37|8\.54/.test(u)), `no request carries the position:\n${urls.join('\n')}`);
+  await context.close();
+});
+
+test('default on a phone: Near me is applied without flagging "Filters changed", map first', { skip: skip() }, async () => {
+  const { page, context } = await open({ geolocation: ZURICH_HB, device: 'iPhone 13', auto: true });
+  await page.waitForSelector('.distance-badge', { state: 'attached' });
+  assert.equal(await page.getAttribute('.main-workspace', 'data-view'), 'map');
+  assert.equal(await page.locator('.nav-dot').count(), 0, 'an automatic default is not a change the visitor made');
   await context.close();
 });
