@@ -275,6 +275,15 @@ export function VenueDetailPanel({ venue, onClose, onScanMenu, onSubmitCrowdRepo
               </a>
             )}
           </div>
+          {venue.websiteSource === 'overture' && safeHttpUrl(venue.website) && (
+            <div style={{ fontSize: '0.68rem', color: '#9c8e7b', marginTop: '0.4rem' }}>
+              Website listed by{' '}
+              <a href="https://overturemaps.org" target="_blank" rel="noopener noreferrer" style={{ color: '#c8a45d' }}>
+                Overture Maps
+              </a>{' '}
+              (CDLA-Permissive-2.0).
+            </div>
+          )}
         </div>
 
         {/* PILLAR 1: WEBSITE & ONLINE MENU SCANNER */}

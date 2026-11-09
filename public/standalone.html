@@ -886,6 +886,11 @@
                         : ''
                     }
                   </div>
+                  ${
+                    selectedVenue.websiteSource === 'overture' && safeHttpUrl(selectedVenue.website)
+                      ? `<div style="font-size:0.68rem;color:#9c8e7b;margin-top:0.4rem;">Website listed by <a href="https://overturemaps.org" target="_blank" rel="noopener noreferrer" style="color:#c8a45d;">Overture Maps</a> (CDLA-Permissive-2.0).</div>`
+                      : ''
+                  }
                 </div>
 
                 <!-- Pillar 1: Menu Scanner -->

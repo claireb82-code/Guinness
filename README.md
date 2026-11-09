@@ -78,6 +78,15 @@ On a Vercel deployment the legacy `GOOGLE_MAPS_API_KEY` is **ignored** (it used 
 
 Over-limit requests get `429` with a `Retry-After` header; both UIs show the message. Set `RATE_LIMIT_DISABLED=1` only for local debugging.
 
+### Where venue websites come from (OpenStreetMap + Overture Maps)
+
+The Guinness scanner reads a venue's own website, so a venue without one cannot be checked. OpenStreetMap lists a website for only about a third of Swiss venues. [Overture Maps](https://overturemaps.org) (an open dataset) lists one for roughly half, so the app fills gaps from it:
+
+- `scripts/import_overture.py` builds **`server/data/overture_ch.json`**: Swiss pubs, bars, restaurants and hotels that list a website (the committed file is from release **2026-10-21.0**: 29,320 venues, 7.4 MB). It reads only the Parquet row groups that overlap Switzerland (about 116 MB of range requests instead of the multi-GB dataset), filters by the address country, status, confidence (≥ 0.5) and category, and drops social/booking/directory pages. Refresh it with `pip install pyarrow && python3 scripts/import_overture.py` (add `--release …` to pin one). Only this script needs `pyarrow`; the app itself stays standard-library only.
+- At runtime `overture.py` matches a venue found through OpenStreetMap that has **no website** to an Overture venue (similar name after dropping words like "Restaurant"/"Hotel", within 75 m) and borrows its website and phone number. The venue is marked `websiteSource: "overture"` and the venue panel credits Overture Maps. An OpenStreetMap website always wins. If the data file is missing, nothing changes.
+- **Measured accuracy (a rough estimate):** of the 203 bundled Swiss venues with a known website, Overture finds a match for about 60%, and for about 84% of those it returns the same website host; most of the rest are the same venue under a second domain (`goldauerhof.ch` vs `.com`) rather than a wrong venue. Treat a borrowed website as a good guess, not a certainty: scanning it can only ever produce the same "mentioned on the website" evidence as any other website.
+- **Licence:** Overture's places theme is CDLA-Permissive-2.0; see [`server/data/OVERTURE_ATTRIBUTION.md`](server/data/OVERTURE_ATTRIBUTION.md) and check Overture's current terms before redistributing the file. Only Switzerland is imported for now; adding a country later means adding it to `COUNTRIES` in the script.
+
 ### Checking that a git push really went live
 
 Vercel deploys automatically when the repository is connected: a push to the **Production Branch** (`main`) updates the live site, any other branch or PR gets its own **preview** URL. To confirm a deploy, the app reports the commit it is running in `/api/config`:
@@ -138,6 +147,7 @@ npm run test:e2e    # real page in Chromium (needs Playwright; skipped automatic
 | `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
 | `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
 | `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
+| `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 | `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
@@ -152,6 +162,7 @@ When fixing a bug, add a failing test first (name it `regression: ...`). Tests n
 | `tests/test_storage.py` | file backend, Redis backend against a fake Upstash server (sharing across instances, caps, outages, bad tokens, atomic expiring counters), backend selection |
 | `tests/test_api.py` | the real request handler end to end: key exposure, Vercel key policy, hardening, validation, persistence across "instances", poisoning, rate limiting, 503 behaviour |
 | `tests/test_deploy.py` | `vercel.json` bundles every module the function imports; entrypoint imports; no committed API keys |
+| `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 
@@ -207,6 +218,7 @@ Guinness/
 ├── app_server.py                    # Zero-dependency Python 3 server + embedded Swiss dataset
 ├── guard.py                         # SSRF-safe fetching, input validation, rate limiting (stdlib only)
 ├── storage.py                       # File + Upstash/Vercel-KV persistence for community data (stdlib only)
+├── overture.py                      # Fills missing venue websites from the Overture extract (stdlib only)
 ├── tests/                           # python3 -m unittest suites; tests/js (Node), tests/e2e (browser), tests/fixtures
 ├── .github/workflows/test.yml       # CI: runs every test suite on push / PR
 ├── index.html                       # Vite React entry HTML
@@ -215,6 +227,7 @@ Guinness/
 │   └── standalone.html              # Self-contained React + Leaflet UI served by app_server.py
 ├── scripts/
 │   ├── check_deploy.py              # Checks which commit is live on a deployment (git push -> Vercel)
+│   ├── import_overture.py           # Builds server/data/overture_ch.json from Overture Maps (needs pyarrow)
 │   ├── README.md                    # Documentation for scripts & automation utilities
 │   ├── check_google_maps.py         # Google Maps venue & review verifier / importer
 │   ├── crawl_switzerland.py         # Nationwide Swiss OSM Overpass + website menu crawler

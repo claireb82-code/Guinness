@@ -60,6 +60,7 @@ class VercelBundleTests(unittest.TestCase):
     def test_data_files_the_app_reads_are_bundled(self):
         bundled = bundled_files()
         self.assertIn("server/data/swiss_crawl_results.json", bundled)
+        self.assertIn("server/data/overture_ch.json", bundled)  # the Overture extract used to fill in websites
         self.assertTrue(any(p.startswith("public/") for p in bundled))
 
     def test_no_secrets_are_committed(self):

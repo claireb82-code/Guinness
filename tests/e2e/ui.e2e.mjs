@@ -157,6 +157,18 @@ test('a normal website gets a hardened external link', { skip: skip() }, async (
   await page.close();
 });
 
+test('a website that came from Overture Maps is credited; an OpenStreetMap one is not', { skip: skip() }, async () => {
+  for (const [source, credited] of [['overture', true], ['openstreetmap', false], [null, false]]) {
+    const { page } = await openPage({ venues: [{ ...good, websiteSource: source }] });
+    await page.click('.venue-card[data-vid="good-1"]');
+    await page.waitForSelector('a:has-text("Venue Website")');
+    const visible = (await page.innerText('body')).replace(/\s+/g, ' '); // visible text only (not the page's script source)
+    assert.equal(/Website listed by Overture Maps/.test(visible), credited, `source=${source}`);
+    if (credited) assert.equal(await page.locator('a[href="https://overturemaps.org"]').count(), 1);
+    await page.close();
+  }
+});
+
 test('a rejected submission shows the server\'s reason instead of failing silently', { skip: skip() }, async () => {
   const { page, dialogs } = await openPage();
   await page.route('**/api/crowd-report', (r) => r.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'note is too long (max 500 characters)' }) }));
