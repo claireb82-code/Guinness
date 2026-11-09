@@ -172,6 +172,8 @@ export function VenueDetailPanel({ venue, onClose, onScanMenu, onSubmitCrowdRepo
 
         <button
           onClick={onClose}
+          className="drawer-close"
+          aria-label="Close details"
           style={{
             background: '#241e18',
             border: '1px solid #382e24',

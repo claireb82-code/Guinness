@@ -37,6 +37,8 @@ export function ApiKeyModal({
           </div>
           <button
             onClick={onClose}
+            className="modal-close"
+            aria-label="Close"
             style={{
               background: 'transparent',
               border: 'none',
@@ -144,7 +146,7 @@ export function ApiKeyModal({
             Automatically crawl & scan venue websites for Guinness menus during Google Places searches
           </label>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.55rem', marginTop: '0.3rem' }}>
+          <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.55rem', marginTop: '0.3rem' }}>
             {keyInput.trim() && (
               <button
                 type="button"

@@ -94,6 +94,8 @@ export function AddVenueModal({
           </div>
           <button
             onClick={onClose}
+            className="modal-close"
+            aria-label="Close"
             style={{ background: 'transparent', border: 'none', color: '#b8ab99', cursor: 'pointer' }}
           >
             <X size={18} />
@@ -128,7 +130,7 @@ export function AddVenueModal({
             value={gmapsQuery}
             onChange={(e) => setGmapsQuery(e.target.value)}
           />
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="stack-row" style={{ display: 'flex', gap: '0.5rem' }}>
             <input
               type="text"
               className="stout-input"
@@ -149,7 +151,7 @@ export function AddVenueModal({
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.55rem' }}>
+          <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.55rem' }}>
             <div>
               <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
                 Venue Name *
@@ -240,7 +242,7 @@ export function AddVenueModal({
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.55rem' }}>
+          <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.55rem' }}>
             <div>
               <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
                 Guinness Status
@@ -303,7 +305,7 @@ export function AddVenueModal({
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.35rem' }}>
+          <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.35rem' }}>
             <button type="button" className="btn-outline" onClick={onClose}>
               Cancel
             </button>

@@ -13,12 +13,19 @@ import {
   FileSearch,
   MessageSquare,
   Users,
+  List,
+  Map as MapIcon,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { PintIcon, formatCategoryLabel } from './components/PintIcon.jsx';
 import { MapCanvas } from './components/MapCanvas.jsx';
 import { VenueDetailPanel } from './components/VenueDetailPanel.jsx';
 import { ApiKeyModal } from './components/ApiKeyModal.jsx';
 import { AddVenueModal } from './components/AddVenueModal.jsx';
+
+// Must match the phone breakpoint in styles.css (one pane at a time, full-screen details).
+const PHONE_QUERY = '(max-width: 768px), (max-height: 500px) and (orientation: landscape)';
+const isPhoneLayout = () => typeof window !== 'undefined' && window.matchMedia(PHONE_QUERY).matches;
 
 const DEFAULT_CITIES = {
   all: { id: 'all', name: 'All Switzerland 🇨🇭', lat: 46.8182, lng: 8.2275, zoom: 8 },
@@ -45,6 +52,9 @@ export default function App() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   // Default: only venues that serve Guinness ("Show All" is one click away).
   const [guinnessFilter, setGuinnessFilter] = useState('serves_any');
+  // Phone layout: one pane at a time (list or map) plus a bottom "Filters" sheet. Desktop ignores these.
+  const [mobileView, setMobileView] = useState('list');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Google Maps & Mode State
   const [googleApiKey, setGoogleApiKey] = useState(() => localStorage.getItem('stoutscout_gmaps_key') || '');
@@ -91,7 +101,8 @@ export default function App() {
       const data = await res.json();
       if (data.venues) {
         setVenues(data.venues);
-        if (data.venues.length > 0 && !selectedVenueId) {
+        // Desktop opens the first venue in the side panel; on a phone that would cover the whole list.
+        if (data.venues.length > 0 && !selectedVenueId && !isPhoneLayout()) {
           setSelectedVenueId(data.venues[0].id);
         }
       }
@@ -293,7 +304,7 @@ export default function App() {
   }, [venues, categoryFilter, searchQuery]);
 
   return (
-    <div className="app-shell">
+    <div className="app-shell m-ui">
       <div className="foam-accent-bar" />
 
       {/* Top Navigation Header */}
@@ -325,8 +336,8 @@ export default function App() {
         </div>
 
         {/* City Selector + Search Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flex: 1, maxWidth: 640 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        <div className="header-search" style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flex: 1, maxWidth: 640 }}>
+          <div className="city-pills" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             {Object.values(cities).map((c) => (
               <button
                 key={c.id}
@@ -368,32 +379,41 @@ export default function App() {
         </div>
 
         {/* Right Action Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <button
             type="button"
             className="btn-outline"
+            aria-label="Add or check a venue"
             onClick={() => {
               setClickedCoords({ lat: mapCenter.lat, lng: mapCenter.lng });
               setAddVenueModalOpen(true);
             }}
           >
-            <PlusCircle size={14} color="#c8a45d" /> Add / Check Venue
+            <PlusCircle size={14} color="#c8a45d" /> <span className="btn-label">Add / Check Venue</span>
           </button>
 
           <button
             type="button"
             className="btn-gold"
+            aria-label="API key and data mode"
             onClick={() => setApiKeyModalOpen(true)}
             title="Configure Google Maps API Key or switch between Demo and Live Google Places mode"
           >
             <KeyRound size={14} />
-            {mode === 'live' && googleApiKey ? 'Google Places: Live' : 'API Key / Mode'}
+            <span className="btn-label">{mode === 'live' && googleApiKey ? 'Google Places: Live' : 'API Key / Mode'}</span>
           </button>
         </div>
       </header>
 
-      {/* Secondary Filter Strip */}
-      <div className="toolbar-strip">
+      {/* Secondary Filter Strip (a bottom sheet on phones) */}
+      {filtersOpen && <div className="sheet-backdrop" onClick={() => setFiltersOpen(false)} />}
+      <div className={`toolbar-strip ${filtersOpen ? 'open' : ''}`} role="group" aria-label="Filters">
+        <div className="sheet-header">
+          <strong>Filters</strong>
+          <button type="button" className="btn-gold" onClick={() => setFiltersOpen(false)}>
+            Show {filteredVenues.length} venue{filteredVenues.length === 1 ? '' : 's'}
+          </button>
+        </div>
         {/* Venue Categories */}
         <div className="pill-group">
           <span style={{ fontSize: '0.72rem', color: '#9c8e7b', fontWeight: 600, marginRight: 4 }}>
@@ -443,7 +463,7 @@ export default function App() {
       </div>
 
       {/* Main Split Workspace */}
-      <div className="main-workspace">
+      <div className="main-workspace" data-view={mobileView}>
         {/* Left Sidebar List */}
         <div className="sidebar-list">
           <div
@@ -665,6 +685,34 @@ export default function App() {
           />
         )}
       </div>
+
+      {/* Phone navigation: one pane at a time. Hidden on larger screens by CSS. */}
+      <nav className="mobile-nav" aria-label="Views">
+        <button
+          type="button"
+          className={mobileView === 'list' ? 'active' : ''}
+          aria-current={mobileView === 'list' ? 'page' : undefined}
+          onClick={() => setMobileView('list')}
+        >
+          <List size={20} aria-hidden="true" />
+          <span>List</span>
+          <span className="nav-count">{filteredVenues.length}</span>
+        </button>
+        <button
+          type="button"
+          className={mobileView === 'map' ? 'active' : ''}
+          aria-current={mobileView === 'map' ? 'page' : undefined}
+          onClick={() => setMobileView('map')}
+        >
+          <MapIcon size={20} aria-hidden="true" />
+          <span>Map</span>
+        </button>
+        <button type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)}>
+          <SlidersHorizontal size={20} aria-hidden="true" />
+          <span>Filters</span>
+          {(categoryFilter !== 'all' || guinnessFilter !== 'serves_any') && <i className="nav-dot" title="Filters changed" />}
+        </button>
+      </nav>
 
       {/* Modals */}
       <ApiKeyModal

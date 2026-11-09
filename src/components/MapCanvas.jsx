@@ -272,6 +272,7 @@ export function MapCanvas({
 
       {/* Floating Legend */}
       <div
+        className="map-legend"
         style={{
           position: 'absolute',
           bottom: '1.25rem',

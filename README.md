@@ -24,6 +24,7 @@ A full-stack application that maps **hotels, bars, pubs, and restaurants across 
   - **Alpine Resorts & Ticino** (`alps` — Interlaken, Grindelwald, Zermatt, Verbier, Davos, St. Moritz, Lugano, Locarno)
 - **Interactive Basemap Switcher**: Defaults to **OpenStreetMap** standard street tiles, with instant switching to **Swiss Topo / Light (CARTO)** and **Dark Map (CARTO)**, or **Google Maps JavaScript SDK** when a Google Maps API key is configured.
 - **Strict Guinness-Only Filtering**: Excludes generic non-Guinness stouts so every verified venue and menu highlight specifically refers to Guinness.
+- **Phone friendly**: on screens up to 768 px wide (and on landscape phones) the React app shows **one pane at a time** instead of three squeezed side by side. A bottom bar switches between **List** (with the venue count), **Map** and **Filters**; filters open as a bottom sheet, venue details and the add-venue / API-key forms open as full-width sheets with a large close button; the city chips swipe sideways; touch targets are at least 44 px and form fields 16 px (so iOS does not zoom in); the bottom bar respects the notch / home indicator. Opening the app on a phone no longer auto-opens the first venue over the list. Desktop keeps the three-pane layout (and a header bug at laptop widths, where the search box and the last cities were pushed off-screen, is fixed). `public/standalone.html` gets a lighter version of the same (map on top, list below, details full-screen). The phone rules live in `src/styles.css` (scoped to `.m-ui` / `.standalone-ui`, so nothing changes on desktop).
 - **Shows venues that serve Guinness by default**: both UIs open with the **✓ Serves Guinness** filter on (confirmed on tap, cans/bottles, or mentioned in reviews). Venues that are *unchecked* or reported as *not serving* it are hidden, but never deleted: press **Show All** to see them. If the default hides everything (for example a freshly scanned area whose menus haven't been checked yet), the list says how many venues are hidden and offers a **Show all venues** button. The header count ("N of M Venues Serve Guinness") always counts every venue matching the type/search filters.
 
 ---
@@ -135,7 +136,7 @@ What the Python API ([`app_server.py`](app_server.py) + [`guard.py`](guard.py)) 
 npm test            # everything below except the browser tests (no network, no browser needed)
 npm run test:py     # python3 -m unittest   (stdlib only; ~150 tests)
 npm run test:js     # node --test           (Node dev server + UI helper; ~30 tests)
-npm run test:e2e    # real page in Chromium (needs Playwright; skipped automatically if it is missing)
+npm run test:e2e    # builds the React app, then drives real pages in Chromium (needs Playwright; skipped automatically if it is missing)
 ```
 
 [`.github/workflows/test.yml`](.github/workflows/test.yml) runs all of these on every push and pull request.
@@ -151,6 +152,7 @@ npm run test:e2e    # real page in Chromium (needs Playwright; skipped automatic
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 | `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
+| `tests/e2e/mobile.e2e.mjs` | the **phone / tablet / desktop layouts** of the built React app (plus the standalone page) with real Leaflet and the real API: no sideways scroll on iPhone SE / 13, Pixel 5, landscape and iPad; the list comes first and no sheet covers it; Leaflet markers do not swallow taps; List / Map tabs; the filters sheet; every control ≥ 44 px and fields ≥ 16 px; the full-width add-venue sheet; and a desktop regression check at 1024 / 1280 / 1920 px. Against the old stylesheet all 16 fail. `tests/js/mobileLayout.test.js` keeps the breakpoint identical in the CSS, the React app and the standalone page |
 | `tests/e2e/ui.e2e.mjs` | the real `standalone.html` in a browser: no `javascript:` links, hostile text stays inert, server errors and rate limits are shown to the user |
 
 **Not covered:** the React UI (`src/`) has no browser test (only a build check in CI and the `safeHttpUrl` lint); map rendering is replaced by a stub; live Google, Overpass and Upstash are never called (fakes of their documented response shapes are used instead).

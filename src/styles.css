@@ -27,7 +27,8 @@ body {
   color: var(--cream-primary);
   overflow: hidden;
   height: 100vh;
-  width: 100vw;
+  height: 100dvh;
+  width: 100%;
 }
 
 .font-serif-guinness {
@@ -55,7 +56,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100vw;
+  height: 100dvh;
+  width: 100%;
   background: radial-gradient(circle at top right, #1f1912 0%, #0d0b09 65%);
 }
 
@@ -149,6 +151,19 @@ body {
   border-color: #e2be75;
   font-weight: 600;
 }
+
+/* Header city strip + search. A flex item defaults to min-width:auto, so the (nowrap) strip used to stretch the
+   header past the window at laptop widths: the last cities and the search box ended up off-screen. */
+.header-search { min-width: 0; }
+.city-pills {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+.city-pills .filter-pill { flex: 0 0 auto; white-space: nowrap; }
+.header-search > div:last-child { flex: 1 0 200px; }
 
 .btn-gold {
   display: inline-flex;
@@ -380,4 +395,275 @@ body {
     bottom: 0;
     width: 380px;
   }
+}
+
+/* ==========================================================================
+   Phone layout (React app only: everything is scoped to .m-ui)
+
+   Desktop shows list | map | details side by side. On a phone that is unusable, so there it becomes:
+   one pane at a time (List or Map, switched from a bottom bar), filters in a bottom sheet, venue
+   details as a full-screen sheet, and large touch targets. Landscape phones (short screens) use it too.
+   ========================================================================== */
+.m-ui .mobile-nav,
+.m-ui .sheet-header,
+.m-ui .sheet-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px), (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --nav-h: 58px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* --- Header: brand + icon buttons on one row, then a swipeable city strip and search --- */
+  .m-ui .top-header {
+    padding: 0.5rem 0.75rem;
+    padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+    gap: 0.5rem;
+  }
+  :is(.m-ui, .standalone-ui) .brand-group { order: 1; flex: 1; min-width: 0; gap: 0.5rem; }
+  .m-ui .brand-title { font-size: 1.1rem; flex-wrap: nowrap; white-space: nowrap; gap: 0.4rem; }
+  .m-ui .brand-subtitle { display: none; }
+  :is(.m-ui, .standalone-ui) .header-actions { order: 2; gap: 0.4rem; }
+  :is(.m-ui, .standalone-ui) .header-actions .btn-label { display: none; }
+  :is(.m-ui, .standalone-ui) .header-actions .btn-outline,
+  :is(.m-ui, .standalone-ui) .header-actions .btn-gold { width: 44px; height: 44px; min-height: 44px; padding: 0; justify-content: center; }
+  :is(.m-ui, .standalone-ui) .header-search {
+    order: 3;
+    flex: 1 1 100% !important; /* the element has an inline "flex: 1" that would otherwise win */
+    min-width: 0; /* a flex item defaults to min-width:auto, so the nowrap city strip would stretch the whole page */
+    width: 100%;
+    max-width: none !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  :is(.m-ui, .standalone-ui) .city-pills {
+    flex-wrap: nowrap !important;
+    min-width: 0;
+    max-width: calc(100% + 1.5rem);
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -0.75rem;
+    padding: 0 0.75rem 0.15rem;
+    scrollbar-width: none;
+  }
+  :is(.m-ui, .standalone-ui) .city-pills::-webkit-scrollbar { display: none; }
+  :is(.m-ui, .standalone-ui) .city-pills .filter-pill { flex: 0 0 auto; scroll-snap-align: start; }
+  :is(.m-ui, .standalone-ui) .header-search > div:last-child { min-width: 0 !important; }
+
+  /* --- Touch targets (>= 44 px) and no iOS zoom-on-focus (inputs >= 16 px) --- */
+  :is(.m-ui, .standalone-ui) .filter-pill { min-height: 44px; padding: 0.45rem 0.95rem; font-size: 0.88rem; }
+  :is(.m-ui, .standalone-ui) .btn-gold, :is(.m-ui, .standalone-ui) .btn-outline { min-height: 44px; font-size: 0.9rem; }
+  :is(.m-ui, .standalone-ui) .stout-input, :is(.m-ui, .standalone-ui) .stout-select, :is(.m-ui, .standalone-ui) .stout-textarea { font-size: 16px !important; min-height: 44px; }
+  .m-ui .drawer-close { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+  :is(.m-ui, .standalone-ui) .venue-card { padding: 0.95rem; }
+  :is(.m-ui, .standalone-ui) .venue-card:hover { transform: none; }
+
+  /* --- One pane at a time --- */
+  .m-ui .main-workspace { padding-bottom: calc(var(--nav-h) + var(--safe-bottom)); }
+  /* isolation: Leaflet panes use z-index 400-700; without their own stacking context the markers would paint over the list */
+  .m-ui .map-pane { position: absolute; inset: 0 0 calc(var(--nav-h) + var(--safe-bottom)) 0; z-index: 0; isolation: isolate; }
+  .m-ui .sidebar-list {
+    position: absolute;
+    inset: 0 0 calc(var(--nav-h) + var(--safe-bottom)) 0;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    border-right: 0;
+  }
+  .m-ui .main-workspace[data-view="map"] .sidebar-list { display: none; }
+  .m-ui .map-legend {
+    bottom: 0.6rem !important;
+    left: 0.6rem !important;
+    max-width: 46%;
+    padding: 0.4rem 0.55rem !important;
+    gap: 0.2rem !important;
+    font-size: 0.66rem !important;
+  }
+  :is(.m-ui, .standalone-ui) .leaflet-control-zoom a { width: 40px !important; height: 40px !important; line-height: 40px !important; }
+
+  /* --- Bottom navigation --- */
+  .m-ui .mobile-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    height: calc(var(--nav-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: rgba(23, 19, 16, 0.97);
+    border-top: 1px solid var(--stout-border);
+  }
+  .m-ui .mobile-nav button {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: none;
+    border: 0;
+    color: var(--cream-muted);
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .m-ui .mobile-nav button.active { color: var(--harp-gold-bright); }
+  .m-ui .mobile-nav button.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 28%;
+    right: 28%;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: var(--harp-gold);
+  }
+  .m-ui .nav-count {
+    position: absolute;
+    top: 5px;
+    left: calc(50% + 8px);
+    min-width: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--harp-gold);
+    color: #0d0b09;
+    font-size: 0.65rem;
+    line-height: 18px;
+    text-align: center;
+  }
+  .m-ui .nav-dot {
+    position: absolute;
+    top: 8px;
+    left: calc(50% + 8px);
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--harp-gold-bright);
+  }
+
+  /* --- Filters become a bottom sheet --- */
+  .m-ui .sheet-backdrop { display: block; position: fixed; inset: 0; z-index: 70; background: rgba(5, 4, 3, 0.6); }
+  .m-ui .toolbar-strip {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 1rem;
+    max-height: 80dvh;
+    overflow-y: auto;
+    padding: 0 1rem calc(1rem + var(--safe-bottom));
+    border: 1px solid var(--stout-border);
+    border-bottom: 0;
+    border-radius: 1rem 1rem 0 0;
+    background: #171310;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.7);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition: transform 0.22s ease, visibility 0s linear 0.22s;
+  }
+  .m-ui .toolbar-strip.open { transform: none; visibility: visible; transition: transform 0.22s ease; }
+  .m-ui .sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 0.85rem 0;
+    background: #171310;
+    font-size: 1.05rem;
+  }
+  .m-ui .toolbar-strip .pill-group { gap: 0.5rem; }
+  .m-ui .toolbar-strip .pill-group > span { flex: 1 0 100%; margin: 0 0 0.1rem !important; }
+
+  /* --- Venue details: a full-screen sheet --- */
+  :is(.m-ui, .standalone-ui) .detail-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    width: 100%;
+    max-width: none;
+    border-left: 0;
+    box-shadow: none;
+    padding-bottom: var(--safe-bottom);
+    animation: sheet-up 0.2s ease;
+  }
+  @keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    :is(.m-ui, .standalone-ui) .detail-drawer { animation: none; }
+    .m-ui .toolbar-strip, .m-ui .toolbar-strip.open { transition: none; }
+  }
+
+  /* --- Modals: full-width bottom sheets with single-column forms --- */
+  :is(.m-ui, .standalone-ui) .modal-backdrop { padding: 0; align-items: flex-end; }
+  :is(.m-ui, .standalone-ui) .modal-card {
+    max-width: none !important;
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 1rem 1rem 0 0;
+    padding: 1.1rem 1rem calc(1.1rem + var(--safe-bottom));
+  }
+  :is(.m-ui, .standalone-ui) .stack-sm { grid-template-columns: 1fr !important; }
+  :is(.m-ui, .standalone-ui) .stack-row { flex-direction: column; align-items: stretch; }
+  :is(.m-ui, .standalone-ui) .stack-row > * { width: 100%; justify-content: center; }
+  :is(.m-ui, .standalone-ui) .modal-actions { flex-direction: column-reverse; align-items: stretch; }
+  :is(.m-ui, .standalone-ui) .modal-actions > * { justify-content: center; }
+  :is(.m-ui, .standalone-ui) .modal-close { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  /* The country badge next to the title does not fit a phone header (the city strip already says Switzerland). */
+  .m-ui .brand-title > span { display: none; }
+
+  /* ---- Standalone page (public/standalone.html): map on top, list below, details full-screen ---- */
+  .standalone-ui .top-header { padding: 0.5rem 0.75rem; padding-top: calc(0.5rem + env(safe-area-inset-top, 0px)); gap: 0.5rem; }
+  .standalone-ui .brand-subtitle { display: none; }
+  .standalone-ui .brand-title { font-size: 1.1rem; }
+  .standalone-ui .brand-title > span { display: none; }
+  .standalone-ui .toolbar-strip { flex-wrap: nowrap; overflow-x: auto; gap: 1rem; padding: 0.4rem 0.75rem; scrollbar-width: none; }
+  .standalone-ui .toolbar-strip::-webkit-scrollbar { display: none; }
+  .standalone-ui .toolbar-strip .pill-group { flex-wrap: nowrap; flex: 0 0 auto; }
+  .standalone-ui .toolbar-strip .filter-pill, .standalone-ui .top-header .filter-pill { flex: 0 0 auto; white-space: nowrap; }
+  .standalone-ui .main-workspace { flex-direction: column; }
+  .standalone-ui .map-pane { flex: 0 0 38%; min-height: 200px; order: 1; }
+  .standalone-ui .sidebar-list { order: 2; flex: 1; width: 100%; min-width: 0; max-width: none; border-right: 0; border-top: 1px solid var(--stout-border); min-height: 0; }
+  .standalone-ui .map-pane { z-index: 0; isolation: isolate; }
+  .standalone-ui .map-legend, .standalone-ui #map-style-switcher { display: none !important; }
+  .standalone-ui .map-scan-buttons {
+    /* left/right (not left + max-width): a row that ends past the screen would stretch the layout viewport */
+    left: 56px !important;
+    right: 0.5rem !important;
+    top: 0.5rem !important;
+    transform: none !important;
+    max-width: none !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    justify-content: flex-start !important;
+    scrollbar-width: none;
+  }
+  .standalone-ui .map-scan-buttons button { flex: 0 0 auto; white-space: nowrap; min-height: 40px; }
+}
+
+/* Landscape phones: a short screen cannot afford a three-row header. One compact row, shorter bottom bar. */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root { --nav-h: 48px; }
+  :is(.m-ui, .standalone-ui) .top-header { flex-wrap: nowrap; padding: 0.3rem 0.75rem; padding-top: calc(0.3rem + env(safe-area-inset-top, 0px)); gap: 0.5rem; }
+  :is(.m-ui, .standalone-ui) .brand-group { flex: 0 0 auto; }
+  :is(.m-ui, .standalone-ui) .brand-title { font-size: 1rem; }
+  :is(.m-ui, .standalone-ui) .header-search { order: 2; flex: 1 1 0 !important; flex-direction: row; align-items: center; }
+  :is(.m-ui, .standalone-ui) .header-search > div:last-child { flex: 1 1 140px; }
+  :is(.m-ui, .standalone-ui) .city-pills { flex: 0 1 45%; margin: 0; padding: 0; max-width: none; }
+  :is(.m-ui, .standalone-ui) .header-actions { order: 3; }
+  .standalone-ui .main-workspace { flex-direction: row; }
+  .standalone-ui .map-pane { flex: 1 1 50%; order: 1; }
+  .standalone-ui .sidebar-list { flex: 1 1 50%; order: 2; border-top: 0; border-left: 1px solid var(--stout-border); }
 }
