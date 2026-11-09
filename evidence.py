@@ -39,7 +39,30 @@ IRISH_NAME_RE = re.compile(
 DRAUGHT_RE = re.compile(r"draught|draft|on tap|\btap\b|vom fass|\bfass\b|pression|alla spina|\bpint\b|zapfen", re.I)
 CAN_RE = re.compile(r"\bcans?\b|bottles?|flasche|dose|bouteille|bottiglia", re.I)
 
+# A price as printed on Swiss menus: "CHF 9.50", "Fr. 9.-", "9,50 CHF", "SFr 9".
+_PRICE_RE = re.compile(
+    r"(?:CHF|SFr\.?|Fr\.?)\s*(\d{1,2}(?:[.,]\d{1,2})?)(?:\.-)?|(\d{1,2}(?:[.,]\d{1,2})?)(?:\.-)?\s*(?:CHF|SFr\.?|Fr\.?)",
+    re.I,
+)
+PRICE_WINDOW = 70  # characters after the word "Guinness" in which its price is looked for
+
 SYNTHETIC_AUTHORS = frozenset({"Swiss Nationwide Crawler", "Switzerland OSM Directory", "OpenStreetMap Tags"})
+
+
+def price_near_guinness(snippets):
+    """The first price printed right after the word "Guinness" in the page text, as "CHF 8.50", or None.
+
+    Taking the first price anywhere in the snippets (as the crawler did) picks up the neighbouring beer's price.
+    This is the price listed after the Guinness entry, which may be a small glass: it is not a pint-price check.
+    """
+    for snippet in snippets or []:
+        for m in re.finditer(r"guinness", snippet or "", re.I):
+            hit = _PRICE_RE.search(snippet[m.end() : m.end() + PRICE_WINDOW])
+            if hit:
+                amount = float((hit.group(1) or hit.group(2)).replace(",", "."))
+                if 2 <= amount <= 40:
+                    return f"CHF {amount:.2f}"
+    return None
 
 
 def is_irish_name(name):
@@ -136,7 +159,12 @@ def sanitise_static_venue(venue):
             )
         else:
             snippets = menu.get("snippets") or []
-            v["menuCheck"] = {**menu, "typesFound": serving_types(snippets) if menu.get("foundOnMenu") else []}
+            v["menuCheck"] = {
+                **menu,
+                "typesFound": serving_types(snippets) if menu.get("foundOnMenu") else [],
+                # the crawler took the first price in the snippets, often another beer's: re-read it from the text
+                "extractedPrice": price_near_guinness(snippets) if menu.get("foundOnMenu") else None,
+            }
         if tag:
             v["editorialSummary"] = f"{(v.get('category') or 'venue').title()} found through OpenStreetMap."
         elif menu.get("foundOnMenu"):
@@ -145,6 +173,9 @@ def sanitise_static_venue(venue):
             v["editorialSummary"] = f"{(v.get('category') or 'venue').title()}; no Guinness found on its website."
     else:  # starter list: written by hand, never checked
         tag = tag_check(TAG_STARTER)
+        hint = menu.get("extractedPrice") or (venue.get("crowdCheck") or {}).get("reportedPrice")
+        if hint:  # kept, but shown as "unchecked": nothing in this app read it from the venue
+            v["priceHint"] = {"price": hint, "text": "Price from the starter list, not checked."}
         v["menuCheck"] = not_checked()
         v["editorialSummary"] = f"{(v.get('category') or 'venue').title()} in the app's starter list. Not yet checked."
 

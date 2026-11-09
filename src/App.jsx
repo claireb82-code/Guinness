@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { PintIcon, formatCategoryLabel } from './components/PintIcon.jsx';
 import { isPhoneLayout } from './layout.js';
+import { priceDisplay } from './price.js';
 import { RADII_KM, DEFAULT_RADIUS_KM, distanceKm, formatDistance, formatRadius, nearest, pickRadius, locationErrorMessage } from './geo.js';
 import { readNearMePref, writeNearMePref } from './nearMePref.js';
 import { MapCanvas } from './components/MapCanvas.jsx';
@@ -877,9 +878,10 @@ export default function App() {
 
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <Users size={12} color="#c8a45d" />
-                        {venue.crowdCheck?.reportedPrice ||
-                          venue.menuCheck?.extractedPrice ||
-                          `${venue.crowdCheck?.confirmedCount || 0} reports`}
+                        {(() => {
+                          const price = priceDisplay(venue);
+                          return price.text ? `${price.text}${price.checked ? '' : ' (unchecked)'}` : `${venue.crowdCheck?.confirmedCount || 0} reports`;
+                        })()}
                       </span>
                     </div>
                   </div>

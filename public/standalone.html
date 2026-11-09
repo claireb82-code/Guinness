@@ -673,6 +673,7 @@
                           <span>🍺 ${escapeHtml(
                             venue.crowdCheck?.reportedPrice ||
                               venue.menuCheck?.extractedPrice ||
+                              (venue.priceHint?.price ? venue.priceHint.price + ' (unchecked)' : '') ||
                               (venue.crowdCheck?.confirmedCount || 0) + ' reports'
                           )}</span>
                         </div>
@@ -890,9 +891,14 @@
                       <div style="font-size:0.66rem;color:#9c8e7b;text-transform:uppercase;">Pint Price</div>
                       <div style="font-size:0.95rem;font-weight:700;color:#e2be75;margin-top:0.1rem;">
                         ${escapeHtml(
-                          crowdCheck.reportedPrice || menuCheck.extractedPrice || selectedVenue.priceLevel || '—'
+                          crowdCheck.reportedPrice || menuCheck.extractedPrice || selectedVenue.priceHint?.price || '—'
                         )}
                       </div>
+                      ${
+                        !(crowdCheck.reportedPrice || menuCheck.extractedPrice) && selectedVenue.priceHint?.price
+                          ? '<div class="evidence-note" style="font-size:0.64rem;color:#9c8e7b;margin-top:0.1rem;">unchecked</div>'
+                          : ''
+                      }
                     </div>
                     <div>
                       <div style="font-size:0.66rem;color:#9c8e7b;text-transform:uppercase;">Guinness 0.0</div>
