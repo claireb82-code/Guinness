@@ -21,6 +21,7 @@ key                   type    content
 ``reports``           list    JSON crowd reports, newest first, capped at MAX_REPORTS
 ``venues``            list    JSON community venues, newest first, capped at MAX_CUSTOM_VENUES
 ``scans``             hash    venueId -> JSON menu-scan result
+``locations``         hash    venueId -> JSON {"lat", "lng"} (a community venue re-placed from its address)
 ``rl:<bucket>:<ip>``  string  rate-limit counters (expire automatically)
 ====================  ======  ==========================================================
 
@@ -46,7 +47,7 @@ class StorageError(RuntimeError):
 
 
 def _empty_store():
-    return {"crowdReports": {}, "menuScans": {}, "customVenues": [], "googleMapsVenues": []}
+    return {"crowdReports": {}, "menuScans": {}, "customVenues": [], "googleMapsVenues": [], "venueLocations": {}}
 
 
 class FileBackend:
@@ -76,6 +77,7 @@ class FileBackend:
                         "menuScans": data.get("menuScans", {}),
                         "customVenues": data.get("customVenues", []),
                         "googleMapsVenues": data.get("googleMapsVenues", []),
+                        "venueLocations": data.get("venueLocations", {}),
                     }
                 except Exception:  # noqa: BLE001 - a corrupt cache must not take the API down
                     continue
@@ -105,6 +107,11 @@ class FileBackend:
 
     def set_scan(self, store, venue_id, scan):
         store.setdefault("menuScans", {})[venue_id] = scan
+        self.save(store)
+
+    def set_location(self, store, venue_id, location):
+        """Move a community venue (``{"lat", "lng"}``). The venue record itself is not rewritten."""
+        store.setdefault("venueLocations", {})[venue_id] = location
         self.save(store)
 
     # -- rate-limit counters (per process) --------------------------------------------
@@ -166,11 +173,12 @@ class RedisBackend(FileBackend):
     def load(self):
         store = super().load()  # derived venue cache (+ bundled seed data) from the local file
         try:
-            reports, venues, scans = self._pipeline(
+            reports, venues, scans, locations = self._pipeline(
                 [
                     ["LRANGE", self._key("reports"), 0, MAX_REPORTS - 1],
                     ["LRANGE", self._key("venues"), 0, MAX_CUSTOM_VENUES - 1],
                     ["HGETALL", self._key("scans")],
+                    ["HGETALL", self._key("locations")],
                 ]
             )
         except StorageError as exc:
@@ -204,6 +212,17 @@ class RedisBackend(FileBackend):
             except (ValueError, TypeError):
                 continue
         store["menuScans"] = parsed_scans
+
+        if isinstance(locations, list):
+            locations = dict(zip(locations[0::2], locations[1::2]))
+        parsed_locations = {}
+        for vid, raw in (locations or {}).items():
+            try:
+                loc = json.loads(raw)
+                parsed_locations[vid] = {"lat": float(loc["lat"]), "lng": float(loc["lng"])}
+            except (ValueError, TypeError, KeyError):
+                continue
+        store["venueLocations"] = parsed_locations
         return store
 
     # -- writes ----------------------------------------------------------------------
@@ -221,6 +240,10 @@ class RedisBackend(FileBackend):
     def set_scan(self, store, venue_id, scan):
         self._pipeline([["HSET", self._key("scans"), venue_id, json.dumps(scan, ensure_ascii=False)]])
         store.setdefault("menuScans", {})[venue_id] = scan
+
+    def set_location(self, store, venue_id, location):
+        self._pipeline([["HSET", self._key("locations"), venue_id, json.dumps(location)]])
+        store.setdefault("venueLocations", {})[venue_id] = location
 
     # -- shared rate-limit counters ----------------------------------------------------
     def incr(self, key, window_seconds):

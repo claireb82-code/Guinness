@@ -37,10 +37,10 @@ export const haveLeaflet = () => fs.existsSync(path.join(LEAFLET_DIR, 'leaflet.j
 export const haveBuild = () => fs.existsSync(path.join(ROOT, 'dist', 'index.html'));
 
 /** Starts the Python API and a static server for dist/ that proxies /api to it. */
-export async function startApp() {
+export async function startApp({ env = {} } = {}) {
   const apiPort = await freePort();
   const webPort = await freePort();
-  const api = spawn('python3', ['app_server.py'], { cwd: ROOT, env: { ...process.env, PORT: String(apiPort), RATE_LIMIT_DISABLED: '1' }, stdio: 'ignore' });
+  const api = spawn('python3', ['app_server.py'], { cwd: ROOT, env: { ...process.env, PORT: String(apiPort), RATE_LIMIT_DISABLED: '1', ...env }, stdio: 'ignore' });
   for (let i = 0; i < 80; i++) {
     try {
       if ((await fetch(`http://127.0.0.1:${apiPort}/api/config`)).ok) break;

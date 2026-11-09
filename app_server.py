@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 import evidence
+import geocode
 import guard
 import overpass
 import overture
@@ -31,7 +32,7 @@ SUBMISSIONS_DISABLED_MESSAGE = (
     "Community submissions are not enabled on this deployment: no database is configured, so "
     "anything submitted would be lost. See the README (Deploying to Vercel)."
 )
-STORE_PATH = "/tmp/user_store.json" if ON_VERCEL else BUNDLED_STORE_PATH
+STORE_PATH = os.environ.get("GUINNESS_STORE_PATH") or ("/tmp/user_store.json" if ON_VERCEL else BUNDLED_STORE_PATH)  # (tests use their own file)
 
 CITY_PRESETS = {
     "all": {"id": "all", "name": "All Switzerland 🇨🇭", "lat": 46.8182, "lng": 8.2275, "zoom": 8, "currency": "CHF"},
@@ -1601,6 +1602,23 @@ def load_crawl_stats():
     return {}
 
 
+def distance_km(lat1, lng1, lat2, lng2):
+    try:
+        p1, p2 = math.radians(float(lat1)), math.radians(float(lat2))
+        h = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(float(lng2) - float(lng1)) / 2) ** 2
+        return 2 * 6371.0088 * math.asin(math.sqrt(h))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def place_community_venue(venue, locations):
+    """A community venue re-placed from its address (see /api/relocate-venue) uses the stored position."""
+    loc = (locations or {}).get(venue.get("id")) if isinstance(venue, dict) else None
+    if loc:
+        return {**venue, "lat": loc["lat"], "lng": loc["lng"]}
+    return venue
+
+
 def fix_legacy_community_venue(venue):
     """Community venues saved before the evidence clean-up carry an invented 4.7 Google rating and one
     invented review mention. Drop exactly those values; real visitor reports (crowdCheck) stay."""
@@ -1621,7 +1639,7 @@ def get_all_combined_venues(store):
     crawl_venues = [evidence.sanitise_static_venue(v) for v in load_crawl_venues()]
     starter_venues = [evidence.sanitise_static_venue(v) for v in DEMO_VENUES]
     raw_list = (
-        [fix_legacy_community_venue(v) for v in (store.get("customVenues") or [])]
+        [place_community_venue(fix_legacy_community_venue(v), store.get("venueLocations")) for v in (store.get("customVenues") or [])]
         + (store.get("googleMapsVenues") or [])
         + starter_venues
         + crawl_venues
@@ -2327,6 +2345,19 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                 }
             )
 
+        if parsed.path == "/api/geocode":
+            qs = urllib.parse.parse_qs(parsed.query)
+            try:
+                query = guard.clean_text(qs.get("q", [""])[0], "q", 200)
+                if self._rate_limited("scan", RATE_SCANS):
+                    return
+                found = geocode.geocode(query) if query else None
+            except guard.ValidationError as exc:
+                return self.send_json({"error": str(exc)}, exc.status)
+            except geocode.GeocodeUnavailable as exc:
+                return self.send_json({"error": str(exc)}, 503)
+            return self.send_json({"found": True, **found} if found else {"found": False})
+
         if parsed.path == "/api/venues":
             qs = urllib.parse.parse_qs(parsed.query)
             city = qs.get("city", ["all"])[0]
@@ -2430,6 +2461,7 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path not in (
             "/api/check-google-maps", "/api/scan-menu", "/api/crowd-report", "/api/add-venue",
+            "/api/relocate-venue",
         ):
             return self.send_json({"error": "Not found"}, 404)
         # Requiring JSON also blocks cross-site "simple" form/text POSTs (CSRF).
@@ -2568,6 +2600,31 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             existing = next((v for v in all_v if v["id"] == vid), None) or venue_snapshot
             updated = enrich_venue(existing, store) if existing and existing.get("id") else None
             return self.send_json({"report": rep, "venue": updated})
+
+        if parsed.path == "/api/relocate-venue":
+            # Re-place a community venue from the address stored with it. The visitor supplies no coordinates, so this
+            # cannot be used to drag a venue anywhere: the only way to move it is to correct its address text first.
+            if not backend.accepts_submissions:
+                return self.send_json({"error": SUBMISSIONS_DISABLED_MESSAGE}, 503)
+            if self._rate_limited("write", RATE_WRITES):
+                return
+            vid = guard.clean_venue_id(data.get("venueId"))
+            venue = next((v for v in (store.get("customVenues") or []) if isinstance(v, dict) and v.get("id") == vid), None)
+            if not venue:
+                raise guard.ValidationError("Only venues added by visitors can be re-placed from their address", 404)
+            address = (venue.get("address") or "").strip()
+            if len(address) < 6 or address.lower() in ("switzerland", "schweiz", "suisse", "svizzera"):
+                raise guard.ValidationError("This venue has no street address to look up.")
+            try:
+                found = geocode.geocode(address)
+            except geocode.GeocodeUnavailable as exc:
+                return self.send_json({"error": str(exc)}, 503)
+            if not found:
+                raise guard.ValidationError(f"Could not find \"{address}\" on the map. Check the address.")
+            backend.set_location(store, vid, {"lat": found["lat"], "lng": found["lng"]})
+            moved_km = round(distance_km(venue.get("lat"), venue.get("lng"), found["lat"], found["lng"]), 1)
+            placed = place_community_venue(venue, store.get("venueLocations"))
+            return self.send_json({"venue": enrich_venue(placed, store), "movedKm": moved_km, "label": found["label"]})
 
         if parsed.path == "/api/add-venue":
             if not backend.accepts_submissions:

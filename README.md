@@ -73,12 +73,16 @@ On a Vercel deployment the legacy `GOOGLE_MAPS_API_KEY` is **ignored** (it used 
 
 | Variable | Default | Protects |
 | :--- | :--- | :--- |
-| `RATE_LIMIT_WRITES_PER_HOUR` | `10` | `/api/crowd-report`, `/api/add-venue` |
+| `RATE_LIMIT_WRITES_PER_HOUR` | `10` | `/api/crowd-report`, `/api/add-venue`, `/api/relocate-venue` |
 | `RATE_LIMIT_SCANS_PER_10MIN` | `120` | `/api/scan-menu` (the "scan all" button sends one per venue), small OSM lookups, `/api/check-google-maps` without Google |
 | `RATE_LIMIT_GOOGLE_PER_10MIN` | `15` | anything that calls Google Places |
 | `RATE_LIMIT_HEAVY_PER_10MIN` | `3` | nationwide Overpass scan (`mode=osm_ch`) |
 
 Over-limit requests get `429` with a `Retry-After` header; both UIs show the message. Set `RATE_LIMIT_DISABLED=1` only for local debugging.
+
+### Adding a venue: where it is placed
+
+The **Add / Check Venue** form places a venue where the visitor *chose* the place, never where the map happened to be centred. Click the map first and that spot is used; otherwise type the street address and press **Find on map** (or just submit: the address is looked up for you). The lookup is the free OpenStreetMap Nominatim search, restricted to Switzerland, cached for a day (`geocode.py`, `GET /api/geocode`; `GEOCODE_URL` overrides the endpoint). If the address cannot be found the form says so instead of guessing. A venue that was saved in the wrong place can be fixed from its panel (**Update from address**, `POST /api/relocate-venue`): the server looks up the address stored with the venue and moves it there. Visitors cannot send coordinates to that endpoint, and bundled venues cannot be moved. Moves are stored in a separate `locations` record, so the venue itself is not rewritten.
 
 ### How the app labels its evidence
 
@@ -178,6 +182,7 @@ npm run test:e2e    # builds the React app, then drives real pages in Chromium (
 | `tests/test_overpass.py` | failover across real local HTTP servers that play busy/broken mirrors: every retryable status, timeouts, HTML/garbage/JSON-array answers, HTTP 200 with a timeout remark, dead servers, HTTP 400 stops at once, giving up with a friendly error, the overall deadline, pauses between passes, the cache (hit, expiry, off, stale-if-error, bounded), and the scan functions + API (503 + `Retry-After`) |
 | `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
 | `tests/test_evidence.py`, `tests/e2e/evidence.e2e.mjs` | **honest evidence**: the bundled data files and every importer carry no invented ratings, review counts, quotes or visitor reports (checked over all ~230 real venues); a tag or a name is a labelled hint, never "confirmed" or "found on a menu"; an unreadable website is *unknown*, not *no Guinness*; "On Tap" only when the page says so; the header counts confirmed and likely apart; the venue panel explains a hint; **prices**: the one printed after "Guinness" (not a neighbouring beer's) is extracted from a scan, starter-list prices stay visible but marked "unchecked" |
+| `tests/test_geocode.py`, `tests/e2e/location.e2e.mjs` | **venues land at their address**: the geocoder against a fake Nominatim (Switzerland only, polite User-Agent, cache, busy vs not-found, malformed answers), `/api/geocode`, `/api/relocate-venue` (only a venue's own stored address is used, bundled venues are never moved, errors), and the form in both UIs (the address is looked up when no spot was clicked, a clicked spot is kept, an unknown address blocks the submit, a venue saved in the wrong place can be moved) |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
 | `tests/js/*.test.js` | Node SSRF guard & scraper, Google Places mapping, `safeHttpUrl` parity between both UIs, href lint, `/api/config` key exposure |
 | `tests/fixtures/shared_cases.json` | one table of status/URL-parsing scenarios that **both** the Python and Node servers must satisfy, so the two implementations cannot drift apart |
@@ -222,6 +227,8 @@ See [`scripts/README.md`](scripts/README.md) for full details on crawler options
 | `POST` | `/api/scan-menu` | Live-scrapes a specific venue's website or menu URL for Guinness variants & CHF price |
 | `POST` | `/api/crowd-report` | Submits a community pint rating, serving format, price, and Guinness 0.0 report |
 | `POST` | `/api/add-venue` | Adds a new hospitality venue to the map and optionally scrapes its menu URL |
+| `GET` | `/api/geocode?q=` | Looks up a Swiss address (OpenStreetMap Nominatim, cached): `{found, lat, lng, label}`; 503 if the lookup service is busy |
+| `POST` | `/api/relocate-venue` | Moves a visitor-added venue to its stored address (`{venueId}`); the visitor cannot supply coordinates |
 
 ---
 
@@ -240,6 +247,7 @@ Guinness/
 │   └── index.py                     # Vercel Python Serverless Function entrypoint
 ├── app_server.py                    # Zero-dependency Python 3 server + embedded Swiss dataset
 ├── guard.py                         # SSRF-safe fetching, input validation, rate limiting (stdlib only)
+├── geocode.py                       # Swiss address -> map position (Nominatim; stdlib only)
 ├── evidence.py                      # What counts as evidence for a venue; strips invented data from the bundled files (stdlib only)
 ├── storage.py                       # File + Upstash/Vercel-KV persistence for community data (stdlib only)
 ├── overture.py                      # Fills missing venue websites from the Overture extract (stdlib only)
