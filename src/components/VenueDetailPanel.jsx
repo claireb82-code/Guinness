@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { priceDisplay } from '../price.js';
 import {
   X,
   Globe,
@@ -252,8 +253,13 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
             <div>
               <div style={{ fontSize: '0.66rem', color: '#9c8e7b', textTransform: 'uppercase' }}>Pint Price</div>
               <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#e2be75', marginTop: '0.1rem' }}>
-                {crowdCheck.reportedPrice || menuCheck.extractedPrice || venue.priceLevel || '—'}
+                {priceDisplay(venue).text || '—'}
               </div>
+              {priceDisplay(venue).text && !priceDisplay(venue).checked && (
+                <div className="evidence-note" style={{ fontSize: '0.64rem', color: '#9c8e7b', marginTop: '0.1rem' }} title={venue.priceHint?.text}>
+                  unchecked
+                </div>
+              )}
             </div>
             <div>
               <div style={{ fontSize: '0.66rem', color: '#9c8e7b', textTransform: 'uppercase' }}>Guinness 0.0</div>

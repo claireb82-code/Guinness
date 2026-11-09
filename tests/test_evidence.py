@@ -72,6 +72,11 @@ class SanitiseStaticVenueTests(unittest.TestCase):
         self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"], v["menuCheck"]["extractedPrice"]), (False, False, None))
         self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Starter list (unverified)")
 
+    def test_crawled_prices_come_from_the_text_after_guinness(self):
+        rec = crawl_record(menuCheck={"checked": True, "foundOnMenu": True, "typesFound": ["x"], "extractedPrice": "CHF 5",
+                                      "snippets": ["CARLSBERG 30 cl CHF 5.5 GUINNESS DRAUGHT 50 cl CHF 9.7 BROOKLYN CHF 6"]})
+        self.assertEqual(evidence.sanitise_static_venue(rec)["menuCheck"]["extractedPrice"], "CHF 9.70")
+
     def test_it_is_idempotent_and_does_not_modify_its_input(self):
         rec = crawl_record()
         before = json.dumps(rec, sort_keys=True)
@@ -79,6 +84,39 @@ class SanitiseStaticVenueTests(unittest.TestCase):
         self.assertEqual(json.dumps(rec, sort_keys=True), before)
         self.assertEqual(evidence.sanitise_static_venue(once), once)
         self.assertIsNone(evidence.sanitise_static_venue(None))
+
+
+class PriceTests(unittest.TestCase):
+    def test_the_price_is_the_one_printed_after_guinness_not_the_neighbouring_beer(self):
+        # a real line from the crawl: the first price on it (7,80) belongs to a cider
+        line = "pezial 5dl / 5,7% 7,80 CHF Cidre Möhl Straight Appel 3,3dl / 4,5% 6,50 CHF Guinness Draught Dose 5dl / 4,2% 8,50 CHF IPA Fleur de Lyss 7,50 CHF"
+        self.assertEqual(evidence.price_near_guinness([line]), "CHF 8.50")
+
+    def test_swiss_price_formats(self):
+        for text, want in [("Guinness 5dl Fr. 9.-", "CHF 9.00"), ("Guinness vom Fass CHF 9.80", "CHF 9.80"), ("GUINNESS 9,50 CHF", "CHF 9.50"), ("Guinness SFr 10", "CHF 10.00")]:
+            with self.subTest(text=text):
+                self.assertEqual(evidence.price_near_guinness([text]), want)
+
+    def test_no_price_after_guinness_means_no_price(self):
+        for text in ["Kilkenny CHF 7 Guinness (ask the bar)", "Guinness stew with Irish whiskey", "Guinness 0.5% abv", "Guinness CHF 900"]:
+            with self.subTest(text=text):
+                self.assertIsNone(evidence.price_near_guinness([text]))
+        self.assertIsNone(evidence.price_near_guinness(None))
+
+    def test_a_real_scan_extracts_the_price(self):
+        page = "<ul><li>Kilkenny 5dl CHF 8.00</li><li>Guinness Draught 5dl CHF 9.80</li></ul>"
+        with mock.patch.object(app.guard, "fetch_page", return_value=page):
+            check = app.scrape_menu_url("https://pub.example")
+        self.assertEqual(check["extractedPrice"], "CHF 9.80")
+
+    def test_regression_starter_list_prices_are_kept_but_marked_as_hints(self):
+        """They vanished when the invented evidence was removed; the venue panel and cards show them as 'unchecked'."""
+        by = {v["name"]: v for v in app.get_all_combined_venues({})}
+        kennedys = by["Kennedy's Irish Pub"]
+        self.assertEqual(kennedys["priceHint"]["price"], "CHF 9.80")
+        self.assertIsNone(kennedys["menuCheck"]["extractedPrice"], "it was not read from the venue, so it is not a scan result")
+        self.assertIsNone(kennedys["crowdCheck"]["reportedPrice"])
+        self.assertGreater(sum(1 for v in by.values() if v.get("priceHint")), 30)
 
 
 class BundledDataTests(unittest.TestCase):
@@ -118,6 +156,14 @@ class BundledDataTests(unittest.TestCase):
                 with self.subTest(venue=v["name"]):
                     self.assertEqual(v["guinnessSummary"]["status"], "likely_serves")
                     self.assertIn("unverified", v["guinnessSummary"]["statusLabel"])
+
+    def test_regression_every_scanned_price_is_printed_after_guinness_in_the_snippets(self):
+        for v in self.venues:
+            price = v["menuCheck"].get("extractedPrice")
+            if price:
+                with self.subTest(venue=v["name"]):
+                    self.assertTrue(v["menuCheck"]["foundOnMenu"])
+                    self.assertEqual(price, evidence.price_near_guinness(v["menuCheck"]["snippets"]))
 
     def test_every_confirmed_venue_has_a_website_that_really_mentions_guinness(self):
         for v in self.enriched:
