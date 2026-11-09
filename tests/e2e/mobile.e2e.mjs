@@ -136,6 +136,32 @@ test('phone: the filters sheet opens from the bottom bar and changes the list', 
   await context.close();
 });
 
+for (const device of ['iPhone SE', 'iPhone 13 landscape']) {
+  test(`${device}: the filters sheet is one scrollable column that reaches every filter group`, { skip: skip() }, async () => {
+    const { page, context, tap } = await open(app.react, { device });
+    await tap('.mobile-nav button:has-text("Filters")');
+    await page.waitForSelector('.toolbar-strip.open');
+    await page.waitForTimeout(350);
+    const layout = await page.$eval('.toolbar-strip', (sheet) => ({
+      lefts: [...sheet.children].map((c) => Math.round(c.getBoundingClientRect().left)),
+      scrollable: sheet.scrollHeight > sheet.clientHeight,
+      names: [...sheet.children].map((c) => c.className.split(' ')[0]),
+    }));
+    assert.deepEqual([...new Set(layout.lefts)].length, 1, `children must share one column, got lefts ${layout.lefts} (${layout.names})`);
+    assert.deepEqual(layout.names, ['sheet-header', 'pill-group', 'pill-group', 'pill-group']);
+    // every group can be scrolled into view and tapped
+    for (const label of ['All Venues', 'Serves Guinness', 'Anywhere']) {
+      const pill = page.locator(`.toolbar-strip .filter-pill:has-text("${label}")`).first();
+      await pill.scrollIntoViewIfNeeded();
+      const b = await pill.boundingBox();
+      const { h } = await viewportSize(page);
+      assert.ok(b.x >= 0 && b.y >= 0 && b.y + b.height <= h + 1, `"${label}" is on screen after scrolling: ${JSON.stringify(b)}`);
+    }
+    assert.ok(layout.scrollable || device === 'iPhone SE', 'a short sheet scrolls');
+    await context.close();
+  });
+}
+
 test('phone: every visible control is at least 44px, and form fields are 16px (no iOS zoom)', { skip: skip() }, async () => {
   const { page, context, tap } = await open(app.react, { device: 'iPhone 13' });
   const tooSmall = () =>

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { PintIcon, formatCategoryLabel } from './PintIcon.jsx';
 import { safeHttpUrl } from '../safeUrl.js';
+import { formatDistance } from '../geo.js';
 
 function highlightGuinnessText(text) {
   if (!text) return null;
@@ -40,7 +41,7 @@ function highlightGuinnessText(text) {
   );
 }
 
-export function VenueDetailPanel({ venue, onClose, onScanMenu, onSubmitCrowdReport }) {
+export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu, onSubmitCrowdReport }) {
   const [scanning, setScanning] = useState(false);
   const [customMenuUrl, setCustomMenuUrl] = useState(venue?.menuUrl || venue?.website || '');
   const [showReportForm, setShowReportForm] = useState(false);
@@ -148,6 +149,11 @@ export function VenueDetailPanel({ venue, onClose, onScanMenu, onSubmitCrowdRepo
                   }}
                 >
                   <Star size={12} fill="#e2be75" /> {venue.googleRating} ({venue.googleReviewCount})
+                </span>
+              )}
+              {Number.isFinite(distanceKm) && (
+                <span className="distance-badge" title="Distance from you">
+                  📍 {formatDistance(distanceKm)} from you
                 </span>
               )}
             </div>
