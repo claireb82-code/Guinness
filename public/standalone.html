@@ -53,6 +53,7 @@
           showReportForm: false,
           scanningSingle: false,
           clickedCoords: null,
+          coordsFromClick: false, // true only when the visitor clicked the map to choose the place
         };
 
         let leafletMap = null;
@@ -316,6 +317,7 @@
             if (leafletMap) {
               const c = leafletMap.getCenter();
               state.clickedCoords = { lat: Number(c.lat.toFixed(5)), lng: Number(c.lng.toFixed(5)) };
+              state.coordsFromClick = false;
             }
             state.addModalOpen = true;
             renderModals();
@@ -371,6 +373,7 @@
             pendingClick = setTimeout(() => {
               pendingClick = null;
               state.clickedCoords = coords;
+              state.coordsFromClick = true;
               state.addModalOpen = true;
               renderModals();
             }, 300);
@@ -522,6 +525,7 @@
 
             document.getElementById('btn-open-add')?.addEventListener('click', () => {
               state.clickedCoords = { lat: state.mapCenter.lat, lng: state.mapCenter.lng };
+              state.coordsFromClick = false; // the map centre is not the venue's position
               state.addModalOpen = true;
               renderModals();
             });
@@ -1199,7 +1203,8 @@
                         <option value="hotel">🏨 Hotel</option>
                       </select>
                     </div>
-                    <input id="add-addr" type="text" class="stout-input" placeholder="Street Address" />
+                    <input id="add-addr" type="text" class="stout-input" placeholder="Street Address (the pin is placed from it)" />
+                    <p id="add-error" class="near-error" role="alert" hidden style="margin:0;"></p>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;">
                       <input id="add-lat" type="number" step="any" class="stout-input" value="${coords.lat}" />
                       <input id="add-lng" type="number" step="any" class="stout-input" value="${coords.lng}" />
@@ -1279,13 +1284,49 @@
             });
             document.getElementById('form-add-venue')?.addEventListener('submit', async (e) => {
               e.preventDefault();
+              const addError = document.getElementById('add-error');
+              const showAddError = (text) => {
+                if (addError) {
+                  addError.textContent = text;
+                  addError.hidden = !text;
+                }
+              };
+              showAddError('');
+              // The position must be chosen by the visitor (a map click, typed coordinates) or come from the address.
+              const typedLat = Number(document.getElementById('add-lat')?.value);
+              const typedLng = Number(document.getElementById('add-lng')?.value);
+              const prefilled = state.clickedCoords || state.mapCenter;
+              const positionChosen = state.coordsFromClick || typedLat !== prefilled.lat || typedLng !== prefilled.lng;
+              let useLat = typedLat;
+              let useLng = typedLng;
+              if (!positionChosen) {
+                const addressText = (document.getElementById('add-addr')?.value || '').trim();
+                if (!addressText) {
+                  showAddError('Enter the street address, or click the map to place the venue.');
+                  return;
+                }
+                try {
+                  const geoRes = await fetch('/api/geocode?q=' + encodeURIComponent(addressText));
+                  const geo = await geoRes.json();
+                  if (!geoRes.ok) throw new Error(geo.error || 'The address lookup is busy right now. Please try again.');
+                  if (!geo.found) {
+                    showAddError('We could not find "' + addressText + '" in Switzerland. Check the address, or click the map to place the venue.');
+                    return;
+                  }
+                  useLat = geo.lat;
+                  useLng = geo.lng;
+                } catch (err) {
+                  showAddError(err.message || 'The address lookup is busy right now. Please try again.');
+                  return;
+                }
+              }
               const payload = {
                 name: document.getElementById('add-name')?.value || 'New Venue',
                 category: document.getElementById('add-cat')?.value || 'pub',
                 city: state.activeCity,
                 address: document.getElementById('add-addr')?.value || 'Added on Map',
-                lat: Number(document.getElementById('add-lat')?.value || state.mapCenter.lat),
-                lng: Number(document.getElementById('add-lng')?.value || state.mapCenter.lng),
+                lat: useLat,
+                lng: useLng,
                 website: document.getElementById('add-web')?.value || '',
                 servingFormat: document.getElementById('add-format')?.value || 'draught',
                 price: document.getElementById('add-price')?.value || '',

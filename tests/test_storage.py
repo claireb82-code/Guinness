@@ -17,7 +17,12 @@ class FileBackendTests(unittest.TestCase):
         self.backend = storage.FileBackend(self.path, os.path.join(self.dir.name, "missing.json"))
 
     def test_empty_when_nothing_exists(self):
-        self.assertEqual(self.backend.load(), {"crowdReports": {}, "menuScans": {}, "customVenues": [], "googleMapsVenues": []})
+        self.assertEqual(self.backend.load(), {"crowdReports": {}, "menuScans": {}, "customVenues": [], "googleMapsVenues": [], "venueLocations": {}})
+
+    def test_a_moved_venue_round_trips_through_the_file(self):
+        store = self.backend.load()
+        self.backend.set_location(store, "custom-1", {"lat": 46.8, "lng": 9.83})
+        self.assertEqual(self.backend.load()["venueLocations"], {"custom-1": {"lat": 46.8, "lng": 9.83}})
 
     def test_writes_round_trip_through_the_file(self):
         store = self.backend.load()
@@ -85,6 +90,13 @@ class RedisBackendTests(unittest.TestCase):
         seen = b.load()
         self.assertEqual(seen["customVenues"][0]["name"], "Pub")
         self.assertEqual(seen["menuScans"]["zh-x"]["foundOnMenu"], True)
+
+    def test_a_moved_venue_is_shared_between_instances_and_junk_is_skipped(self):
+        a, b = self.backend(), self.backend()
+        a.set_location(a.load(), "custom-1", {"lat": 46.8, "lng": 9.83})
+        self.redis.data.setdefault("t:locations", {})["custom-2"] = "not json"  # a malformed entry must not break loading
+        seen = b.load()
+        self.assertEqual(seen["venueLocations"], {"custom-1": {"lat": 46.8, "lng": 9.83}})
 
     def test_unicode_survives(self):
         a = self.backend()

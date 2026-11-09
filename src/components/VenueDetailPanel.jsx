@@ -41,8 +41,9 @@ function highlightGuinnessText(text) {
   );
 }
 
-export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu, onSubmitCrowdReport }) {
+export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu, onSubmitCrowdReport, onRelocate }) {
   const [scanning, setScanning] = useState(false);
+  const [relocating, setRelocating] = useState(false);
   const [customMenuUrl, setCustomMenuUrl] = useState(venue?.menuUrl || venue?.website || '');
   const [showReportForm, setShowReportForm] = useState(false);
 
@@ -173,6 +174,26 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
               <MapPin size={12} style={{ flexShrink: 0, color: '#c8a45d' }} />
               <span>{venue.address}</span>
             </div>
+            {/* Venues added by visitors were placed by hand: offer to re-place them from their address. */}
+            {onRelocate && String(venue.id).startsWith('custom-') && (
+              <button
+                type="button"
+                className="btn-outline relocate-venue"
+                style={{ marginTop: '0.4rem', padding: '0.28rem 0.55rem', fontSize: '0.7rem' }}
+                disabled={relocating}
+                title="Look up the address above and move the pin there"
+                onClick={async () => {
+                  setRelocating(true);
+                  try {
+                    await onRelocate(venue.id);
+                  } finally {
+                    setRelocating(false);
+                  }
+                }}
+              >
+                {relocating ? 'Looking up…' : '📍 Pin in the wrong place? Update from address'}
+              </button>
+            )}
           </div>
         </div>
 

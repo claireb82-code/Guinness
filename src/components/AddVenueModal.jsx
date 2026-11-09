@@ -5,6 +5,7 @@ export function AddVenueModal({
   isOpen,
   onClose,
   initialCoords,
+  coordsFromClick = false,
   activeCity,
   onAddVenue,
   onCheckGoogleMaps,
@@ -24,13 +25,46 @@ export function AddVenueModal({
   const [pintRating, setPintRating] = useState('4.8');
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Where the position came from. Only a click on the map, a successful address lookup or typed coordinates count as
+  // the visitor choosing a place; "default" is just wherever the map was centred, which is not the venue's position.
+  const [coordsSource, setCoordsSource] = useState(coordsFromClick ? 'map' : 'default');
+  const [lookup, setLookup] = useState({ status: 'idle', label: '', address: '' });
+  const [formError, setFormError] = useState('');
 
+  // Each time the form opens: start from the clicked spot (or the map centre, which does not count as a chosen place).
   useEffect(() => {
+    if (!isOpen) return;
     if (initialCoords) {
       setLat(initialCoords.lat);
       setLng(initialCoords.lng);
     }
-  }, [initialCoords?.lat, initialCoords?.lng]);
+    setCoordsSource(coordsFromClick ? 'map' : 'default');
+    setLookup({ status: 'idle', label: '', address: '' });
+    setFormError('');
+  }, [isOpen]);
+
+  // Ask the server where an address is. Resolves { lat, lng, label }, or { error } with a message for the visitor.
+  const findAddress = async (text) => {
+    setLookup({ status: 'busy', label: '', address: text });
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(text)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'The address lookup is busy right now. Please try again.');
+      if (!data.found) {
+        const error = `We couldn't find "${text}" in Switzerland. Check the address, or click the map to place the venue.`;
+        setLookup({ status: 'notfound', label: '', address: text });
+        return { error };
+      }
+      setLat(data.lat);
+      setLng(data.lng);
+      setCoordsSource('lookup');
+      setLookup({ status: 'found', label: data.label, address: text });
+      return { lat: data.lat, lng: data.lng, label: data.label };
+    } catch (err) {
+      setLookup({ status: 'error', label: '', address: text });
+      return { error: err.message || 'The address lookup is busy right now. Please try again.' };
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -57,15 +91,33 @@ export function AddVenueModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
+    setFormError('');
     setSubmitting(true);
     try {
+      let useLat = Number(lat);
+      let useLng = Number(lng);
+      // The position must come from the visitor (a click, typed coordinates) or from the address they typed.
+      const addressChangedSinceLookup = coordsSource === 'lookup' && lookup.address !== address.trim();
+      if (coordsSource === 'default' || addressChangedSinceLookup) {
+        if (!address.trim()) {
+          setFormError('Enter the street address, or click the map to place the venue.');
+          return;
+        }
+        const found = await findAddress(address.trim());
+        if (found.error) {
+          setFormError(found.error);
+          return;
+        }
+        useLat = found.lat;
+        useLng = found.lng;
+      }
       await onAddVenue({
         name,
         category,
         city: activeCity,
-        address: address || `${lat}, ${lng}`,
-        lat: Number(lat),
-        lng: Number(lng),
+        address: address || `${useLat}, ${useLng}`,
+        lat: useLat,
+        lng: useLng,
         website,
         servingFormat,
         price,
@@ -197,6 +249,30 @@ export function AddVenueModal({
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: 4, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn-outline"
+                style={{ padding: '0.3rem 0.6rem', fontSize: '0.72rem' }}
+                disabled={address.trim().length < 4 || lookup.status === 'busy'}
+                onClick={() => findAddress(address.trim())}
+              >
+                {lookup.status === 'busy' ? 'Looking…' : '📍 Find on map'}
+              </button>
+              {lookup.status === 'found' && (
+                <span className="lookup-ok" role="status" style={{ fontSize: '0.72rem', color: '#6ee7b7' }}>
+                  Found: {lookup.label}
+                </span>
+              )}
+              {coordsSource === 'default' && address.trim().length < 4 && (
+                <span style={{ fontSize: '0.72rem', color: '#9c8e7b' }}>or click the map to place it</span>
+              )}
+            </div>
+            {formError && (
+              <p className="near-error" role="alert" style={{ marginTop: 6 }}>
+                {formError}
+              </p>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.55rem' }}>
@@ -210,7 +286,10 @@ export function AddVenueModal({
                 className="stout-input"
                 style={{ width: '100%' }}
                 value={lat}
-                onChange={(e) => setLat(e.target.value)}
+                onChange={(e) => {
+                  setLat(e.target.value);
+                  setCoordsSource('typed');
+                }}
               />
             </div>
             <div>
@@ -223,7 +302,10 @@ export function AddVenueModal({
                 className="stout-input"
                 style={{ width: '100%' }}
                 value={lng}
-                onChange={(e) => setLng(e.target.value)}
+                onChange={(e) => {
+                  setLng(e.target.value);
+                  setCoordsSource('typed');
+                }}
               />
             </div>
           </div>

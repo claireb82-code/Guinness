@@ -342,6 +342,26 @@ export default function App() {
     }
   };
 
+  // Re-place a visitor-added venue from the address stored with it (the server does the lookup).
+  const handleRelocateVenue = async (venueId) => {
+    try {
+      const res = await fetch('/api/relocate-venue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ venueId }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        window.alert(data.error || 'Could not update the location. Please try again.');
+        return;
+      }
+      setVenues((prev) => prev.map((v) => (v.id === venueId ? data.venue : v)));
+      setMapCenter({ lat: data.venue.lat, lng: data.venue.lng, zoom: 15 });
+    } catch (err) {
+      window.alert('Could not update the location. Please try again.');
+    }
+  };
+
   const handleCheckGoogleMaps = async ({ query = '', website = '', city = activeCity, lat = mapCenter.lat, lng = mapCenter.lng } = {}) => {
     setLoading(true);
     try {
@@ -535,7 +555,7 @@ export default function App() {
             className="btn-outline"
             aria-label="Add or check a venue"
             onClick={() => {
-              setClickedCoords({ lat: mapCenter.lat, lng: mapCenter.lng });
+              setClickedCoords(null); // no position chosen yet: the form finds the address (see AddVenueModal)
               setAddVenueModalOpen(true);
             }}
           >
@@ -895,6 +915,7 @@ export default function App() {
             onClose={() => setSelectedVenueId(null)}
             onScanMenu={handleScanSingleMenu}
             onSubmitCrowdReport={handleSubmitCrowdReport}
+            onRelocate={handleRelocateVenue}
           />
         )}
       </div>
@@ -952,6 +973,7 @@ export default function App() {
         isOpen={addVenueModalOpen}
         onClose={() => setAddVenueModalOpen(false)}
         initialCoords={clickedCoords || mapCenter}
+        coordsFromClick={Boolean(clickedCoords)}
         activeCity={activeCity}
         onAddVenue={handleAddVenue}
         onCheckGoogleMaps={handleCheckGoogleMaps}
