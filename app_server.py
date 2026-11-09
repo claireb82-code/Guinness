@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 import guard
+import overpass
 import overture
 import storage
 
@@ -2057,14 +2058,8 @@ def fetch_osm_overpass_live(lat, lng, radius=1500, scrape_menus=False):
     );
     out center 40;
     """
-    req = urllib.request.Request(
-        "https://overpass-api.de/api/interpreter",
-        data=urllib.parse.urlencode({"data": overpass_query}).encode("utf-8"),
-        headers={"User-Agent": "StoutScoutSwitzerland/1.0 (https://openstreetmap.org)"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=16) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    # Several servers, retries and a short cache: see overpass.py
+    data = overpass.run(overpass_query)
 
     venues = []
     seen_names = set()
@@ -2203,14 +2198,8 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
     );
     out center 100;
     """
-    req = urllib.request.Request(
-        "https://overpass-api.de/api/interpreter",
-        data=urllib.parse.urlencode({"data": overpass_query}).encode("utf-8"),
-        headers={"User-Agent": "StoutScoutSwitzerland/1.0 (https://openstreetmap.org)"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=22) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    # Several servers, retries and a short cache: see overpass.py
+    data = overpass.run(overpass_query, attempt_seconds=24)
 
     venues = []
     seen_names = {v["name"].lower() for v in DEMO_VENUES}
@@ -2405,6 +2394,8 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                     return self.send_json(
                         {"source": "openstreetmap_overpass_free", "swissCrawlStats": crawl_stats, "venues": enriched}
                     )
+                except overpass.OverpassUnavailable as e:
+                    return self.send_json({"error": str(e)}, 503, retry_after=30)
                 except Exception as e:
                     return self.send_json({"error": str(e)}, 500)
 

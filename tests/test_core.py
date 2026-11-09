@@ -11,6 +11,7 @@ from unittest import mock
 
 import app_server as app
 import guard
+import overpass
 from tests.test_api import ApiTestCase
 
 NO_STORE = {"menuScans": {}, "crowdReports": {}}
@@ -430,9 +431,11 @@ class OverpassMappingTests(unittest.TestCase):
         self.assertEqual([v["name"] for v in out], ["Brand New Irish Pub"])
         self.assertTrue(out[0]["id"].startswith("osm-"))
 
-    def test_osm_failures_propagate_to_the_caller(self):
-        with mock.patch("urllib.request.urlopen", side_effect=OSError("overpass down")), self.assertRaises(OSError):
+    def test_osm_failures_become_a_friendly_error_after_trying_every_server(self):
+        with mock.patch("urllib.request.urlopen", side_effect=OSError("overpass down")) as urlopen, self.assertRaises(overpass.OverpassUnavailable) as ctx:
             app.fetch_osm_overpass_live(47, 8)
+        self.assertEqual(urlopen.call_count, len(overpass.DEFAULT_URLS) * 2)  # every server, two passes
+        self.assertIn("try again in a minute", str(ctx.exception))
 
 
 def urllib_unquote(s):
