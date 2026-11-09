@@ -1874,7 +1874,7 @@ def scrape_menu_url(url, existing_check=None):
             "lastChecked": now_iso,
             "foundOnMenu": found,
             "typesFound": evidence.serving_types(snippets) if found else [],
-            "extractedPrice": None,
+            "extractedPrice": evidence.price_near_guinness(snippets) if found else None,
             "snippets": snippets
             if found
             else [f"Scanned {url} — no explicit 'Guinness' text found on public HTML page."],

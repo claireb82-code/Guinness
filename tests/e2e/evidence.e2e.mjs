@@ -60,3 +60,26 @@ test('a venue that is only a guess says so, and explains why', { skip: skip() },
   assert.match(await page.textContent('.status-badge'), /unverified/i);
   await context.close();
 });
+
+test('regression: Kennedy\'s price is back, shown as unchecked (card and panel)', { skip: skip() }, async () => {
+  const { page, context } = await open();
+  const card = page.locator('.venue-card:has-text("Kennedy")').first();
+  await card.waitFor({ state: 'attached' });
+  assert.match(await card.textContent(), /CHF 9\.80 \(unchecked\)/);
+  await card.click();
+  await page.waitForSelector('.detail-drawer');
+  const panel = await page.textContent('.detail-drawer');
+  assert.match(panel, /Pint Price\s*CHF 9\.80\s*unchecked/);
+  await context.close();
+});
+
+test('regression: the same on the standalone page', { skip: skip() }, async () => {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+  const page = await context.newPage();
+  await routeOffline(page);
+  await page.goto(`${app.standalone}/`);
+  await page.waitForSelector('.venue-card, [data-venue-id]', { state: 'attached', timeout: 20000 });
+  const text = await page.locator('#sidebar-mount').textContent();
+  assert.match(text, /CHF 9\.80 \(unchecked\)/);
+  await context.close();
+});
