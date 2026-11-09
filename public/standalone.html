@@ -44,7 +44,7 @@
           selectedVenueId: null,
           searchQuery: '',
           categoryFilter: 'all',
-          guinnessFilter: 'all',
+          guinnessFilter: 'serves_any', // default: only venues that serve Guinness ("Show All" is one click away)
           googleApiKey: localStorage.getItem('stoutscout_gmaps_key') || '',
           mode: 'demo',
           autoScrapeMenus: true,
@@ -95,6 +95,28 @@
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+        }
+
+        // <safeHttpUrl>
+        // Venue websites are user-submitted. Only ever link to http(s) URLs: HTML-escaping alone does
+        // not stop a "javascript:" href. (Mirrored in src/safeUrl.js; tests keep the two in sync.)
+        function safeHttpUrl(value) {
+          if (typeof value !== 'string') return '';
+          const raw = value.trim();
+          if (!raw) return '';
+          try {
+            const u = new URL(/^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : 'https://' + raw);
+            return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : '';
+          } catch (e) {
+            return '';
+          }
+        }
+        // </safeHttpUrl>
+
+        function showApiError(res, data) {
+          if (res.ok && !(data && data.error)) return false;
+          window.alert((data && data.error) || 'Something went wrong. Please try again.');
+          return true;
         }
 
         function highlightGuinnessHtml(text) {
@@ -152,19 +174,20 @@
           return { pub: 'Pub', bar: 'Bar', hotel: 'Hotel', restaurant: 'Restaurant' }[cat] || 'Venue';
         }
 
-        function getFilteredVenues() {
+        function getFilteredVenues({ ignoreGuinnessFilter = false } = {}) {
+          const guinnessFilter = ignoreGuinnessFilter ? 'all' : state.guinnessFilter;
           return state.venues.filter((v) => {
             if (state.categoryFilter !== 'all' && v.category !== state.categoryFilter) return false;
             const status = v.guinnessSummary?.status;
-            if (state.guinnessFilter === 'serves_any') {
+            if (guinnessFilter === 'serves_any') {
               if (status === 'no_guinness' || status === 'unverified') return false;
-            } else if (state.guinnessFilter === 'draught_only') {
+            } else if (guinnessFilter === 'draught_only') {
               if (status !== 'confirmed_draught') return false;
-            } else if (state.guinnessFilter === 'on_menu') {
+            } else if (guinnessFilter === 'on_menu') {
               if (!v.menuCheck?.foundOnMenu) return false;
-            } else if (state.guinnessFilter === 'in_reviews') {
+            } else if (guinnessFilter === 'in_reviews') {
               if (!(v.reviewCheck?.mentionCount > 0)) return false;
-            } else if (state.guinnessFilter === 'guinness_zero') {
+            } else if (guinnessFilter === 'guinness_zero') {
               const hasZero =
                 v.crowdCheck?.hasZero ||
                 (v.menuCheck?.typesFound || []).some((t) => /0\.0|zero/i.test(t));
@@ -554,17 +577,29 @@
 
         function renderSidebarAndDrawer() {
           const filtered = getFilteredVenues();
+          // Venues hidden only because the default "Serves Guinness" filter is on (not by type or search).
+          const hiddenByGuinnessFilter =
+            state.guinnessFilter === 'all' ? 0 : getFilteredVenues({ ignoreGuinnessFilter: true }).length - filtered.length;
           const sidebarEl = document.getElementById('sidebar-mount');
           if (sidebarEl) {
-            const servingCount = filtered.filter((v) =>
+            // Header stats count every venue matching the type/search filters, so they stay meaningful
+            // while the (default) "Serves Guinness" filter hides the rest of the list.
+            const statsPool = getFilteredVenues({ ignoreGuinnessFilter: true });
+            const servingCount = statsPool.filter((v) =>
               ['confirmed_draught', 'cans_or_bottles', 'likely_serves'].includes(v.guinnessSummary?.status)
             ).length;
-            const onMenuCount = filtered.filter((v) => v.menuCheck?.foundOnMenu).length;
+            const onMenuCount = statsPool.filter((v) => v.menuCheck?.foundOnMenu).length;
 
             const cardsHtml = state.loading
               ? `<div style="padding:2rem 1rem;text-align:center;color:#b8ab99;font-size:0.84rem;">Scanning area for hotels, bars, pubs & restaurants...</div>`
               : filtered.length === 0
-              ? `<div style="padding:2rem 1rem;text-align:center;color:#b8ab99;font-size:0.84rem;">No venues match your current filters.</div>`
+              ? hiddenByGuinnessFilter > 0
+                ? `<div style="padding:2rem 1rem;text-align:center;color:#b8ab99;font-size:0.84rem;">
+                     No venues here are confirmed to serve Guinness yet.<br />
+                     ${hiddenByGuinnessFilter} other venue${hiddenByGuinnessFilter === 1 ? ' is' : 's are'} hidden because ${hiddenByGuinnessFilter === 1 ? "it hasn't" : "they haven't"} been checked or reported as serving it.<br />
+                     <button type="button" id="btn-show-all" class="filter-pill" style="margin-top:0.8rem;">Show all venues</button>
+                   </div>`
+                : `<div style="padding:2rem 1rem;text-align:center;color:#b8ab99;font-size:0.84rem;">No venues match your current filters.</div>`
               : filtered
                   .map((venue) => {
                     const summary = venue.guinnessSummary || {};
@@ -636,7 +671,7 @@
               <div style="padding:0.7rem 0.9rem;border-bottom:1px solid #332a21;display:flex;align-items:center;justify-content:space-between;background:#14110e;">
                 <div>
                   <div style="font-size:0.8rem;font-weight:700;color:#f5efe6;">
-                    ${servingCount} of ${filtered.length} Venues Serve Guinness
+                    ${servingCount} of ${statsPool.length} Venues Serve Guinness
                   </div>
                   <div style="font-size:0.7rem;color:#9c8e7b;">
                     ${onMenuCount} confirmed directly via online menu scan
@@ -665,6 +700,13 @@
               });
             });
 
+            document.getElementById('btn-show-all')?.addEventListener('click', () => {
+              state.guinnessFilter = 'all';
+              renderHeaderAndToolbar();
+              renderSidebarAndDrawer();
+              updateMapMarkers();
+            });
+
             document.getElementById('btn-batch-scan')?.addEventListener('click', async () => {
               state.batchScanning = true;
               renderSidebarAndDrawer();
@@ -677,6 +719,10 @@
                       body: JSON.stringify({ venueId: v.id, websiteUrl: v.menuUrl || v.website }),
                     });
                     const data = await res.json();
+                    if (res.status === 429) {
+                      window.alert(data.error || 'Scan limit reached. Please wait a few minutes and try again.');
+                      break;
+                    }
                     if (data.venue) {
                       state.venues = state.venues.map((item) => (item.id === v.id ? data.venue : item));
                     }
@@ -833,10 +879,10 @@
                       🗺️ Open in Google Maps
                     </a>
                     ${
-                      selectedVenue.website
+                      safeHttpUrl(selectedVenue.website)
                         ? `<a href="${escapeHtml(
-                            selectedVenue.website
-                          )}" target="_blank" rel="noreferrer" class="btn-outline" style="text-decoration:none;flex:1;justify-content:center;font-size:0.75rem;">🌐 Venue Website</a>`
+                            safeHttpUrl(selectedVenue.website)
+                          )}" target="_blank" rel="noopener noreferrer" class="btn-outline" style="text-decoration:none;flex:1;justify-content:center;font-size:0.75rem;">🌐 Venue Website</a>`
                         : ''
                     }
                   </div>
@@ -962,6 +1008,7 @@
                 body: JSON.stringify({ venueId: selectedVenue.id, websiteUrl: urlVal, venue: selectedVenue }),
               });
               const data = await res.json();
+              if (showApiError(res, data)) return;
               if (data.venue) {
                 state.venues = state.venues.map((v) => (v.id === selectedVenue.id ? data.venue : v));
               }
@@ -995,6 +1042,7 @@
               body: JSON.stringify(payload),
             });
             const data = await res.json();
+            if (showApiError(res, data)) return;
             if (data.venue) {
               state.venues = state.venues.map((v) => (v.id === selectedVenue.id ? data.venue : v));
               state.showReportForm = false;
@@ -1218,6 +1266,7 @@
                 body: JSON.stringify(payload),
               });
               const data = await res.json();
+              if (showApiError(res, data)) return;
               if (data.venue) {
                 state.venues = [data.venue, ...state.venues];
                 state.selectedVenueId = data.venue.id;

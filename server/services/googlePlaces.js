@@ -45,7 +45,7 @@ export function classifyCategory(types = [], name = '') {
     typeSet.has('resort_hotel') ||
     typeSet.has('guest_house') ||
     lowerName.includes('hotel') ||
-    lowerName.includes('inn')
+    /\binn\b/.test(lowerName) // a word, not a substring: "Cinnamon" and "Binningen" are not inns
   ) {
     return 'hotel';
   }
@@ -173,7 +173,10 @@ export function computeGuinnessStatus(venue) {
   const crowdDenied = venue.crowdCheck?.deniedCount || 0;
   const servingFormat = venue.crowdCheck?.servingFormat || (menuFound ? 'draught' : 'unknown');
 
-  if (!menuFound && crowdDenied >= 3 && crowdConfirmed === 0) {
+  // Same rule as compute_guinness_status() in app_server.py (tests/fixtures/shared_cases.json keeps them in sync):
+  // "no" needs a checked menu or repeated denials, never just a missing check.
+  const menuChecked = Boolean(venue.menuCheck?.checked);
+  if (!menuFound && crowdConfirmed === 0 && (crowdDenied >= 3 || (menuChecked && servingFormat === 'none'))) {
     return {
       status: 'no_guinness',
       statusLabel: 'No Guinness Served',

@@ -7,3 +7,4 @@ __pycache__/
 server/data/user_store.json
 server/data/swiss_osm_raw_cache.json
 server/data/swiss_website_scan_audit.json
+.coverage

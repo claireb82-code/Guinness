@@ -10,15 +10,25 @@ import json
 import math
 import os
 import re
+import sys
 import time
+import traceback
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
+import guard
+import storage
+
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 BUNDLED_STORE_PATH = os.path.join(ROOT_DIR, "server", "data", "user_store.json")
-STORE_PATH = "/tmp/user_store.json" if os.environ.get("VERCEL") else BUNDLED_STORE_PATH
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+SUBMISSIONS_DISABLED_MESSAGE = (
+    "Community submissions are not enabled on this deployment: no database is configured, so "
+    "anything submitted would be lost. See the README (Deploying to Vercel)."
+)
+STORE_PATH = "/tmp/user_store.json" if ON_VERCEL else BUNDLED_STORE_PATH
 
 CITY_PRESETS = {
     "all": {"id": "all", "name": "All Switzerland 🇨🇭", "lat": 46.8182, "lng": 8.2275, "zoom": 8, "currency": "CHF"},
@@ -1482,30 +1492,85 @@ DEMO_VENUES = [
 ]
 
 
+_BACKEND = None
+
+
+def get_backend():
+    """The active storage backend (file locally; Redis/KV when configured; see storage.py)."""
+    global _BACKEND
+    if _BACKEND is None:
+        _BACKEND = storage.build_backend(os.environ, STORE_PATH, BUNDLED_STORE_PATH, ON_VERCEL)
+    return _BACKEND
+
+
 def load_store():
-    for candidate_path in (STORE_PATH, BUNDLED_STORE_PATH):
-        if os.path.exists(candidate_path):
-            try:
-                with open(candidate_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    return {
-                        "crowdReports": data.get("crowdReports", {}),
-                        "menuScans": data.get("menuScans", {}),
-                        "customVenues": data.get("customVenues", []),
-                        "googleMapsVenues": data.get("googleMapsVenues", []),
-                    }
-            except Exception:
-                pass
-    return {"crowdReports": {}, "menuScans": {}, "customVenues": [], "googleMapsVenues": []}
+    return get_backend().load()
 
 
 def save_store(store):
-    try:
-        os.makedirs(os.path.dirname(STORE_PATH), exist_ok=True)
-        with open(STORE_PATH, "w", encoding="utf-8") as f:
-            json.dump(store, f, indent=2, ensure_ascii=False)
-    except OSError:
-        pass
+    """Persist the whole local store (derived venue cache). Community writes use add_* below."""
+    get_backend().save(store)
+
+
+# (max requests, window seconds) per client IP. Override with the env vars in .env.example.
+# Separate budgets so cheap actions (the UI's "scan all" button calls scan-menu once per venue) are not
+# throttled by the tight limits on expensive or billed ones.
+RATE_WRITES = (int(os.environ.get("RATE_LIMIT_WRITES_PER_HOUR", "10")), 3600)  # reports, new venues
+RATE_SCANS = (int(os.environ.get("RATE_LIMIT_SCANS_PER_10MIN", "120")), 600)  # menu scans, small OSM lookups
+RATE_GOOGLE = (int(os.environ.get("RATE_LIMIT_GOOGLE_PER_10MIN", "15")), 600)  # anything that calls Google Places
+RATE_HEAVY = (int(os.environ.get("RATE_LIMIT_HEAVY_PER_10MIN", "3")), 600)  # nationwide Overpass scan
+
+
+def get_rate_limiter():
+    return guard.RateLimiter(get_backend(), enabled=os.environ.get("RATE_LIMIT_DISABLED") != "1")
+
+
+def server_google_key_allowed():
+    """The server's own Google key may serve anonymous visitors locally, but on a public (Vercel)
+    deployment only when explicitly enabled - otherwise anyone could spend your Google quota."""
+    return (not ON_VERCEL) or os.environ.get("ALLOW_PUBLIC_GOOGLE_LIVE") == "1"
+
+
+def browser_maps_key():
+    """The key that is deliberately sent to browsers (map tiles). It must be a *browser* key
+    restricted to your site's referrers; it is never used for server-side Places calls.
+    On a public deployment only GOOGLE_MAPS_BROWSER_KEY is ever exposed; the legacy
+    GOOGLE_MAPS_API_KEY name is honoured for local development only."""
+    key = os.environ.get("GOOGLE_MAPS_BROWSER_KEY", "")
+    if not key and not ON_VERCEL:
+        key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
+    return key
+
+
+def deployment_info():
+    """Which build is serving this request. None of it is secret (the repository is public), and it
+    lets you check that a git push really went live: compare ``commit`` with the commit you pushed
+    (see scripts/check_deploy.py). Values come from variables Vercel sets for every deployment;
+    anything malformed is dropped so a bad value can never reach clients."""
+    sha = os.environ.get("VERCEL_GIT_COMMIT_SHA", "").strip().lower()
+    ref = os.environ.get("VERCEL_GIT_COMMIT_REF", "").strip()
+    env = os.environ.get("VERCEL_ENV", "").strip()
+    valid_sha = bool(re.fullmatch(r"[0-9a-f]{7,40}", sha))
+    return {
+        "commit": sha if valid_sha else None,
+        "commitShort": sha[:7] if valid_sha else None,
+        "branch": ref if re.fullmatch(r"[A-Za-z0-9_./\-]{1,100}", ref) else None,
+        "environment": env if env in ("production", "preview", "development") else ("unknown" if ON_VERCEL else "local"),
+    }
+
+
+def resolve_places_key(headers):
+    """Key for a server-side Google Places call: the visitor's own key (their quota), else the
+    server key if allowed. Returns "" when no key may be used."""
+    own = (headers.get("x-google-maps-key") or "").strip()
+    if own:
+        return own if len(own) <= 100 and own.isprintable() else ""
+    if server_google_key_allowed():
+        key = os.environ.get("GOOGLE_PLACES_API_KEY", "")
+        if not key and not ON_VERCEL:
+            key = os.environ.get("GOOGLE_MAPS_API_KEY", "")  # legacy single-key local setups
+        return key
+    return ""
 
 
 CRAWL_RESULTS_PATH = os.path.join(ROOT_DIR, "server", "data", "swiss_crawl_results.json")
@@ -1689,7 +1754,38 @@ def enrich_venue(venue, store):
     return v
 
 
+# Tests point this at a local server; production never sets it (see guard.fetch_page).
+FETCH_ALLOW_PRIVATE = False
+
+
+def _not_scanned(now_iso, reason):
+    return {
+        "checked": False,
+        "lastChecked": now_iso,
+        "foundOnMenu": False,
+        "typesFound": [],
+        "extractedPrice": None,
+        "snippets": [f"Menu URL not scanned: {reason}."],
+    }
+
+
+def clean_public_url(value):
+    """A website taken from third-party data. OpenStreetMap tags can be edited by anyone, so keep a
+    value only if it is a plain http(s) URL (normalised, e.g. "www.pub.ch" -> "https://www.pub.ch");
+    otherwise None. Rendering is protected too (safeHttpUrl in the UIs); this keeps junk out of storage."""
+    try:
+        return guard.normalize_http_url(value) if value else None
+    except guard.UnsafeURL:
+        return None
+
+
 def scrape_menu_url(url, existing_check=None):
+    """Fetch a venue's website/menu page and look for Guinness.
+
+    All fetching goes through ``guard.fetch_page``: only public http(s) hosts are contacted
+    (also on redirects), downloads are size- and time-limited. Unsafe URLs are reported as
+    "not scanned" rather than as a negative result.
+    """
     now_iso = datetime.now(timezone.utc).isoformat()
     if not url:
         return {
@@ -1700,15 +1796,12 @@ def scrape_menu_url(url, existing_check=None):
             "extractedPrice": None,
             "snippets": ["No website URL provided."],
         }
-    if not re.match(r"^https?://", url, re.I):
-        url = "https://" + url
     try:
-        req = urllib.request.Request(
-            url,
-            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) StoutScout/1.0"},
-        )
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            html = resp.read().decode("utf-8", errors="ignore")
+        url = guard.normalize_http_url(url)
+    except guard.UnsafeURL as exc:
+        return _not_scanned(now_iso, str(exc))
+    try:
+        html = guard.fetch_page(url, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
         text_lines = [
             re.sub(r"\s+", " ", line).strip()
             for line in re.sub(r"<[^>]+>", "\n", html).splitlines()
@@ -1726,6 +1819,8 @@ def scrape_menu_url(url, existing_check=None):
             if found
             else [f"Scanned {url} — no explicit 'Guinness' text found on public HTML page."],
         }
+    except guard.UnsafeURL as exc:
+        return _not_scanned(now_iso, str(exc))
     except Exception:
         if existing_check and existing_check.get("checked"):
             return {**existing_check, "lastChecked": now_iso}
@@ -1989,8 +2084,8 @@ def fetch_osm_overpass_live(lat, lng, radius=1500, scrape_menus=False):
         address_parts = [f"{street} {housenumber}".strip(), f"{postcode} {city_name}".strip()]
         address = ", ".join([p for p in address_parts if p]) or "Switzerland (OpenStreetMap)"
 
-        website = tags.get("website") or tags.get("contact:website") or tags.get("url")
-        menu_url = tags.get("url:menu") or website
+        website = clean_public_url(tags.get("website") or tags.get("contact:website") or tags.get("url"))
+        menu_url = clean_public_url(tags.get("url:menu")) or website
         phone = tags.get("phone") or tags.get("contact:phone")
 
         # Check OSM tags & name for Irish / Guinness signals
@@ -2133,8 +2228,8 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
         address_parts = [f"{street} {housenumber}".strip(), f"{postcode} {city_name}".strip()]
         address = ", ".join([p for p in address_parts if p]) or f"{city_name}, Switzerland (OpenStreetMap)"
 
-        website = tags.get("website") or tags.get("contact:website") or tags.get("url")
-        menu_url = tags.get("url:menu") or website
+        website = clean_public_url(tags.get("website") or tags.get("contact:website") or tags.get("url"))
+        menu_url = clean_public_url(tags.get("url:menu")) or website
         phone = tags.get("phone") or tags.get("contact:phone")
         brewery = (tags.get("brewery") or tags.get("drink:beer") or "").lower()
 
@@ -2193,14 +2288,32 @@ def fetch_osm_switzerland_nationwide(scrape_menus=False):
 
 
 class StoutScoutHandler(SimpleHTTPRequestHandler):
-    def send_json(self, payload, status=200):
+    def send_json(self, payload, status=200, retry_after=None):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        # Public read-only data may be fetched cross-origin; writes are same-origin only.
+        if self.command == "GET":
+            self.send_header("Access-Control-Allow-Origin", "*")
+        if retry_after:
+            self.send_header("Retry-After", str(int(retry_after)))
         self.end_headers()
         self.wfile.write(body)
+
+    def _client_ip(self):
+        peer = self.client_address[0] if self.client_address else None
+        return guard.client_ip(self.headers, peer, ON_VERCEL)
+
+    def _rate_limited(self, bucket, limit_and_window):
+        """Answer 429 and return True if this client is over the limit for ``bucket``."""
+        limit, window = limit_and_window
+        allowed, retry_after = get_rate_limiter().check(bucket, self._client_ip(), limit, window)
+        if not allowed:
+            self.send_json(
+                {"error": "Too many requests. Please slow down and try again later."}, 429, retry_after=retry_after
+            )
+        return not allowed
 
     def send_static_file(self, rel_path, content_type):
         abs_path = os.path.join(ROOT_DIR, rel_path)
@@ -2217,13 +2330,16 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/api/config":
-            env_key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
+            # Only the *browser* key (map tiles; must be referrer-restricted) is ever sent to clients.
+            browser_key = browser_maps_key()
             return self.send_json(
                 {
-                    "hasEnvApiKey": bool(env_key),
-                    "envApiKey": env_key,
+                    "hasEnvApiKey": bool(browser_key),
+                    "envApiKey": browser_key,
                     "cities": CITY_PRESETS,
                     "swissCrawlStats": load_crawl_stats(),
+                    "communitySubmissions": get_backend().accepts_submissions,
+                    "deployment": deployment_info(),
                 }
             )
 
@@ -2234,7 +2350,19 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             lat = qs.get("lat", [None])[0]
             lng = qs.get("lng", [None])[0]
             scrape_menus = qs.get("scrapeMenus", ["false"])[0] == "true"
-            api_key = self.headers.get("x-google-maps-key") or os.environ.get("GOOGLE_MAPS_API_KEY", "")
+            api_key = resolve_places_key(self.headers)
+            try:
+                if lat and lng:
+                    lat = guard.clean_number(lat, "lat", -90, 90)
+                    lng = guard.clean_number(lng, "lng", -180, 180)
+            except guard.ValidationError as exc:
+                return self.send_json({"error": str(exc)}, exc.status)
+            if mode == "osm_ch" and self._rate_limited("heavy", RATE_HEAVY):
+                return
+            if mode == "osm" and self._rate_limited("scan", RATE_SCANS):
+                return
+            if mode == "live" and api_key and self._rate_limited("google", RATE_GOOGLE):
+                return
             store = load_store()
             crawl_stats = load_crawl_stats()
 
@@ -2295,23 +2423,46 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             return self.send_static_file(os.path.join("public", "standalone.html"), "text/html; charset=utf-8")
         if parsed.path == "/src/styles.css":
             return self.send_static_file(os.path.join("src", "styles.css"), "text/css; charset=utf-8")
-        return super().do_GET()
+        # Only the routes above exist. (This used to fall through to SimpleHTTPRequestHandler, which
+        # served any file in the project directory: source code, .git, and a .env holding API keys.)
+        return self.send_json({"error": "Not found"}, 404)
 
     def do_POST(self):
+        """Never let an exception escape as a dropped connection; answer with a JSON error."""
+        try:
+            self._handle_post()
+        except guard.ValidationError as exc:
+            self.send_json({"error": str(exc)}, exc.status)
+        except storage.StorageError as exc:
+            print(f"[storage] {exc}", file=sys.stderr)
+            self.send_json({"error": "The database is temporarily unavailable. Please try again shortly."}, 503)
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+            self.send_json({"error": "Internal server error"}, 500)
+
+    def _handle_post(self):
         parsed = urllib.parse.urlparse(self.path)
-        length = int(self.headers.get("Content-Length", "0"))
-        raw_body = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
-        data = json.loads(raw_body or "{}")
+        if parsed.path not in (
+            "/api/check-google-maps", "/api/scan-menu", "/api/crowd-report", "/api/add-venue",
+        ):
+            return self.send_json({"error": "Not found"}, 404)
+        # Requiring JSON also blocks cross-site "simple" form/text POSTs (CSRF).
+        if not self.headers.get("Content-Type", "").lower().startswith("application/json"):
+            raise guard.ValidationError("Content-Type must be application/json", 415)
+        data = guard.read_json_body(self.headers, self.rfile)
+        backend = get_backend()
         store = load_store()
 
         if parsed.path == "/api/check-google-maps":
-            query = (data.get("query") or "").strip()
-            city = data.get("city") or "all"
-            lat = float(data.get("lat") or 47.3745)
-            lng = float(data.get("lng") or 8.5385)
-            radius = float(data.get("radius") or 3500)
-            website = (data.get("website") or "").strip()
-            api_key = self.headers.get("x-google-maps-key") or os.environ.get("GOOGLE_MAPS_API_KEY", "")
+            query = guard.clean_text(data.get("query"), "query", 1000)
+            city = guard.clean_choice(data.get("city"), "city", tuple(CITY_PRESETS) + ("custom",), "all")
+            lat = guard.clean_number(data.get("lat"), "lat", -90, 90, 47.3745)
+            lng = guard.clean_number(data.get("lng"), "lng", -180, 180, 8.5385)
+            radius = guard.clean_number(data.get("radius"), "radius", 100, 10000, 3500)
+            website = guard.clean_website(data.get("website")) or ""
+            api_key = resolve_places_key(self.headers)
+            if self._rate_limited("google" if api_key else "scan", RATE_GOOGLE if api_key else RATE_SCANS):
+                return
 
             checked_venues = []
             if api_key:
@@ -2322,11 +2473,11 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                 except Exception as e:
                     return self.send_json({"error": str(e)}, 500)
             elif query:
-                for line in [ln.strip() for ln in query.splitlines() if ln.strip()]:
+                for line in [ln.strip() for ln in query.splitlines() if ln.strip()][:10]:
                     pq = parse_google_maps_url_or_query(line)
-                    v_name = pq["name"] or line
-                    v_lat = pq["lat"] if pq["lat"] is not None else lat
-                    v_lng = pq["lng"] if pq["lng"] is not None else lng
+                    v_name = (pq["name"] or line)[:100]
+                    v_lat = max(-90.0, min(90.0, pq["lat"])) if pq["lat"] is not None else lat
+                    v_lng = max(-180.0, min(180.0, pq["lng"])) if pq["lng"] is not None else lng
                     lower_n = v_name.lower()
                     v_cat = (
                         "hotel"
@@ -2348,10 +2499,11 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                             "snippets": [f"Checked via Google Maps importer ({v_name})."],
                         }
                     )
+                    # Only keep a user-supplied link if it is really an https Google Maps URL.
                     gmaps_uri = (
-                        line
-                        if pq["isUrl"]
-                        else "https://www.google.com/maps/search/?api=1&query="
+                        guard.safe_google_maps_uri(line) if pq["isUrl"] else None
+                    ) or (
+                        "https://www.google.com/maps/search/?api=1&query="
                         + urllib.parse.quote_plus(f"{v_name} Switzerland")
                     )
                     checked_venues.append({
@@ -2414,43 +2566,56 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
             })
 
         if parsed.path == "/api/scan-menu":
-            vid = data.get("venueId")
-            url = data.get("websiteUrl")
-            venue_snapshot = data.get("venue")
+            if self._rate_limited("scan", RATE_SCANS):
+                return
+            vid = guard.clean_venue_id(data["venueId"]) if data.get("venueId") else None
+            url = guard.clean_website(data.get("websiteUrl"))
+            venue_snapshot = data.get("venue") if isinstance(data.get("venue"), dict) else None
             all_v = get_all_combined_venues(store)
-            existing = next((v for v in all_v if v["id"] == vid), None) or venue_snapshot
+            known = next((v for v in all_v if v["id"] == vid), None) if vid else None
+            existing = known or venue_snapshot
             target_url = url or (existing.get("menuUrl") if existing else None) or (existing.get("website") if existing else None)
             scan_res = scrape_menu_url(target_url, existing.get("menuCheck") if existing else None)
             if vid:
-                store.setdefault("menuScans", {})[vid] = scan_res
-                save_store(store)
-            updated = enrich_venue(existing, store) if existing else None
+                store.setdefault("menuScans", {})[vid] = scan_res  # so this response reflects the scan
+                # Only *save* a result for a venue we know, from a real scan, of a page on that venue's own
+                # site - otherwise anyone could make any venue look like it serves Guinness.
+                own_site = bool(known) and (
+                    not url or guard.same_site(url, known.get("website")) or guard.same_site(url, known.get("menuUrl"))
+                )
+                if own_site and scan_res.get("checked"):
+                    backend.set_scan(store, vid, scan_res)
+            updated = enrich_venue(existing, store) if existing and existing.get("id") else None
             return self.send_json({"scanResult": scan_res, "venue": updated})
 
         if parsed.path == "/api/crowd-report":
-            vid = data.get("venueId")
-            venue_snapshot = data.get("venue")
+            if not backend.accepts_submissions:
+                return self.send_json({"error": SUBMISSIONS_DISABLED_MESSAGE}, 503)
+            if self._rate_limited("write", RATE_WRITES):
+                return
+            clean = guard.validate_crowd_report(data)
+            vid = clean.pop("venueId")
+            venue_snapshot = data.get("venue") if isinstance(data.get("venue"), dict) else None
             rep = {
                 "id": f"rep-{int(time.time() * 1000)}",
-                "user": (data.get("user") or "Swiss Guinness Scout").strip(),
-                "servingFormat": data.get("servingFormat") or "draught",
-                "pintRating": None if data.get("servingFormat") == "none" else float(data.get("pintRating") or 5.0),
-                "price": data.get("price"),
-                "hasZero": bool(data.get("hasZero")),
-                "note": (data.get("note") or "").strip(),
+                **clean,
                 "createdAt": datetime.now(timezone.utc).isoformat(),
             }
-            store.setdefault("crowdReports", {}).setdefault(vid, []).insert(0, rep)
-            save_store(store)
+            backend.add_report(store, vid, rep)
             all_v = get_all_combined_venues(store)
             existing = next((v for v in all_v if v["id"] == vid), None) or venue_snapshot
-            updated = enrich_venue(existing, store) if existing else None
+            updated = enrich_venue(existing, store) if existing and existing.get("id") else None
             return self.send_json({"report": rep, "venue": updated})
 
         if parsed.path == "/api/add-venue":
+            if not backend.accepts_submissions:
+                return self.send_json({"error": SUBMISSIONS_DISABLED_MESSAGE}, 503)
+            if self._rate_limited("write", RATE_WRITES):
+                return
+            clean = guard.validate_new_venue(data, set(CITY_PRESETS))
             vid = f"custom-{int(time.time() * 1000)}"
-            website = data.get("website")
-            s_format = data.get("servingFormat") or "draught"
+            website = clean["website"]
+            s_format = clean["servingFormat"]
             menu_check = (
                 scrape_menu_url(website)
                 if website
@@ -2459,25 +2624,25 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                     "lastChecked": None,
                     "foundOnMenu": s_format != "none",
                     "typesFound": ["Guinness Draught (On Tap)"] if s_format == "draught" else [],
-                    "extractedPrice": data.get("price"),
-                    "snippets": [f"Reported by scout: {data.get('note') or 'Serves Guinness'}"],
+                    "extractedPrice": clean["price"],
+                    "snippets": [f"Reported by scout: {clean['note'] or 'Serves Guinness'}"],
                 }
             )
             new_venue = {
                 "id": vid,
-                "city": data.get("city") if data.get("city") != "all" else "zurich",
-                "name": (data.get("name") or "New Venue").strip(),
-                "category": data.get("category") or "pub",
-                "address": data.get("address") or "Switzerland",
-                "lat": float(data.get("lat") or 47.3745),
-                "lng": float(data.get("lng") or 8.5385),
+                "city": clean["city"],
+                "name": clean["name"],
+                "category": clean["category"],
+                "address": clean["address"],
+                "lat": clean["lat"],
+                "lng": clean["lng"],
                 "googleRating": 4.7,
                 "googleReviewCount": 1,
                 "priceLevel": "CHF ··",
                 "website": website,
                 "menuUrl": website,
                 "openNow": True,
-                "editorialSummary": data.get("note") or "Community-added Swiss venue checked for Guinness availability.",
+                "editorialSummary": clean["note"] or "Community-added Swiss venue checked for Guinness availability.",
                 "menuCheck": menu_check,
                 "reviewCheck": {
                     "mentionCount": 1 if s_format != "none" else 0,
@@ -2488,14 +2653,13 @@ class StoutScoutHandler(SimpleHTTPRequestHandler):
                     "confirmedCount": 1 if s_format != "none" else 0,
                     "deniedCount": 1 if s_format == "none" else 0,
                     "servingFormat": s_format,
-                    "avgPintRating": float(data.get("pintRating") or 4.8) if s_format != "none" else None,
-                    "reportedPrice": data.get("price"),
+                    "avgPintRating": clean["pintRating"] if s_format != "none" else None,
+                    "reportedPrice": clean["price"],
                     "hasZero": False,
                     "recentReports": [],
                 },
             }
-            store.setdefault("customVenues", []).insert(0, new_venue)
-            save_store(store)
+            backend.add_venue(store, new_venue)
             return self.send_json({"venue": enrich_venue(new_venue, store)})
 
         return self.send_json({"error": "Not found"}, 404)

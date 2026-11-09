@@ -152,6 +152,16 @@ function enrichVenueWithStoreAndStatus(venue, store) {
   };
 }
 
+/**
+ * Server-side Google Places key for this *local development* server. Prefer GOOGLE_PLACES_API_KEY;
+ * the legacy GOOGLE_MAPS_API_KEY name still works. Never returned by /api/config.
+ * (The deployed Vercel API is app_server.py, which also refuses to use this key for anonymous
+ * visitors on a public deployment unless ALLOW_PUBLIC_GOOGLE_LIVE=1.)
+ */
+function serverGoogleKey() {
+  return process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
+}
+
 async function startServer() {
   const app = express();
   const PORT = process.env.PORT || 3000;
@@ -161,7 +171,9 @@ async function startServer() {
 
   // GET /api/config - Returns presets and whether an env Google Maps API key is configured
   app.get('/api/config', (req, res) => {
-    const envApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+    // Only the *browser* key (map tiles; restrict it to your site's referrers) is ever sent to clients.
+    // The legacy GOOGLE_MAPS_API_KEY name is accepted for local development.
+    const envApiKey = process.env.GOOGLE_MAPS_BROWSER_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
     res.json({
       hasEnvApiKey: Boolean(envApiKey),
       envApiKey,
@@ -174,7 +186,7 @@ async function startServer() {
     try {
       const store = loadUserStore();
       const { city = 'all', lat, lng, radius = 3500, mode = 'demo', scrapeMenus = 'true' } = req.query;
-      const clientApiKey = req.headers['x-google-maps-key'] || process.env.GOOGLE_MAPS_API_KEY || '';
+      const clientApiKey = req.headers['x-google-maps-key'] || serverGoogleKey();
 
       if (mode === 'live' && clientApiKey && lat && lng) {
         const liveVenues = await fetchGooglePlacesVenues({
@@ -227,7 +239,7 @@ async function startServer() {
         radius = 3500,
         website = '',
       } = req.body || {};
-      const clientApiKey = req.headers['x-google-maps-key'] || process.env.GOOGLE_MAPS_API_KEY || '';
+      const clientApiKey = req.headers['x-google-maps-key'] || serverGoogleKey();
 
       let checkedVenues = [];
 

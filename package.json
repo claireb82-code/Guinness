@@ -7,7 +7,11 @@
     "dev": "node server/index.js",
     "client": "vite",
     "build": "vite build",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "test": "python3 -m unittest && npm run test:js",
+    "test:py": "python3 -m unittest",
+    "test:js": "node --test \"tests/js/*.test.js\"",
+    "test:e2e": "node --test tests/e2e/ui.e2e.mjs"
   },
   "dependencies": {
     "cheerio": "^1.0.0",
