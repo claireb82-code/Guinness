@@ -295,6 +295,10 @@ body {
   flex: 1;
   position: relative;
   background: #0a0907;
+  /* Leaflet's panes and controls use z-index 400-1000. Keeping them in the map's own stacking context stops them
+     painting over the header, the side panel and dialogs, which sit outside it. */
+  z-index: 0;
+  isolation: isolate;
 }
 
 .detail-drawer {
@@ -381,7 +385,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 2000; /* above everything on the page, Leaflet's own controls (up to 1000) included */
   padding: 1rem;
 }
 
