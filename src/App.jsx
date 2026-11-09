@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Search,
   MapPin,
@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { PintIcon, formatCategoryLabel } from './components/PintIcon.jsx';
 import { isPhoneLayout } from './layout.js';
+import { RADII_KM, DEFAULT_RADIUS_KM, distanceKm, formatDistance, formatRadius, nearest, pickRadius, locationErrorMessage } from './geo.js';
+import { readNearMePref, writeNearMePref } from './nearMePref.js';
 import { MapCanvas } from './components/MapCanvas.jsx';
 import { VenueDetailPanel } from './components/VenueDetailPanel.jsx';
 import { ApiKeyModal } from './components/ApiKeyModal.jsx';
@@ -52,6 +54,32 @@ export default function App() {
   // Phone layout: one pane at a time (map or list) plus a bottom "Filters" sheet. The map comes first. Desktop ignores these.
   const [mobileView, setMobileView] = useState('map');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // "Near me": the position stays in this browser (never stored); it is sent to the server only if the visitor
+  // asks to scan their area. nearbyKm === null means "anywhere".
+  const [userLocation, setUserLocation] = useState(null);
+  const [nearbyKm, setNearbyKm] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  // Near me is on by default: on load we quietly ask for the position (see the effects below). Only the visitor's
+  // on/off + radius preference is remembered, never the location. Anything the visitor picks themselves wins.
+  const [nearAuto, setNearAuto] = useState(false); // near me was switched on automatically (not by a click)
+  const [nearMeNotice, setNearMeNotice] = useState('');
+  const [autoPending, setAutoPending] = useState(false); // position known, waiting for venues to pick a radius
+  const userChoseRef = useRef(false);
+  const autoStartedRef = useRef(false);
+  const nearMePrefRef = useRef(null);
+  if (nearMePrefRef.current === null) {
+    nearMePrefRef.current = typeof localStorage === 'undefined' ? {} : readNearMePref(localStorage);
+  }
+  const rememberNearMe = (pref) => {
+    nearMePrefRef.current = pref;
+    if (typeof localStorage !== 'undefined') writeNearMePref(localStorage, pref);
+  };
+  const userPicked = () => {
+    userChoseRef.current = true;
+    setNearAuto(false);
+    setNearMeNotice('');
+  };
 
   // Google Maps & Mode State
   const [googleApiKey, setGoogleApiKey] = useState(() => localStorage.getItem('stoutscout_gmaps_key') || '');
@@ -96,6 +124,7 @@ export default function App() {
         headers: overrideKey ? { 'x-google-maps-key': overrideKey } : {},
       });
       const data = await res.json();
+      if (!res.ok && data.error && targetMode !== 'demo') window.alert(data.error);
       if (data.venues) {
         setVenues(data.venues);
         // Desktop opens the first venue in the side panel; on a phone that would cover the whole list.
@@ -126,25 +155,126 @@ export default function App() {
     localStorage.setItem('stoutscout_gmaps_key', newKey);
   };
 
-  const handleUseMyLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
+  // One-shot position request (no watching: it would drain the battery). Resolves { loc } or { error }.
+  const locateMe = () =>
+    new Promise((resolve) => {
+      setLocationError('');
+      if (!navigator.geolocation) {
+        const error = locationErrorMessage();
+        setLocationError(error);
+        resolve({ error });
+        return;
+      }
+      setLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(loc);
+          setLocating(false);
+          resolve({ loc });
+        },
+        (err) => {
+          const error = locationErrorMessage(err);
+          setLocationError(error);
+          setLocating(false);
+          resolve({ error });
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    });
+
+  // Default Near me, step 1: on load, quietly ask for the position - unless the visitor switched Near me off last
+  // time or the browser already says no. No error is shown if it fails: the app just stays on "Anywhere".
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    if (nearMePrefRef.current.mode === 'off' || !navigator.geolocation) return;
+    const ask = () => {
+      setLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLocating(false);
+          if (userChoseRef.current) return;
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setAutoPending(true);
+        },
+        () => setLocating(false),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    };
+    const permissions = navigator.permissions?.query ? navigator.permissions.query({ name: 'geolocation' }) : null;
+    if (!permissions) return ask();
+    permissions.then((p) => (p.state === 'denied' ? undefined : ask()), ask);
+  }, []);
+
+  // Step 2: once the venues are in, start at the saved radius (default 500 m) and widen until something is in range.
+  // Venues that the current type/search/Guinness filters hide don't count, so the list is never empty on arrival.
+  useEffect(() => {
+    if (!autoPending || loading) return;
+    setAutoPending(false);
+    if (userChoseRef.current || venues.length === 0) return;
+    const wanted = nearMePrefRef.current.km ?? DEFAULT_RADIUS_KM;
+    const candidates = venues.filter((v) => matchesFilters(v, guinnessFilter, { ignoreRadius: true }));
+    const radius = pickRadius(candidates, userLocation, wanted);
+    if (radius === null) {
+      const closest = nearest(candidates, userLocation);
+      setNearMeNotice(
+        closest
+          ? `The nearest venue is ${formatDistance(closest.distanceKm)} from you, so we're showing everywhere in Switzerland.`
+          : ''
+      );
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setMapCenter({ lat, lng, zoom: 14 });
-        if (googleApiKey) {
-          setMode('live');
-          loadVenues({ cityKey: 'custom', targetLat: lat, targetLng: lng, targetMode: 'live' });
-        }
-      },
-      () => {
-        alert('Could not access your GPS location. Please check browser permissions.');
-      }
-    );
+    showWholeCountry();
+    setNearbyKm(radius);
+    setNearAuto(true);
+    if (radius > wanted) setNearMeNotice(`Nothing within ${formatRadius(wanted)} of you, so we're showing ${formatRadius(radius)}.`);
+  }, [autoPending, loading, venues]);
+
+  // Near-me works on the whole country: leave a single-city view first.
+  const showWholeCountry = () => {
+    if (activeCity !== 'all' && mode === 'demo') setActiveCity('all');
+  };
+
+  const chooseRadius = async (km) => {
+    userPicked();
+    if (km === null) {
+      setNearbyKm(null);
+      setLocationError('');
+      rememberNearMe({ mode: 'off' });
+      return;
+    }
+    const { loc } = userLocation ? { loc: userLocation } : await locateMe();
+    if (loc) {
+      showWholeCountry();
+      setNearbyKm(km);
+      rememberNearMe({ mode: 'on', km });
+    }
+  };
+
+  // The header "Near Me" button: refresh the position and filter to the default radius.
+  const handleUseMyLocation = async () => {
+    userPicked();
+    const { loc, error } = await locateMe();
+    if (!loc) {
+      window.alert(error);
+      return;
+    }
+    showWholeCountry();
+    setNearbyKm((km) => km ?? nearMePrefRef.current.km ?? DEFAULT_RADIUS_KM);
+    rememberNearMe({ mode: 'on', km: nearbyKm ?? nearMePrefRef.current.km ?? DEFAULT_RADIUS_KM });
+    if (googleApiKey) {
+      setMode('live');
+      loadVenues({ cityKey: 'custom', targetLat: loc.lat, targetLng: loc.lng, targetMode: 'live' });
+    }
+  };
+
+  // Ask the server to look for venues around the visitor (OpenStreetMap). This is the one place the position leaves the browser.
+  const scanAroundMe = () => {
+    if (!userLocation) return;
+    userPicked();
+    setGuinnessFilter('all'); // freshly scanned venues are unchecked, so the default "Serves Guinness" filter would hide them
+    loadVenues({ cityKey: 'custom', targetLat: userLocation.lat, targetLng: userLocation.lng, targetMode: 'osm' });
   };
 
   const handleScanSingleMenu = async (venueId, websiteUrl) => {
@@ -238,9 +368,14 @@ export default function App() {
   };
 
   // Filtered Venues
-  const matchesFilters = (v, guinnessMode) => {
+  const nearMeActive = nearbyKm !== null && userLocation !== null;
+
+  const matchesFilters = (v, guinnessMode, { ignoreRadius = false } = {}) => {
     // Category Filter
     if (categoryFilter !== 'all' && v.category !== categoryFilter) return false;
+
+    // Near me: within the chosen radius of the visitor
+    if (nearMeActive && !ignoreRadius && !(distanceKm(userLocation, v) <= nearbyKm)) return false;
 
     // Guinness Availability Filter
     const status = v.guinnessSummary?.status;
@@ -270,15 +405,31 @@ export default function App() {
     return true;
   };
 
-  const filteredVenues = useMemo(
-    () => venues.filter((v) => matchesFilters(v, guinnessFilter)),
-    [venues, categoryFilter, guinnessFilter, searchQuery]
+  const distanceById = useMemo(
+    () => (nearMeActive ? new Map(venues.map((v) => [v.id, distanceKm(userLocation, v)])) : new Map()),
+    [venues, nearMeActive, userLocation]
   );
+
+  // With Near me on, the list is sorted nearest first.
+  const filteredVenues = useMemo(() => {
+    const list = venues.filter((v) => matchesFilters(v, guinnessFilter));
+    return nearMeActive ? [...list].sort((a, b) => (distanceById.get(a.id) ?? Infinity) - (distanceById.get(b.id) ?? Infinity)) : list;
+  }, [venues, categoryFilter, guinnessFilter, searchQuery, nearbyKm, userLocation, distanceById]);
+
+  // When nothing is near: the closest venue that would otherwise match, and the next radius up.
+  const nearestMatch = useMemo(
+    () =>
+      nearMeActive && filteredVenues.length === 0
+        ? nearest(venues.filter((v) => matchesFilters(v, guinnessFilter, { ignoreRadius: true })), userLocation)
+        : null,
+    [venues, categoryFilter, guinnessFilter, searchQuery, nearbyKm, userLocation, filteredVenues.length]
+  );
+  const nextRadius = nearbyKm === null ? null : RADII_KM.find((r) => r > nearbyKm) ?? null;
 
   // Venues hidden only because the default "Serves Guinness" filter is on (not by type or search).
   const hiddenByGuinnessFilter = useMemo(
     () => (guinnessFilter === 'all' ? 0 : venues.filter((v) => matchesFilters(v, 'all')).length - filteredVenues.length),
-    [venues, categoryFilter, guinnessFilter, searchQuery, filteredVenues]
+    [venues, categoryFilter, guinnessFilter, searchQuery, nearbyKm, userLocation, filteredVenues]
   );
 
   const selectedVenue = useMemo(
@@ -298,7 +449,7 @@ export default function App() {
     ).length;
     const onMenuCount = pool.filter((v) => v.menuCheck?.foundOnMenu).length;
     return { total: pool.length, serving, onMenuCount };
-  }, [venues, categoryFilter, searchQuery]);
+  }, [venues, categoryFilter, searchQuery, nearbyKm, userLocation]);
 
   return (
     <div className="app-shell m-ui">
@@ -341,6 +492,8 @@ export default function App() {
                 type="button"
                 className={`filter-pill ${activeCity === c.id && mode === 'demo' ? 'active' : ''}`}
                 onClick={() => {
+                  userPicked();
+                  setNearbyKm(null); // picking a city means "browse that city", not "near me"
                   setMode('demo');
                   setActiveCity(c.id);
                 }}
@@ -352,7 +505,8 @@ export default function App() {
               type="button"
               className="filter-pill"
               onClick={handleUseMyLocation}
-              title="Locate venues near your current GPS coordinates"
+              aria-pressed={nearbyKm !== null && userLocation !== null}
+              title="Show venues near you, nearest first. Your location stays in your browser."
             >
               <Navigation size={12} /> Near Me
             </button>
@@ -457,6 +611,38 @@ export default function App() {
             </button>
           ))}
         </div>
+
+        {/* Near me: filter by distance from the visitor (nearest first). The position never leaves the browser. */}
+        <div className="pill-group near-me-group" role="group" aria-label="Distance from you">
+          <span style={{ fontSize: '0.72rem', color: '#9c8e7b', fontWeight: 600, marginRight: 4 }} title="Your location is only used in your browser to filter and sort this list.">
+            NEAR ME:
+          </span>
+          <button type="button" className={`filter-pill ${nearbyKm === null ? 'active' : ''}`} onClick={() => chooseRadius(null)}>
+            Anywhere
+          </button>
+          {RADII_KM.map((km) => (
+            <button
+              key={km}
+              type="button"
+              className={`filter-pill ${nearbyKm === km ? 'active' : ''}`}
+              aria-pressed={nearbyKm === km}
+              onClick={() => chooseRadius(km)}
+            >
+              📍 {formatRadius(km)}
+            </button>
+          ))}
+          {locating && <span className="near-status" role="status">Locating you…</span>}
+          {locationError && (
+            <span className="near-error" role="alert">
+              {locationError}
+            </span>
+          )}
+          {nearMeNotice && (
+            <span className="near-notice" role="status">
+              {nearMeNotice}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Main Split Workspace */}
@@ -501,7 +687,30 @@ export default function App() {
               </div>
             ) : filteredVenues.length === 0 ? (
               <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#b8ab99', fontSize: '0.84rem' }}>
-                {hiddenByGuinnessFilter > 0 ? (
+                {nearMeActive ? (
+                  <>
+                    No matching venues within {formatRadius(nearbyKm)} of you.
+                    {nearestMatch && (
+                      <>
+                        <br />
+                        The nearest match is {formatDistance(nearestMatch.distanceKm)} away: {nearestMatch.name}.
+                      </>
+                    )}
+                    <div className="near-actions">
+                      {nextRadius && (
+                        <button type="button" className="filter-pill" onClick={() => chooseRadius(nextRadius)}>
+                          Try {formatRadius(nextRadius)}
+                        </button>
+                      )}
+                      <button type="button" className="filter-pill" onClick={() => chooseRadius(null)}>
+                        Show everywhere
+                      </button>
+                      <button type="button" className="filter-pill" onClick={scanAroundMe}>
+                        Scan around me
+                      </button>
+                    </div>
+                  </>
+                ) : hiddenByGuinnessFilter > 0 ? (
                   <>
                     No venues here are confirmed to serve Guinness yet.
                     <br />
@@ -561,6 +770,11 @@ export default function App() {
                           )}
                           {summary.statusLabel}
                         </span>
+                        {nearMeActive && Number.isFinite(distanceById.get(venue.id)) && (
+                          <span className="distance-badge" title="Distance from you">
+                            📍 {formatDistance(distanceById.get(venue.id))}
+                          </span>
+                        )}
                       </div>
 
                       {venue.crowdCheck?.avgPintRating && (
@@ -665,6 +879,8 @@ export default function App() {
             selectedVenue={selectedVenue}
             onSelectVenue={(v) => setSelectedVenueId(v.id)}
             googleApiKey={mode === 'live' ? googleApiKey : ''}
+            userLocation={nearMeActive ? userLocation : null}
+            radiusKm={nearMeActive ? nearbyKm : null}
             onMapClickForNewVenue={(coords) => {
               setClickedCoords(coords);
               setAddVenueModalOpen(true);
@@ -676,6 +892,7 @@ export default function App() {
         {selectedVenue && (
           <VenueDetailPanel
             venue={selectedVenue}
+            distanceKm={nearMeActive ? distanceById.get(selectedVenue.id) : null}
             onClose={() => setSelectedVenueId(null)}
             onScanMenu={handleScanSingleMenu}
             onSubmitCrowdReport={handleSubmitCrowdReport}
@@ -707,7 +924,7 @@ export default function App() {
         <button type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)}>
           <SlidersHorizontal size={20} aria-hidden="true" />
           <span>Filters</span>
-          {(categoryFilter !== 'all' || guinnessFilter !== 'serves_any') && <i className="nav-dot" title="Filters changed" />}
+          {(categoryFilter !== 'all' || guinnessFilter !== 'serves_any' || (nearbyKm !== null && !nearAuto)) && <i className="nav-dot" title="Filters changed" />}
         </button>
       </nav>
 

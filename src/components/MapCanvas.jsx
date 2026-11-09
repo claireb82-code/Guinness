@@ -40,11 +40,14 @@ export function MapCanvas({
   selectedVenue,
   onSelectVenue,
   googleApiKey,
+  userLocation = null,
+  radiusKm = null,
   onMapClickForNewVenue,
 }) {
   const mapContainerRef = useRef(null);
   const leafletMapRef = useRef(null);
   const leafletMarkersRef = useRef([]);
+  const nearLayersRef = useRef([]);
   const googleMapRef = useRef(null);
   const googleMarkersRef = useRef([]);
   const [googleSdkReady, setGoogleSdkReady] = useState(false);
@@ -191,7 +194,8 @@ export function MapCanvas({
       });
 
       leafletMapRef.current = map;
-    } else {
+    } else if (!(userLocation && radiusKm)) {
+      // (With Near me on, the map frames the visitor's radius instead; see the effect below.)
       leafletMapRef.current.flyTo([center.lat, center.lng], zoom, {
         duration: 0.85,
       });
@@ -234,6 +238,35 @@ export function MapCanvas({
       leafletMarkersRef.current.push(marker);
     });
   }, [venues, selectedVenue, googleApiKey, googleSdkReady]);
+
+  // Near me: the visitor's position and the chosen radius, framed on the map (OpenStreetMap map only).
+  useEffect(() => {
+    if (googleApiKey && googleSdkReady) return;
+    const map = leafletMapRef.current;
+    if (!map || !window.L) return;
+
+    nearLayersRef.current.forEach((layer) => layer.remove());
+    nearLayersRef.current = [];
+    if (!userLocation || !radiusKm) return;
+
+    const circle = window.L.circle([userLocation.lat, userLocation.lng], {
+      radius: radiusKm * 1000,
+      color: '#4aa3ff',
+      weight: 2,
+      fillColor: '#4aa3ff',
+      fillOpacity: 0.07,
+      interactive: false,
+      className: 'near-me-circle',
+    }).addTo(map);
+    const dot = window.L.marker([userLocation.lat, userLocation.lng], {
+      icon: window.L.divIcon({ className: 'user-location-marker', html: '<span></span>', iconSize: [20, 20], iconAnchor: [10, 10] }),
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: 1000,
+    }).addTo(map);
+    nearLayersRef.current = [circle, dot];
+    map.fitBounds(circle.getBounds(), { padding: [24, 24], maxZoom: 17 });
+  }, [userLocation?.lat, userLocation?.lng, radiusKm, googleApiKey, googleSdkReady]);
 
   // Pan to selected venue smoothly
   useEffect(() => {
