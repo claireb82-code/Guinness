@@ -97,6 +97,28 @@
             .replace(/"/g, '&quot;');
         }
 
+        // <safeHttpUrl>
+        // Venue websites are user-submitted. Only ever link to http(s) URLs: HTML-escaping alone does
+        // not stop a "javascript:" href. (Mirrored in src/safeUrl.js; tests keep the two in sync.)
+        function safeHttpUrl(value) {
+          if (typeof value !== 'string') return '';
+          const raw = value.trim();
+          if (!raw) return '';
+          try {
+            const u = new URL(/^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : 'https://' + raw);
+            return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : '';
+          } catch (e) {
+            return '';
+          }
+        }
+        // </safeHttpUrl>
+
+        function showApiError(res, data) {
+          if (res.ok && !(data && data.error)) return false;
+          window.alert((data && data.error) || 'Something went wrong. Please try again.');
+          return true;
+        }
+
         function highlightGuinnessHtml(text) {
           const safe = escapeHtml(text || '');
           return safe.replace(
@@ -677,6 +699,10 @@
                       body: JSON.stringify({ venueId: v.id, websiteUrl: v.menuUrl || v.website }),
                     });
                     const data = await res.json();
+                    if (res.status === 429) {
+                      window.alert(data.error || 'Scan limit reached. Please wait a few minutes and try again.');
+                      break;
+                    }
                     if (data.venue) {
                       state.venues = state.venues.map((item) => (item.id === v.id ? data.venue : item));
                     }
@@ -833,10 +859,10 @@
                       🗺️ Open in Google Maps
                     </a>
                     ${
-                      selectedVenue.website
+                      safeHttpUrl(selectedVenue.website)
                         ? `<a href="${escapeHtml(
-                            selectedVenue.website
-                          )}" target="_blank" rel="noreferrer" class="btn-outline" style="text-decoration:none;flex:1;justify-content:center;font-size:0.75rem;">🌐 Venue Website</a>`
+                            safeHttpUrl(selectedVenue.website)
+                          )}" target="_blank" rel="noopener noreferrer" class="btn-outline" style="text-decoration:none;flex:1;justify-content:center;font-size:0.75rem;">🌐 Venue Website</a>`
                         : ''
                     }
                   </div>
@@ -962,6 +988,7 @@
                 body: JSON.stringify({ venueId: selectedVenue.id, websiteUrl: urlVal, venue: selectedVenue }),
               });
               const data = await res.json();
+              if (showApiError(res, data)) return;
               if (data.venue) {
                 state.venues = state.venues.map((v) => (v.id === selectedVenue.id ? data.venue : v));
               }
@@ -995,6 +1022,7 @@
               body: JSON.stringify(payload),
             });
             const data = await res.json();
+            if (showApiError(res, data)) return;
             if (data.venue) {
               state.venues = state.venues.map((v) => (v.id === selectedVenue.id ? data.venue : v));
               state.showReportForm = false;
@@ -1218,6 +1246,7 @@
                 body: JSON.stringify(payload),
               });
               const data = await res.json();
+              if (showApiError(res, data)) return;
               if (data.venue) {
                 state.venues = [data.venue, ...state.venues];
                 state.selectedVenueId = data.venue.id;

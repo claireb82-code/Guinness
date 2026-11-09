@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { PintIcon, formatCategoryLabel } from './PintIcon.jsx';
+import { safeHttpUrl } from '../safeUrl.js';
 
 function highlightGuinnessText(text) {
   if (!text) return null;
@@ -262,11 +263,11 @@ export function VenueDetailPanel({ venue, onClose, onScanMenu, onSubmitCrowdRepo
             >
               <ExternalLink size={13} /> Open in Google Maps
             </a>
-            {venue.website && (
+            {safeHttpUrl(venue.website) && (
               <a
-                href={venue.website}
+                href={safeHttpUrl(venue.website)}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="btn-outline"
                 style={{ textDecoration: 'none', flex: 1, justifyContent: 'center', fontSize: '0.75rem' }}
               >

@@ -145,6 +145,10 @@ export default function App() {
       body: JSON.stringify({ venueId, websiteUrl }),
     });
     const data = await res.json();
+    if (res.status === 429) {
+      window.alert(data.error || 'Scan limit reached. Please wait a few minutes and try again.');
+      return { ...data, rateLimited: true };
+    }
     if (data.venue) {
       setVenues((prev) => prev.map((v) => (v.id === venueId ? data.venue : v)));
     }
@@ -156,7 +160,8 @@ export default function App() {
     try {
       for (const v of filteredVenues) {
         if (v.website || v.menuUrl) {
-          await handleScanSingleMenu(v.id, v.menuUrl || v.website);
+          const result = await handleScanSingleMenu(v.id, v.menuUrl || v.website);
+          if (result && result.rateLimited) break;
         }
       }
     } finally {
@@ -171,6 +176,10 @@ export default function App() {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
+    if (!res.ok || data.error) {
+      window.alert(data.error || 'Could not save your report. Please try again.');
+      return;
+    }
     if (data.venue) {
       setVenues((prev) => prev.map((v) => (v.id === payload.venueId ? data.venue : v)));
     }
@@ -183,6 +192,10 @@ export default function App() {
       body: JSON.stringify(newVenueData),
     });
     const data = await res.json();
+    if (!res.ok || data.error) {
+      window.alert(data.error || 'Could not add the venue. Please try again.');
+      return;
+    }
     if (data.venue) {
       setVenues((prev) => [data.venue, ...prev]);
       setSelectedVenueId(data.venue.id);

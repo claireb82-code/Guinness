@@ -40,3 +40,9 @@ Configures `.git/hooks/post-commit` so that every local `git commit` automatical
 ```bash
 ./scripts/install_git_hooks.sh
 ```
+
+---
+
+## Note on API keys
+
+These command-line scripts run on your own machine and keep using `GOOGLE_MAPS_API_KEY` (or `--api-key`). The web app deployed to Vercel uses separate browser/server keys (`GOOGLE_MAPS_BROWSER_KEY`, `GOOGLE_PLACES_API_KEY`); see the main [README](../README.md#deploying-to-vercel). The scripts maintain their own local `server/data/user_store.json` and do not use the app's database or rate limits.

@@ -4,6 +4,8 @@
  * and parses menu text for Guinness variants and pricing.
  */
 
+import { assertPublicHost, fetchPublicPage, normalizeHttpUrl } from './safeFetch.js';
+
 const MENU_PATH_PATTERNS = /menu|drink|beer|draught|draft|tap|bar|beverage|food|wine|carta/i;
 
 const GUINNESS_VARIANTS = [
@@ -57,32 +59,32 @@ function extractMenuLinks(html, baseUrl) {
   return Array.from(links).slice(0, 4);
 }
 
-async function fetchHtmlWithTimeout(url, timeoutMs = 6500) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+const BROWSER_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
+
+/** Fetch one page via the SSRF-safe fetcher. Returns the HTML, or null on any failure. */
+async function fetchHtmlWithTimeout(url, timeoutMs = 6500, fetchOpts = {}) {
   try {
-    const response = await fetch(url, {
-      signal: controller.signal,
+    const page = await fetchPublicPage(url, {
+      timeoutMs,
+      ...fetchOpts,
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+        'User-Agent': BROWSER_UA,
         Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
     });
-    if (!response.ok) return null;
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('text/html') && !contentType.includes('text/plain')) {
-      return null;
-    }
-    return await response.text();
+    return page.text;
   } catch {
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
-export async function scrapeVenueMenuForGuinness(websiteUrl, existingDemoCheck = null) {
+/**
+ * @param {string} websiteUrl
+ * @param {object|null} [existingDemoCheck]
+ * @param {object} [fetchOpts] passed to fetchPublicPage (tests inject fetchImpl / lookup / allowPrivate)
+ */
+export async function scrapeVenueMenuForGuinness(websiteUrl, existingDemoCheck = null, fetchOpts = {}) {
   if (!websiteUrl) {
     return {
       checked: false,
@@ -95,13 +97,26 @@ export async function scrapeVenueMenuForGuinness(websiteUrl, existingDemoCheck =
     };
   }
 
-  let normalizedUrl = websiteUrl.trim();
-  if (!/^https?:\/\//i.test(normalizedUrl)) {
-    normalizedUrl = `https://${normalizedUrl}`;
+  // Only public http(s) sites are ever contacted; anything else is reported as "not scanned".
+  let normalizedUrl;
+  try {
+    normalizedUrl = normalizeHttpUrl(websiteUrl);
+    if (!fetchOpts.allowPrivate) await assertPublicHost(new URL(normalizedUrl).hostname, fetchOpts.lookup);
+  } catch (err) {
+    return {
+      checked: false,
+      lastChecked: new Date().toISOString(),
+      foundOnMenu: false,
+      typesFound: [],
+      extractedPrice: null,
+      snippets: [`Menu URL not scanned: ${err.message}.`],
+      scannedUrls: [],
+      mode: 'blocked',
+    };
   }
 
   const scannedUrls = [normalizedUrl];
-  const homeHtml = await fetchHtmlWithTimeout(normalizedUrl);
+  const homeHtml = await fetchHtmlWithTimeout(normalizedUrl, 6500, fetchOpts);
 
   // If network is unavailable or the demo domain doesn't resolve live, return enriched scan or fallback
   if (!homeHtml) {
@@ -129,7 +144,7 @@ export async function scrapeVenueMenuForGuinness(websiteUrl, existingDemoCheck =
   const subPagesHtml = await Promise.all(
     subMenuLinks.map(async (link) => {
       scannedUrls.push(link);
-      return await fetchHtmlWithTimeout(link);
+      return await fetchHtmlWithTimeout(link, 6500, fetchOpts);
     })
   );
 
