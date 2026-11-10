@@ -199,7 +199,16 @@ test('picking a city leaves Near me; Near me from a single-city view still searc
   await page.waitForTimeout(500);
   const geneva = await cardNames(page);
   await tap(radiusPill('5 km')); // from a Geneva-only list: must switch to the whole country first
-  await page.waitForSelector('.distance-badge', { timeout: 10000 });
+  // the map flies from Geneva to Zurich: wait until it is there (its bounds contain you) and the list has caught up with it
+  await page.waitForFunction(
+    ({ lat, lng }) => {
+      const d = document.querySelector('.leaflet-container')?.dataset || {};
+      return +d.viewSouth <= lat && lat <= +d.viewNorth && +d.viewWest <= lng && lng <= +d.viewEast && document.querySelectorAll('.venue-card .distance-badge').length > 0;
+    },
+    { lat: ZURICH_HB.latitude, lng: ZURICH_HB.longitude },
+    { timeout: 15000 }
+  );
+  await page.waitForTimeout(500);
   const zurich = await cardNames(page);
   assert.deepEqual(zurich, expectedInView(await viewBounds(page)).map((v) => v.name));
   assert.ok(zurich.some((n) => !geneva.includes(n)));
