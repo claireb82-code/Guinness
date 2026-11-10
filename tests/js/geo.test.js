@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { distanceKm, formatDistance, nearby, nearest, locationErrorMessage, RADII_KM, DEFAULT_RADIUS_KM, formatRadius } from '../../src/geo.js';
+import { distanceKm, formatDistance, nearby, nearest, locationErrorMessage, RADII_KM, DEFAULT_RADIUS_KM, formatRadius, inView } from '../../src/geo.js';
 
 const ZURICH = { lat: 47.3769, lng: 8.5417 };
 const BERN = { lat: 46.948, lng: 7.4474 };
@@ -151,4 +151,21 @@ test('pickRadius starts at 500 m by default and widens step by step', () => {
   assert.equal(pickRadius([at(0.3)], near), 0.5);
   assert.equal(pickRadius([at(0.7)], near), 1);
   assert.equal(pickRadius([at(0.3), at(7)], near, 1), 1);
+});
+
+test('inView: a venue is in view when it is inside the map bounds; no view means no restriction', () => {
+  const view = { north: 47.40, south: 47.36, east: 8.56, west: 8.52 };
+  assert.equal(inView({ lat: 47.38, lng: 8.54 }, view), true);
+  assert.equal(inView({ lat: 47.40, lng: 8.56 }, view), true, 'the edge counts');
+  for (const out of [{ lat: 47.41, lng: 8.54 }, { lat: 47.35, lng: 8.54 }, { lat: 47.38, lng: 8.57 }, { lat: 47.38, lng: 8.51 }]) assert.equal(inView(out, view), false, JSON.stringify(out));
+  assert.equal(inView({ lat: 1, lng: 2 }, null), true);
+  assert.equal(inView({ lat: 1, lng: 2 }, undefined), true);
+  assert.equal(inView({ id: 'x' }, view), false, 'a venue without coordinates is never in view');
+});
+
+test('there is a 2 km step, so a nearest venue just over 1 km does not jump to 5 km (Davos)', () => {
+  assert.deepEqual(RADII_KM, [0.5, 1, 2, 5, 10, 25]);
+  const home = { lat: 46.8027, lng: 9.836 };
+  const at = (km) => ({ id: `v${km}`, lat: home.lat + km / 111.19, lng: home.lng });
+  assert.equal(pickRadius([at(1.012)], home), 2);
 });

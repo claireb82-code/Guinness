@@ -1,6 +1,6 @@
 // Distance helpers for the "Near me" filter. Pure functions (no browser APIs), unit-tested in tests/js/geo.test.js.
 
-export const RADII_KM = [0.5, 1, 5, 10, 25];
+export const RADII_KM = [0.5, 1, 2, 5, 10, 25];
 // Where Near me starts (and what the map first frames): 500 m around the visitor. The automatic default widens
 // from here until it finds a venue, so it never starts on an empty list.
 export const DEFAULT_RADIUS_KM = 0.5;
@@ -75,4 +75,11 @@ export function locationErrorMessage(error) {
   if (error.code === 1) return 'Location permission was denied. Allow location access in your browser settings to use Near me.';
   if (error.code === 3) return 'Finding your location took too long. Please try again.';
   return 'Could not work out where you are. Please try again.';
+}
+
+/** Is a venue inside a map view ({north, south, east, west})? A missing view means "no restriction". */
+export function inView(venue, view) {
+  if (!view) return true;
+  if (!Number.isFinite(venue?.lat) || !Number.isFinite(venue?.lng)) return false;
+  return venue.lat <= view.north && venue.lat >= view.south && venue.lng <= view.east && venue.lng >= view.west;
 }
