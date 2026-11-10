@@ -58,6 +58,16 @@ const km = (text) => {
 const cardNames = (page) => page.$$eval('.venue-card h3', (h) => h.map((x) => x.textContent.trim()));
 const cardDistances = async (page) => (await page.$$eval('.venue-card .distance-badge', (b) => b.map((x) => x.textContent))).map(km);
 // exact label: has-text("5 km") would also match "25 km"
+// The list follows the map: what the map shows (it publishes its bounds on the container) decides which venues are listed.
+const viewBounds = (page) =>
+  page.$eval('.leaflet-container', (el) => ({ north: +el.dataset.viewNorth, south: +el.dataset.viewSouth, east: +el.dataset.viewEast, west: +el.dataset.viewWest }));
+const inBounds = (v, b) => v.lat <= b.north && v.lat >= b.south && v.lng <= b.east && v.lng >= b.west;
+// Expected list: serving venues inside the view, nearest the centre of the view first.
+const expectedInView = (b) => {
+  const centre = { lat: (b.north + b.south) / 2, lng: (b.east + b.west) / 2 };
+  return all.filter(serves).filter((v) => inBounds(v, b)).sort((x, y) => distanceKm(centre, x) - distanceKm(centre, y));
+};
+const nearestServing = (origin) => all.filter(serves).sort((a, b) => distanceKm({ lat: origin.latitude, lng: origin.longitude }, a) - distanceKm({ lat: origin.latitude, lng: origin.longitude }, b))[0];
 const radiusPill = (label) => `.near-me-group .filter-pill:text-is("${label === 'Anywhere' ? label : `📍 ${label}`}")`;
 
 test('the data has bundled venues near Zurich HB (so the tests below mean something)', { skip: skip() }, () => {
@@ -65,40 +75,69 @@ test('the data has bundled venues near Zurich HB (so the tests below mean someth
   assert.ok(expectedWithin(ZURICH_HB, 1).length < expectedWithin(ZURICH_HB, 5).length, 'radii must differ');
 });
 
-test('choosing a radius asks for your location, filters to it, sorts nearest first and shows distances', { skip: skip() }, async () => {
+test('choosing a radius asks for your location, zooms the map to it, lists what the map shows and shows distances', { skip: skip() }, async () => {
   const { page, context, errors, tap } = await open({ geolocation: ZURICH_HB });
   assert.equal(await page.locator('.distance-badge').count(), 0, 'no distances until Near me is on');
   await tap(radiusPill('5 km'));
   await page.waitForSelector('.venue-card .distance-badge');
-  const expected = expectedWithin(ZURICH_HB, 5);
+  const expected = expectedInView(await viewBounds(page));
   const names = await cardNames(page);
-  assert.deepEqual(names, expected.map((v) => v.name), 'same venues, nearest first');
+  assert.deepEqual(names, expected.map((v) => v.name), 'the venues the map shows, nearest its centre first');
+  assert.ok(names.length >= expectedWithin(ZURICH_HB, 5).length, 'at least everything within 5 km');
   const distances = await cardDistances(page);
-  assert.equal(distances.length, expected.length);
-  assert.ok(distances.every((d, i) => i === 0 || d >= distances[i - 1] - 0.051), `ascending: ${distances}`);
-  assert.ok(distances.every((d) => d <= 5.06), `all within 5 km: ${distances}`);
+  assert.equal(distances.length, expected.length, 'every card shows how far it is from you');
   assert.equal(await page.getAttribute(radiusPill('5 km'), 'aria-pressed'), 'true');
   assert.equal(await page.getAttribute('.header-search .filter-pill:has-text("Near Me")', 'aria-pressed'), 'true');
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-test('a tighter radius shows a subset, and Anywhere brings everything back', { skip: skip() }, async () => {
+test('a tighter radius zooms in to a subset, and Anywhere shows the whole country again', { skip: skip() }, async () => {
   const { page, context, tap } = await open({ geolocation: ZURICH_HB });
-  const before = await cardNames(page);
   await tap(radiusPill('10 km'));
   await page.waitForSelector('.distance-badge');
   const ten = await cardNames(page);
+  assert.deepEqual(ten, expectedInView(await viewBounds(page)).map((v) => v.name));
   await tap(radiusPill('1 km'));
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(300);
   const one = await cardNames(page);
-  assert.deepEqual(ten, expectedWithin(ZURICH_HB, 10).map((v) => v.name));
-  assert.deepEqual(one, expectedWithin(ZURICH_HB, 1).map((v) => v.name));
-  assert.ok(one.every((n) => ten.includes(n)) && one.length < ten.length);
+  assert.deepEqual(one, expectedInView(await viewBounds(page)).map((v) => v.name));
+  assert.ok(one.every((n) => ten.includes(n)) && one.length < ten.length, 'zooming in shows a subset');
   await tap(radiusPill('Anywhere'));
-  await page.waitForTimeout(200);
-  assert.deepEqual(await cardNames(page), before, 'back to the original list and order');
+  await page.waitForFunction(() => document.querySelectorAll('.venue-card').length > 20, null, { timeout: 8000 });
+  // order is by distance from the map centre, which on a country-wide view differs a little from the bounds' midpoint: compare the set
+  assert.deepEqual([...(await cardNames(page))].sort(), expectedInView(await viewBounds(page)).map((v) => v.name).sort(), 'the whole-country view');
   assert.equal(await page.locator('.distance-badge').count(), 0);
+  await context.close();
+});
+
+test('regression: panning the map changes the list to what is now visible', { skip: skip() }, async () => {
+  const { page, context } = await open({ geolocation: ZURICH_HB });
+  await page.locator('.near-me-group .filter-pill:text-is("📍 5 km")').click();
+  await page.waitForSelector('.venue-card .distance-badge');
+  const before = await cardNames(page);
+  const box = await page.locator('.leaflet-container').boundingBox();
+  // drag the map by about half its width: a different neighbourhood comes into view
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.5 - 380, box.y + box.height * 0.5, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(800);
+  const after = await cardNames(page);
+  const bounds = await viewBounds(page);
+  assert.deepEqual(after, expectedInView(bounds).map((v) => v.name), 'the list is the new view, nearest its centre first');
+  assert.notDeepEqual(after, before, 'and it changed');
+  await context.close();
+});
+
+test('regression: tapping a venue does not rewrite the list (the map flies to it, the list stays)', { skip: skip() }, async () => {
+  const { page, context } = await open({ geolocation: ZURICH_HB });
+  await page.locator('.near-me-group .filter-pill:text-is("📍 5 km")').click();
+  await page.waitForSelector('.venue-card .distance-badge');
+  const before = await cardNames(page);
+  await page.locator('.venue-card').nth(1).click();
+  await page.waitForTimeout(1600); // the flight to the venue
+  assert.deepEqual(await cardNames(page), before);
   await context.close();
 });
 
@@ -162,7 +201,7 @@ test('picking a city leaves Near me; Near me from a single-city view still searc
   await tap(radiusPill('5 km')); // from a Geneva-only list: must switch to the whole country first
   await page.waitForSelector('.distance-badge', { timeout: 10000 });
   const zurich = await cardNames(page);
-  assert.deepEqual(zurich, expectedWithin(ZURICH_HB, 5).map((v) => v.name));
+  assert.deepEqual(zurich, expectedInView(await viewBounds(page)).map((v) => v.name));
   assert.ok(zurich.some((n) => !geneva.includes(n)));
   await tap('.city-pills .filter-pill:has-text("Geneva")');
   await page.waitForTimeout(500);
@@ -176,7 +215,7 @@ test('far from every venue: the empty state names the nearest one and offers way
   await tap(radiusPill('5 km'));
   await page.waitForSelector('.near-actions');
   const text = (await page.textContent('.sidebar-list')).replace(/\s+/g, ' ');
-  assert.match(text, /No matching venues within 5 km of you/);
+  assert.match(text, /No matching venues in this part of the map/);
   const nearestVenue = all.filter(serves).map((v) => ({ v, d: distanceKm({ lat: LONDON.latitude, lng: LONDON.longitude }, v) })).sort((a, b) => a.d - b.d)[0];
   assert.ok(text.includes(nearestVenue.v.name), 'names the nearest matching venue');
   assert.match(text, new RegExp(`${Math.round(nearestVenue.d)} km away`));
@@ -184,8 +223,7 @@ test('far from every venue: the empty state names the nearest one and offers way
   await tap('.near-actions button:has-text("Try 10 km")');
   assert.equal(await page.getAttribute(radiusPill('10 km'), 'aria-pressed'), 'true');
   await tap('.near-actions button:has-text("Show everywhere")');
-  await page.waitForTimeout(200);
-  assert.ok((await page.locator('.venue-card').count()) > 5, 'everything is back');
+  await page.waitForFunction(() => document.querySelectorAll('.venue-card').length > 5, null, { timeout: 8000 });
   await context.close();
 });
 
@@ -259,9 +297,10 @@ test('default: on load Near me is on, starting at 500 m and widening to the firs
   await page.waitForSelector('.distance-badge');
   const label = want < 1 ? `📍 ${want * 1000} m` : `📍 ${want} km`;
   assert.deepEqual(await pressedRadius(page), [label]);
-  const distances = await cardDistances(page);
-  assert.ok(distances.length > 0 && distances.every((d) => d <= want + 0.06), `all within ${want} km: ${distances}`);
-  assert.deepEqual(distances, [...distances].sort((a, b) => a - b), 'nearest first');
+  const names = await cardNames(page);
+  assert.ok(names.length > 0, 'something is listed');
+  assert.deepEqual(names, expectedInView(await viewBounds(page)).map((v) => v.name), 'the list is what the map shows');
+  assert.ok(names.includes(nearestServing(ZURICH_HB).name), 'the nearest venue is in view');
   assert.equal(await page.locator('path.near-me-circle').count(), 1, 'the radius is drawn on the map');
   assert.equal(await page.locator('.near-notice').count(), want === RADII_KM[0] ? 0 : 1, 'a notice only when it had to widen');
   assert.deepEqual(errors, []);
@@ -278,8 +317,9 @@ test('default: the radius widens when nothing is within 500 m, and says so', { s
   await page.waitForSelector('.distance-badge');
   assert.equal((await pressedRadius(page)).length, 1);
   assert.match(await page.textContent('.near-notice'), /Nothing within 500 m of you/);
-  const distances = await cardDistances(page);
-  assert.ok(distances.every((d) => d <= want + 0.06), `all within ${want} km: ${distances}`);
+  const names = await cardNames(page);
+  assert.deepEqual(names, expectedInView(await viewBounds(page)).map((v) => v.name), 'the list is what the map shows');
+  assert.ok(names.includes(nearestServing(origin).name), 'the map is zoomed out far enough to include the nearest venue');
   await context.close();
 });
 
