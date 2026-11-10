@@ -7,22 +7,26 @@ Swiss cantons, then crawls live Swiss venue websites and drink menu subpages in
 parallel (120 workers) to build a complete nationwide Guinness dataset.
 """
 
+import argparse
 import concurrent.futures
 import html
 import json
 import math
 import os
 import re
-import subprocess
 import sys
 import time
 import urllib.parse
+import urllib.robotparser
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT_DIR)
 import evidence  # noqa: E402 - the crawler writes only evidence it really has (see evidence.py)
+import guard  # noqa: E402 - SSRF-safe page fetching
+import overpass  # noqa: E402 - the app's Overpass client
+import overture  # noqa: E402 - websites for venues OpenStreetMap lists without one
 DATA_DIR = os.path.join(ROOT_DIR, "server", "data")
 RESULTS_PATH = os.path.join(DATA_DIR, "swiss_crawl_results.json")
 RAW_OSM_CACHE_PATH = os.path.join(DATA_DIR, "swiss_osm_raw_cache.json")
@@ -114,40 +118,16 @@ def assign_swiss_region(lat, lng):
 
 
 def query_swiss_overpass(query_str, label, max_time=18):
-    for endpoint in OVERPASS_ENDPOINTS:
-        t0 = time.time()
-        try:
-            proc = subprocess.run(
-                [
-                    "/usr/bin/curl",
-                    "-4",
-                    "-sSLk",
-                    "--compressed",
-                    "--max-time",
-                    str(max_time),
-                    "--connect-timeout",
-                    "4",
-                    "-A",
-                    "GuinnessGuideSwitzerland/2.0",
-                    "--data-urlencode",
-                    f"data={query_str}",
-                    endpoint,
-                ],
-                capture_output=True,
-                timeout=max_time + 3,
-            )
-            out_str = proc.stdout.decode("utf-8", errors="ignore").strip()
-            if proc.returncode == 0 and out_str.startswith("{"):
-                data = json.loads(out_str)
-                els = data.get("elements", [])
-                print(
-                    f"  [OSM OK] {label}: {len(els):,} elements in {time.time() - t0:.1f}s ({endpoint})",
-                    flush=True,
-                )
-                return els
-        except Exception as e:
-            print(f"  [OSM Retry] {label} on {endpoint}: {e}", flush=True)
-    return []
+    """One tile of the nationwide query, through overpass.py (the app's own client: mirrors, retries, verified TLS)."""
+    t0 = time.time()
+    try:
+        data = overpass.run(query_str, attempt_seconds=max_time, deadline_seconds=max_time * 3, urls=OVERPASS_ENDPOINTS)
+    except overpass.OverpassError as exc:
+        print(f"  [OSM Retry] {label}: {exc}", flush=True)
+        return []
+    els = data.get("elements", [])
+    print(f"  [OSM OK] {label}: {len(els):,} elements in {time.time() - t0:.1f}s", flush=True)
+    return els
 
 
 def fetch_swiss_osm_dataset():
@@ -203,6 +183,14 @@ out center tags;"""
     return bundle
 
 
+def safe_website(value):
+    """A normalised public http(s) address, or None."""
+    try:
+        return guard.clean_website(value)
+    except guard.ValidationError:
+        return None
+
+
 def classify_element(el):
     tags = el.get("tags") or {}
     lat = el.get("lat") or (el.get("center") or {}).get("lat")
@@ -237,10 +225,9 @@ def classify_element(el):
     ).strip()
     menu_url = (tags.get("url:menu") or tags.get("website:menu") or website).strip()
 
-    if website and not website.startswith(("http://", "https://")):
-        website = "https://" + website
-    if menu_url and not menu_url.startswith(("http://", "https://")):
-        menu_url = "https://" + menu_url
+    # Website tags can be edited by anyone: keep only plain public http(s) addresses (no javascript:, localhost, IP literals).
+    website = safe_website(website) or ""
+    menu_url = safe_website(menu_url) or website
 
     street = tags.get("addr:street") or ""
     housenumber = tags.get("addr:housenumber") or ""
@@ -317,48 +304,43 @@ def classify_element(el):
     }
 
 
-def fetch_html_curl(url, max_time=3.5):
+ROBOTS_AGENT = "GuinnessGuide"
+_robots_cache = {}
+
+
+def robots_allows(url):
+    """Respect a site's robots.txt (a missing, unreadable or empty one allows everything)."""
     try:
-        proc = subprocess.run(
-            [
-                "/usr/bin/curl",
-                "-4",
-                "-sSLk",
-                "--compressed",
-                "--max-time",
-                str(max_time),
-                "--connect-timeout",
-                "2.0",
-                "--max-filesize",
-                "450000",
-                "-A",
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-                "-H",
-                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "-H",
-                "Accept-Language: de-CH,de;q=0.9,en;q=0.8,fr-CH;q=0.7",
-                "-w",
-                "\n__HTTP_STATUS__:%{http_code}",
-                url,
-            ],
-            capture_output=True,
-            timeout=max_time + 2,
-        )
-        out = proc.stdout.decode("utf-8", errors="ignore")
-        status_code = 0
-        if "__HTTP_STATUS__:" in out:
-            body, status_part = out.rsplit("__HTTP_STATUS__:", 1)
-            try:
-                status_code = int(status_part.strip())
-            except ValueError:
-                status_code = 200
-        else:
-            body = out
-        if 200 <= status_code < 400 and len(body.strip()) > 30:
-            return status_code, body
-        return None, f"HTTP {status_code}"
-    except Exception as e:
-        return None, str(e)
+        parts = urllib.parse.urlsplit(url)
+    except ValueError:
+        return False
+    host = f"{parts.scheme}://{parts.netloc}"
+    parser = _robots_cache.get(host)
+    if parser is None:
+        parser = urllib.robotparser.RobotFileParser()
+        try:
+            parser.parse(guard.fetch_page(f"{host}/robots.txt", timeout=2.5, deadline=4, max_bytes=100_000).splitlines())
+        except Exception:  # noqa: BLE001 - no robots.txt (or unreachable) means no restrictions
+            parser.parse([])
+        _robots_cache[host] = parser
+    return parser.can_fetch(ROBOTS_AGENT, url)
+
+
+def fetch_html(url, max_time=3.5):
+    """(status, body) for a public page, or (None, reason). Goes through guard.fetch_page: only public http(s) hosts (also
+    on redirects), size and time limits, TLS verified. Website addresses come from OpenStreetMap tags that anyone can
+    edit, so they are never fetched directly."""
+    try:
+        if not robots_allows(url):
+            return None, "disallowed by robots.txt"
+        body = guard.fetch_page(url, timeout=max_time, deadline=max_time + 2, max_bytes=450_000)
+        if len(body.strip()) > 30:
+            return 200, body
+        return None, "empty page"
+    except guard.UnsafeURL as exc:
+        return None, f"unsafe address: {exc}"
+    except Exception as exc:  # noqa: BLE001 - any network failure is simply "could not read"
+        return None, str(exc)
 
 
 def parse_guinness_from_html(raw_html):
@@ -412,7 +394,7 @@ def scan_venue_website(venue):
             "error": "Social media link only",
         }
 
-    status, body = fetch_html_curl(url, max_time=3.5)
+    status, body = fetch_html(url, max_time=3.5)
     if status is None or not body:
         return {"scanned": True, "reachable": False, "foundOnMenu": False, "error": body or "Unreachable"}
 
@@ -427,7 +409,7 @@ def scan_venue_website(venue):
             sub_url = urllib.parse.urljoin(url, href)
             if urllib.parse.urlparse(sub_url).netloc == urllib.parse.urlparse(url).netloc and sub_url != url:
                 checked_subpage = sub_url
-                s_status, s_body = fetch_html_curl(sub_url, max_time=2.5)
+                s_status, s_body = fetch_html(sub_url, max_time=2.5)
                 if s_status and s_body:
                     found, types_found, price, snippets = parse_guinness_from_html(s_body)
                     if found:
@@ -445,7 +427,47 @@ def scan_venue_website(venue):
     }
 
 
-def main():
+def fill_websites_from_overture(venues, index=None, all_categories=False):
+    """Give venues that OpenStreetMap lists without a website the one Overture Maps has for the same place (a similar name
+    within 75 m). Pubs, bars and likely pubs by default; every category with ``all_categories``. Returns how many were filled."""
+    filled = 0
+    for v in venues:
+        if v["website"] or not v.get("name"):
+            continue
+        if not all_categories and not (v["category"] in ("pub", "bar") or v.get("is_pub_or_candidate")):
+            continue
+        match = overture.find_match(v["name"], v["lat"], v["lng"], index=index)
+        if not match or not match.get("website"):
+            continue
+        site = safe_website(match["website"])
+        if not site:
+            continue
+        v["website"] = site
+        v["website_source"] = "overture"
+        filled += 1
+    return filled
+
+
+def select_target_urls(sorted_urls, pub_bar_count, scan_all=False, max_urls=None):
+    """Which websites to read. ``sorted_urls`` is ordered by priority (Irish/pubs/bars first, then hotels, then
+    restaurants). Default: every pub/bar site plus 400 hotels and restaurants; ``scan_all``: every site; ``max_urls``: that many."""
+    if max_urls is not None:
+        return sorted_urls[:max_urls]
+    if scan_all:
+        return list(sorted_urls)
+    return sorted_urls[: pub_bar_count + 400]
+
+
+def parse_args(argv=None):
+    ap = argparse.ArgumentParser(description="Crawl Swiss venue websites for Guinness and write server/data/swiss_crawl_results.json")
+    ap.add_argument("--all", action="store_true", help="read every venue website (restaurants and hotels too), not just pubs and bars")
+    ap.add_argument("--max-urls", type=int, default=None, help="read at most this many websites (overrides --all; MAX_URLS_TO_SCAN does the same)")
+    ap.add_argument("--no-overture", action="store_true", help="do not look up missing websites in the Overture Maps extract")
+    return ap.parse_args(argv)
+
+
+def main(argv=None):
+    args = parse_args(argv)
     t_start = time.time()
     bundle = fetch_swiss_osm_dataset()
     census_counts = bundle.get("censusCounts") or {}
@@ -483,6 +505,15 @@ def main():
     print(f"  By Category (Nationwide OSM): {category_totals}", flush=True)
     print(f"  Venues with Website URLs: {total_with_websites:,} ({dict(with_website_totals)})", flush=True)
 
+    websites_from_overture = 0
+    if not args.no_overture:
+        websites_from_overture = fill_websites_from_overture(all_venues, all_categories=args.all)
+        print(f"  Websites found in Overture Maps for venues OSM lists without one: {websites_from_overture:,}", flush=True)
+        for v in all_venues:
+            if v.get("website_source") == "overture":
+                with_website_totals[v["category"]] += 1
+        total_with_websites = sum(with_website_totals.values())
+
     tier1_osm_confirmed = [v for v in all_venues if v["osm_has_guinness"] or v["osm_is_irish"]]
     print(f"  OSM Tag/Name Confirmed Irish/Guinness Venues: {len(tier1_osm_confirmed):,}", flush=True)
 
@@ -513,13 +544,13 @@ def main():
         flush=True,
     )
 
-    # Scan 100% of all Pubs, Bars & Candidates in Switzerland + 400 Hotels/Restaurants
-    default_max = len(p012_urls) + 400
-    max_urls_to_scan = int(os.environ.get("MAX_URLS_TO_SCAN", str(default_max)))
-    target_urls = sorted_urls[:max_urls_to_scan]
+    # Default: every pub/bar/candidate site plus 400 hotels/restaurants; --all reads every site.
+    env_max = os.environ.get("MAX_URLS_TO_SCAN")
+    max_urls = args.max_urls if args.max_urls is not None else (int(env_max) if env_max else None)
+    target_urls = select_target_urls(sorted_urls, len(p012_urls), scan_all=args.all, max_urls=max_urls)
     print(
-        f"\n[WEB CRAWLER] Launching 120-worker menu scanner across {len(target_urls):,} unique Swiss websites "
-        f"(100% of Swiss pubs & bars with websites + 400 hotels/restaurants)...",
+        f"\n[WEB CRAWLER] Launching 120-worker menu scanner across {len(target_urls):,} of {len(sorted_urls):,} unique Swiss websites"
+        f"{' (all of them)' if len(target_urls) == len(sorted_urls) else ''}...",
         flush=True,
     )
 
@@ -729,6 +760,7 @@ def main():
         "venuesWithWebsiteScanned": venues_with_website_scanned,
         "websitesReachableHttp200": reachable_count,
         "venuesWithWebsiteReachable": venues_with_website_reachable,
+        "websitesFromOverture": websites_from_overture,
         "guinnessWebsiteHits": guinness_web_hits,
         "guinnessOsmTagHits": len(tier1_osm_confirmed),
         "totalGuinnessVenuesFound": len(confirmed_venues_output),

@@ -23,10 +23,12 @@ import re
 TAG_OSM = "osm_tag"
 TAG_NAME = "irish_name"
 TAG_STARTER = "starter_list"
+TAG_WEB = "web_mention"  # a restaurant/hotel website names Guinness, but not clearly as something on the menu
 
 TAG_TEXT = {
     TAG_OSM: "OpenStreetMap lists Guinness as a beer or brewery here. Those tags are edited by volunteers and not checked by this app.",
     TAG_NAME: "The name suggests an Irish pub. Nothing was checked, so this is a guess.",
+    TAG_WEB: "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event).",
     TAG_STARTER: "Part of this app's starter list of Irish pubs and Guinness venues. It has not been checked.",
 }
 
@@ -36,7 +38,7 @@ IRISH_NAME_RE = re.compile(
 )
 
 # Website wording that says how Guinness is served (English, German, French, Italian).
-DRAUGHT_RE = re.compile(r"draught|draft|on tap|\btap\b|vom fass|\bfass\b|pression|alla spina|\bpint\b|zapfen", re.I)
+DRAUGHT_RE = re.compile(r"draught|draft|on tap|\btap\b|vom fass|\bfass\b|ausschank|pression|alla spina|\bpint\b|zapfen", re.I)
 CAN_RE = re.compile(r"\bcans?\b|bottles?|flasche|dose|bouteille|bottiglia", re.I)
 
 # A price as printed on Swiss menus: "CHF 9.50", "Fr. 9.-", "9,50 CHF", "SFr 9".
@@ -63,6 +65,23 @@ def price_near_guinness(snippets):
                 if 2 <= amount <= 40:
                     return f"CHF {amount:.2f}"
     return None
+
+
+def website_mention_kind(category, snippets):
+    """Does a venue's own website name Guinness as something it serves ("menu"), or only mention it ("mention")?
+
+    A pub or bar that names Guinness on its website almost certainly pours it. A restaurant or hotel might only have a
+    recipe ("braised in Guinness"), an event or a blog post, so there the text has to say how it is served or what it
+    costs. Text that only came from page metadata (keywords) never counts as a menu.
+    """
+    text = " ".join(snippets or [])
+    if re.search(r"<meta|content=|name=\"keywords", text, re.I):
+        return "mention"
+    if (category or "") in ("pub", "bar"):
+        return "menu"
+    if DRAUGHT_RE.search(text) or CAN_RE.search(text) or price_near_guinness(snippets) or re.search(r"0[.,]0|alkoholfrei|sans alcool", text, re.I):
+        return "menu"
+    return "mention"
 
 
 def is_irish_name(name):
@@ -157,6 +176,10 @@ def sanitise_static_venue(venue):
                 if scanned
                 else not_checked()
             )
+        elif menu.get("foundOnMenu") and website_mention_kind(v.get("category"), menu.get("snippets")) == "mention":
+            # a restaurant/hotel site that names Guinness without saying it is served: a hint, not a confirmation
+            tag = tag_check(TAG_WEB)
+            v["menuCheck"] = {**menu, "foundOnMenu": False, "typesFound": [], "extractedPrice": None}
         else:
             snippets = menu.get("snippets") or []
             v["menuCheck"] = {
