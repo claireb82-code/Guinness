@@ -219,7 +219,9 @@ for (const [w, h] of [[1024, 768], [1280, 720], [1920, 1080]]) {
     assert.equal(await page.locator('.mobile-nav').isVisible(), false);
     assert.equal(await page.locator('.sheet-header').isVisible(), false);
     assert.equal(await page.locator('.toolbar-strip').isVisible(), true, 'filters are shown inline on desktop');
-    await page.waitForSelector('.detail-drawer'); // the first venue opens in the side panel
+    assert.equal(await page.locator('.detail-drawer').count(), 0, 'nothing opens by itself: the map is not covered on arrival');
+    await page.locator('.venue-card').first().click();
+    await page.waitForSelector('.detail-drawer');
     const [list, map, drawer] = await Promise.all(['.sidebar-list', '.map-pane', '.detail-drawer'].map((s) => box(page, s)));
     assert.ok(list.x + list.width <= map.x + 1, 'list is left of the map');
     assert.ok(drawer.x >= map.x + map.width - 1 || drawer.x >= list.x + list.width, 'details are beside, not on top of, the list');

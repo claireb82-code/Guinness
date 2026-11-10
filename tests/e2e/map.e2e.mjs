@@ -108,9 +108,9 @@ async function dialogIsOnTop(page) {
   });
 }
 
-test('regression: the "Add / Check Venue" form opens in front of the map, not behind it', { skip: skip() }, async () => {
+test('regression: the "Add a venue" form opens in front of the map, not behind it', { skip: skip() }, async () => {
   const { page, context } = await open();
-  await page.locator('button:has-text("Add / Check Venue")').first().click();
+  await page.locator('button:has-text("Add a venue")').first().click();
   await page.waitForSelector('.modal-card');
   assert.deepEqual(await dialogIsOnTop(page), { cardOnTop: true, zoomCovered: true, floatingCovered: true, hasBackdrop: true });
   await context.close();

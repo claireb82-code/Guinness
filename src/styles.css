@@ -462,8 +462,10 @@ body {
   .m-ui .brand-subtitle { display: none; }
   :is(.m-ui, .standalone-ui) .header-actions { order: 2; gap: 0.4rem; }
   :is(.m-ui, .standalone-ui) .header-actions .btn-label { display: none; }
+  :is(.m-ui, .standalone-ui) .header-actions .btn-add .btn-label { display: inline; } /* the add button keeps its words: a bare + is unclear */
   :is(.m-ui, .standalone-ui) .header-actions .btn-outline,
   :is(.m-ui, .standalone-ui) .header-actions .btn-gold { width: 44px; height: 44px; min-height: 44px; padding: 0; justify-content: center; }
+  :is(.m-ui, .standalone-ui) .header-actions .btn-add { width: auto; padding: 0 0.85rem; gap: 0.4rem; }
   :is(.m-ui, .standalone-ui) .header-search {
     order: 3;
     flex: 1 1 100% !important; /* the element has an inline "flex: 1" that would otherwise win */
@@ -703,3 +705,8 @@ body {
   .standalone-ui .map-pane { flex: 1 1 50%; order: 1; }
   .standalone-ui .sidebar-list { flex: 1 1 50%; order: 2; border-top: 0; border-left: 1px solid var(--stout-border); }
 }
+
+/* Venue cards: why the venue has its label, then the price */
+.card-meta { gap: 0.6rem; align-items: flex-start !important; }
+.card-reason { min-width: 0; flex: 1 1 auto; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-price { flex: 0 0 auto; color: var(--harp-gold, #c8a45d); }

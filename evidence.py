@@ -137,6 +137,7 @@ def sanitise_static_venue(venue):
     is_crawl = str(v.get("id", "")).startswith("ch-")
     menu = v.get("menuCheck") or {}
 
+    v["editorialSummary"] = None  # hand-written or generated blurbs said nothing the evidence does not (the label and its reason do)
     v["googleRating"] = None
     v["googleReviewCount"] = 0
     v["priceLevel"] = None
@@ -165,19 +166,12 @@ def sanitise_static_venue(venue):
                 # the crawler took the first price in the snippets, often another beer's: re-read it from the text
                 "extractedPrice": price_near_guinness(snippets) if menu.get("foundOnMenu") else None,
             }
-        if tag:
-            v["editorialSummary"] = f"{(v.get('category') or 'venue').title()} found through OpenStreetMap."
-        elif menu.get("foundOnMenu"):
-            v["editorialSummary"] = f"{(v.get('category') or 'venue').title()}; Guinness is mentioned on its website."
-        else:
-            v["editorialSummary"] = f"{(v.get('category') or 'venue').title()}; no Guinness found on its website."
     else:  # starter list: written by hand, never checked
         tag = tag_check(TAG_STARTER)
         hint = menu.get("extractedPrice") or (venue.get("crowdCheck") or {}).get("reportedPrice")
         if hint:  # kept, but shown as "unchecked": nothing in this app read it from the venue
             v["priceHint"] = {"price": hint, "text": "Price from the starter list, not checked."}
         v["menuCheck"] = not_checked()
-        v["editorialSummary"] = f"{(v.get('category') or 'venue').title()} in the app's starter list. Not yet checked."
 
     if tag:
         v["tagCheck"] = tag

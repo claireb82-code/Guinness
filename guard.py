@@ -378,18 +378,28 @@ def clean_website(value):
     return url
 
 
+def clean_serving_format(value):
+    """How Guinness is served is something the visitor must say: nothing is assumed when it is missing."""
+    if value is None or value == "":
+        raise ValidationError("servingFormat is required: say whether Guinness is served (draught, cans_bottles or none)")
+    return clean_choice(value, "servingFormat", SERVING_FORMATS, None)
+
+
 def validate_crowd_report(data):
     """Whitelist + bound everything a visitor may submit as a pint report."""
-    fmt = clean_choice(data.get("servingFormat"), "servingFormat", SERVING_FORMATS, "draught")
-    rating = None if fmt == "none" else clean_number(data.get("pintRating"), "pintRating", 1.0, 5.0, 5.0)
+    venue_id = clean_venue_id(data.get("venueId"))
+    note = clean_text(data.get("note"), "note", 500)
+    fmt = clean_serving_format(data.get("servingFormat"))
+    # A rating is optional: without one there is simply no rating (it used to default to 5.0).
+    rating = None if fmt == "none" else clean_number(data.get("pintRating"), "pintRating", 1.0, 5.0, None)
     return {
-        "venueId": clean_venue_id(data.get("venueId")),
+        "venueId": venue_id,
         "user": clean_text(data.get("user"), "user", 40) or "Swiss Guinness Scout",
         "servingFormat": fmt,
         "pintRating": rating,
         "price": clean_price(data.get("price")),
         "hasZero": data.get("hasZero") is True,
-        "note": clean_text(data.get("note"), "note", 500),
+        "note": note,
     }
 
 
@@ -404,7 +414,7 @@ def validate_new_venue(data, city_ids):
     lng = clean_number(data.get("lng"), "lng", -180, 180, 8.5385)
     if not (CH_BOUNDS["south"] <= lat <= CH_BOUNDS["north"] and CH_BOUNDS["west"] <= lng <= CH_BOUNDS["east"]):
         raise ValidationError("Venues must be located in Switzerland")
-    fmt = clean_choice(data.get("servingFormat"), "servingFormat", SERVING_FORMATS, "draught")
+    fmt = clean_serving_format(data.get("servingFormat"))
     return {
         "city": city,
         "name": clean_text(data.get("name"), "name", 100, required=True),
@@ -414,7 +424,7 @@ def validate_new_venue(data, city_ids):
         "lng": lng,
         "website": clean_website(data.get("website")),
         "servingFormat": fmt,
-        "pintRating": clean_number(data.get("pintRating"), "pintRating", 1.0, 5.0, 4.8),
+        "pintRating": None if fmt == "none" else clean_number(data.get("pintRating"), "pintRating", 1.0, 5.0, None),
         "price": clean_price(data.get("price")),
         "note": clean_text(data.get("note"), "note", 500),
     }

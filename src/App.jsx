@@ -10,16 +10,13 @@ import {
   XCircle,
   AlertTriangle,
   RefreshCw,
-  FileSearch,
-  MessageSquare,
-  Users,
   List,
   Map as MapIcon,
   SlidersHorizontal,
 } from 'lucide-react';
 import { PintIcon, formatCategoryLabel } from './components/PintIcon.jsx';
-import { isPhoneLayout } from './layout.js';
 import { priceDisplay } from './price.js';
+import { isAdvanced } from './advanced.js';
 import { RADII_KM, DEFAULT_RADIUS_KM, distanceKm, formatDistance, formatRadius, nearest, pickRadius, locationErrorMessage } from './geo.js';
 import { readNearMePref, writeNearMePref } from './nearMePref.js';
 import { MapCanvas } from './components/MapCanvas.jsx';
@@ -38,6 +35,7 @@ const DEFAULT_CITIES = {
 };
 
 export default function App() {
+  const advanced = useMemo(() => isAdvanced(), []);
   const [cities, setCities] = useState(DEFAULT_CITIES);
   const [activeCity, setActiveCity] = useState('all');
   const [mapCenter, setMapCenter] = useState({ lat: 46.8182, lng: 8.2275, zoom: 8 });
@@ -128,10 +126,7 @@ export default function App() {
       if (!res.ok && data.error && targetMode !== 'demo') window.alert(data.error);
       if (data.venues) {
         setVenues(data.venues);
-        // Desktop opens the first venue in the side panel; on a phone that would cover the whole list.
-        if (data.venues.length > 0 && !selectedVenueId && !isPhoneLayout()) {
-          setSelectedVenueId(data.venues[0].id);
-        }
+        // (Nothing is opened automatically: the panel would cover half the map for a first-time visitor.)
       }
     } catch (err) {
       console.error('Failed to load venues:', err);
@@ -553,26 +548,28 @@ export default function App() {
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <button
             type="button"
-            className="btn-outline"
-            aria-label="Add or check a venue"
+            className="btn-outline btn-add"
+            aria-label="Add a venue"
             onClick={() => {
               setClickedCoords(null); // no position chosen yet: the form finds the address (see AddVenueModal)
               setAddVenueModalOpen(true);
             }}
           >
-            <PlusCircle size={14} color="#c8a45d" /> <span className="btn-label">Add / Check Venue</span>
+            <PlusCircle size={14} color="#c8a45d" /> <span className="btn-label">Add a venue</span>
           </button>
 
-          <button
-            type="button"
-            className="btn-gold"
-            aria-label="API key and data mode"
-            onClick={() => setApiKeyModalOpen(true)}
-            title="Configure Google Maps API Key or switch between Demo and Live Google Places mode"
-          >
-            <KeyRound size={14} />
-            <span className="btn-label">{mode === 'live' && googleApiKey ? 'Google Places: Live' : 'API Key / Mode'}</span>
-          </button>
+          {advanced && (
+            <button
+              type="button"
+              className="btn-gold"
+              aria-label="API key and data mode"
+              onClick={() => setApiKeyModalOpen(true)}
+              title="Configure Google Maps API Key or switch between Demo and Live Google Places mode"
+            >
+              <KeyRound size={14} />
+              <span className="btn-label">{mode === 'live' && googleApiKey ? 'Google Places: Live' : 'API Key / Mode'}</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -684,20 +681,22 @@ export default function App() {
                 {stats.confirmed} of {stats.total} venues confirmed to serve Guinness
               </div>
               <div style={{ fontSize: '0.7rem', color: '#9c8e7b' }}>
-                {stats.likely} more are likely (unverified) · {stats.onMenuCount} mention it on their website
+                {stats.likely} more {stats.likely === 1 ? 'is' : 'are'} possible (not checked yet)
               </div>
             </div>
 
-            <button
-              type="button"
-              className="btn-outline"
-              style={{ padding: '0.32rem 0.6rem', fontSize: '0.72rem' }}
-              onClick={handleBatchScanMenus}
-              disabled={batchScanning}
-              title="Crawl & verify online menus for all listed venues"
-            >
-              <RefreshCw size={12} /> {batchScanning ? 'Scanning...' : 'Scan All Menus'}
-            </button>
+            {advanced && (
+              <button
+                type="button"
+                className="btn-outline"
+                style={{ padding: '0.32rem 0.6rem', fontSize: '0.72rem' }}
+                onClick={handleBatchScanMenus}
+                disabled={batchScanning}
+                title="Crawl & verify online menus for all listed venues"
+              >
+                <RefreshCw size={12} /> {batchScanning ? 'Scanning...' : 'Scan All Menus'}
+              </button>
+            )}
           </div>
 
           <div className="venue-cards-scroll">
@@ -847,8 +846,9 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* 3-Pillar Mini Indicators */}
+                    {/* Why it has this label, and the price if there is one */}
                     <div
+                      className="card-meta"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -859,30 +859,18 @@ export default function App() {
                         paddingTop: '0.45rem',
                       }}
                     >
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          color: venue.menuCheck?.foundOnMenu ? '#6ee7b7' : '#8f7e68',
-                        }}
-                      >
-                        <FileSearch size={12} />
-                        {venue.menuCheck?.foundOnMenu ? 'Menu Verified' : 'No Menu Match'}
+                      <span className="card-reason" title={summary.reason}>
+                        {summary.reason}
                       </span>
-
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <MessageSquare size={12} color="#c8a45d" />
-                        {venue.reviewCheck?.mentionCount || 0} rev.
-                      </span>
-
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <Users size={12} color="#c8a45d" />
-                        {(() => {
-                          const price = priceDisplay(venue);
-                          return price.text ? `${price.text}${price.checked ? '' : ' (unchecked)'}` : `${venue.crowdCheck?.confirmedCount || 0} reports`;
-                        })()}
-                      </span>
+                      {(() => {
+                        const price = priceDisplay(venue);
+                        return price.text ? (
+                          <span className="card-price" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                            🍺 {price.text}
+                            {price.checked ? '' : ' (unchecked)'}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                 );
@@ -976,6 +964,7 @@ export default function App() {
         onClose={() => setAddVenueModalOpen(false)}
         initialCoords={clickedCoords || mapCenter}
         coordsFromClick={Boolean(clickedCoords)}
+        advanced={advanced}
         activeCity={activeCity}
         onAddVenue={handleAddVenue}
         onCheckGoogleMaps={handleCheckGoogleMaps}

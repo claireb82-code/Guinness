@@ -31,12 +31,12 @@ class ComputeGuinnessStatusTests(unittest.TestCase):
     def test_menu_mention_means_confirmed_but_not_necessarily_on_tap(self):
         r = self.status(menuCheck={"checked": True, "foundOnMenu": True})
         self.assertEqual((r["status"], r["servingFormat"]), ("confirmed_draught", "unknown"))
-        self.assertEqual(r["statusLabel"], "Guinness confirmed on website")  # "On Tap" only when the page says so
+        self.assertEqual((r["statusLabel"], r["reason"]), ("Confirmed", "Its website mentions Guinness"))  # "on tap" only when the page says so
         self.assertGreaterEqual(r["confidence"], 78)
 
     def test_menu_wording_decides_whether_it_is_on_tap(self):
         r = self.status(menuCheck={"foundOnMenu": True, "snippets": ["Guinness vom Fass 5dl CHF 9.80"]})
-        self.assertEqual((r["servingFormat"], r["statusLabel"]), ("draught", "Confirmed Guinness On Tap"))
+        self.assertEqual((r["servingFormat"], r["statusLabel"], r["reason"]), ("draught", "Confirmed", "Its website lists Guinness on tap"))
 
     def test_menu_with_only_bottles_or_cans_is_not_draught(self):
         r = self.status(menuCheck={"checked": True, "foundOnMenu": True, "typesFound": ["Guinness Cans", "Guinness Bottle"]})
@@ -400,7 +400,8 @@ class OverpassMappingTests(unittest.TestCase):
         self.assertEqual((brew["menuCheck"]["checked"], brew["menuCheck"]["foundOnMenu"]), (False, False))
         self.assertEqual(brew["tagCheck"]["kind"], "osm_tag")
         summary = app.enrich_venue(brew, NO_STORE)["guinnessSummary"]
-        self.assertEqual((summary["status"], summary["statusLabel"]), ("likely_serves", "Listed on OpenStreetMap (unverified)"))
+        self.assertEqual((summary["status"], summary["statusLabel"]), ("likely_serves", "Possible"))
+        self.assertIn("OpenStreetMap lists Guinness", summary["reason"])
         scrape.assert_not_called()
 
     def test_untouched_websites_are_not_scanned_by_default(self):

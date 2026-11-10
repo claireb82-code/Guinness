@@ -58,17 +58,18 @@ async function openReact() {
   return { page, context };
 }
 
-async function fillForm(page, { name, address }) {
-  await page.locator('button:has-text("Add / Check Venue")').first().click();
+async function fillForm(page, { name, address, serves = true }) {
+  await page.locator('button:has-text("Add a venue")').first().click();
   await page.waitForSelector('.modal-card');
   await page.fill('input[placeholder^="e.g. Kennedy"]', name);
   if (address) await page.fill('input[placeholder^="Freisch"]', address);
+  if (serves) await page.locator('.modal-card select:has(option:text("Yes, on tap"))').selectOption('draught');
 }
 
 test('regression: a venue added with an address is placed at that address, not at the map centre', { skip: skip() }, async () => {
   const { page, context } = await openReact();
   await fillForm(page, { name: 'The Green Wildman', address: ADDRESS });
-  await page.locator('button:has-text("Add Venue & Check Menu")').click();
+  await page.locator('button:has-text("Add venue")').click();
   await page.waitForSelector('.modal-card', { state: 'detached', timeout: 10000 });
   const [venue] = await venuesByName('The Green Wildman');
   assert.ok(venue, 'the venue was saved');
@@ -90,7 +91,7 @@ test('"Find on map" fills in the position and says what it found', { skip: skip(
 test('an address that cannot be found stops the submit and says why; nothing is saved', { skip: skip() }, async () => {
   const { page, context } = await openReact();
   await fillForm(page, { name: 'Nowhere Pub', address: 'Nowhere street 1, 9999 Nowhere' });
-  await page.locator('button:has-text("Add Venue & Check Menu")').click();
+  await page.locator('button:has-text("Add venue")').click();
   await page.waitForSelector('.modal-card [role="alert"]');
   assert.match(await page.textContent('.modal-card [role="alert"]'), /couldn't find/);
   assert.equal((await venuesByName('Nowhere Pub')).length, 0);
@@ -100,7 +101,7 @@ test('an address that cannot be found stops the submit and says why; nothing is 
 test('without an address or a clicked spot the form asks for one instead of guessing', { skip: skip() }, async () => {
   const { page, context } = await openReact();
   await fillForm(page, { name: 'Guess Pub', address: '' });
-  await page.locator('button:has-text("Add Venue & Check Menu")').click();
+  await page.locator('button:has-text("Add venue")').click();
   await page.waitForSelector('.modal-card [role="alert"]');
   assert.match(await page.textContent('.modal-card [role="alert"]'), /street address, or click the map/);
   assert.equal((await venuesByName('Guess Pub')).length, 0);
@@ -115,7 +116,8 @@ test('a spot chosen on the map is kept, with no address lookup', { skip: skip() 
   await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.8);
   await page.waitForSelector('.modal-card', { timeout: 3000 });
   await page.fill('input[placeholder^="e.g. Kennedy"]', 'Pin Pub');
-  await page.locator('button:has-text("Add Venue & Check Menu")').click();
+  await page.locator('.modal-card select:has(option:text("Yes, on tap"))').selectOption('draught');
+  await page.locator('button:has-text("Add venue")').click();
   await page.waitForSelector('.modal-card', { state: 'detached', timeout: 10000 });
   const [venue] = await venuesByName('Pin Pub');
   assert.ok(venue);
@@ -154,6 +156,7 @@ test('regression: the same on the standalone page (address is looked up; nothing
   await page.waitForTimeout(1000);
   await page.locator('#btn-open-add').click();
   await page.fill('#add-name', 'Standalone Wildman');
+  await page.selectOption('#add-format', 'draught');
   await page.locator('#form-add-venue button[type="submit"]').click();
   await page.waitForSelector('#add-error:not([hidden])');
   assert.match(await page.textContent('#add-error'), /street address, or click the map/);
@@ -162,5 +165,29 @@ test('regression: the same on the standalone page (address is looked up; nothing
   await page.waitForSelector('.modal-card', { state: 'detached', timeout: 10000 });
   const [venue] = await venuesByName('Standalone Wildman');
   assert.deepEqual([venue.lat, venue.lng], [DAVOS.lat, DAVOS.lng]);
+  await context.close();
+});
+
+test('regression: how it is served is never assumed: the form will not submit until the visitor chooses', { skip: skip() }, async () => {
+  const { page, context } = await openReact();
+  await fillForm(page, { name: 'Undecided Pub', address: ADDRESS, serves: false });
+  const chosen = await page.locator('.modal-card select:has(option:text("Yes, on tap"))').inputValue();
+  assert.equal(chosen, '', 'nothing is pre-selected');
+  assert.equal(await page.locator('.modal-card select:has(option:text("No rating"))').inputValue(), '', 'and no rating is pre-filled');
+  await page.locator('button:has-text("Add venue")').click();
+  await page.waitForTimeout(500);
+  assert.equal(await page.locator('.modal-card').count(), 1, 'the form stays open');
+  assert.equal((await venuesByName('Undecided Pub')).length, 0);
+  await context.close();
+});
+
+test('a venue added without a rating has no rating (none is invented)', { skip: skip() }, async () => {
+  const { page, context } = await openReact();
+  await fillForm(page, { name: 'Unrated Pub', address: ADDRESS });
+  await page.locator('button:has-text("Add venue")').click();
+  await page.waitForSelector('.modal-card', { state: 'detached', timeout: 10000 });
+  const [venue] = await venuesByName('Unrated Pub');
+  assert.equal(venue.crowdCheck.avgPintRating, null);
+  assert.equal(venue.googleRating, null);
   await context.close();
 });
