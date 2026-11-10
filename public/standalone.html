@@ -114,6 +114,23 @@
         }
         const ADVANCED = isAdvanced();
 
+        // Open the Add form with no position chosen yet (the map centre is not the venue's position): the form finds the address.
+        function openAddVenue() {
+          state.clickedCoords = { lat: state.mapCenter.lat, lng: state.mapCenter.lng };
+          state.coordsFromClick = false;
+          state.addModalOpen = true;
+          renderModals();
+        }
+
+        // "Know a place that serves Guinness? Tell us": dismissible, and the choice is remembered (guarded: storage can be blocked).
+        function promptIsHidden() {
+          try {
+            return localStorage.getItem('guinness.hideAddPrompt') === '1';
+          } catch (err) {
+            return false;
+          }
+        }
+
         function escapeHtml(str) {
           if (str === null || str === undefined) return '';
           return String(str)
@@ -545,12 +562,7 @@
               });
             }
 
-            document.getElementById('btn-open-add')?.addEventListener('click', () => {
-              state.clickedCoords = { lat: state.mapCenter.lat, lng: state.mapCenter.lng };
-              state.coordsFromClick = false; // the map centre is not the venue's position
-              state.addModalOpen = true;
-              renderModals();
-            });
+            document.getElementById('btn-open-add')?.addEventListener('click', openAddVenue);
 
             document.getElementById('btn-open-apikey')?.addEventListener('click', () => {
               state.apiKeyModalOpen = true;
@@ -725,6 +737,15 @@
                     : ''
                 }
               </div>
+              ${
+                promptIsHidden()
+                  ? ''
+                  : `<div class="add-prompt" role="note">
+                <span class="add-prompt-text">Know a place that serves Guinness?</span>
+                <button type="button" class="add-prompt-btn" id="btn-add-prompt">Tell us</button>
+                <button type="button" class="add-prompt-close" id="btn-hide-prompt" aria-label="Hide this">×</button>
+              </div>`
+              }
               <div class="venue-cards-scroll">${cardsHtml}</div>
             `;
 
@@ -742,6 +763,15 @@
               });
             });
 
+            document.getElementById('btn-add-prompt')?.addEventListener('click', openAddVenue);
+            document.getElementById('btn-hide-prompt')?.addEventListener('click', () => {
+              try {
+                localStorage.setItem('guinness.hideAddPrompt', '1');
+              } catch (err) {
+                /* storage blocked: it just comes back next time */
+              }
+              renderSidebarAndDrawer();
+            });
             document.getElementById('btn-show-all')?.addEventListener('click', () => {
               state.guinnessFilter = 'all';
               renderHeaderAndToolbar();
@@ -989,9 +1019,9 @@
                 <!-- Pillar 3: Community Reports -->
                 <div style="background:#1b1612;border:1px solid #332a21;border-radius:0.75rem;padding:0.95rem;">
                   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
-                    <div style="font-weight:700;font-size:0.86rem;color:#e2be75;">🍺 3. Community Pint Reports</div>
+                    <div style="font-weight:700;font-size:0.86rem;color:#e2be75;">🍺 3. Been here? Tell us</div>
                     <button type="button" id="btn-toggle-report" class="btn-gold" style="padding:0.3rem 0.65rem;font-size:0.73rem;">
-                      ${state.showReportForm ? 'Cancel' : '+ Log Pint / Confirm'}
+                      ${state.showReportForm ? 'Cancel' : 'Tell us what you saw'}
                     </button>
                   </div>
                   <div style="font-size:0.75rem;color:#b8ab99;margin-bottom:0.6rem;">

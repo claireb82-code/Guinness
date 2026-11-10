@@ -17,6 +17,7 @@ import {
 import { PintIcon, formatCategoryLabel } from './components/PintIcon.jsx';
 import { priceDisplay } from './price.js';
 import { isAdvanced } from './advanced.js';
+import { readPromptHidden, writePromptHidden } from './addPrompt.js';
 import { RADII_KM, DEFAULT_RADIUS_KM, distanceKm, formatDistance, formatRadius, nearest, pickRadius, locationErrorMessage } from './geo.js';
 import { readNearMePref, writeNearMePref } from './nearMePref.js';
 import { MapCanvas } from './components/MapCanvas.jsx';
@@ -36,6 +37,12 @@ const DEFAULT_CITIES = {
 
 export default function App() {
   const advanced = useMemo(() => isAdvanced(), []);
+  // "Know a place that serves Guinness? Tell us": a prompt above the list that can be dismissed (that choice is remembered).
+  const [promptHidden, setPromptHidden] = useState(() => (typeof localStorage === 'undefined' ? false : readPromptHidden(localStorage)));
+  const hidePrompt = () => {
+    setPromptHidden(true);
+    if (typeof localStorage !== 'undefined') writePromptHidden(localStorage, true);
+  };
   const [cities, setCities] = useState(DEFAULT_CITIES);
   const [activeCity, setActiveCity] = useState('all');
   const [mapCenter, setMapCenter] = useState({ lat: 46.8182, lng: 8.2275, zoom: 8 });
@@ -145,6 +152,12 @@ export default function App() {
       targetMode: mode,
     });
   }, [activeCity, mode]);
+
+  // Open the Add form with no position chosen yet: the form finds the address (see AddVenueModal).
+  const openAddVenue = () => {
+    setClickedCoords(null);
+    setAddVenueModalOpen(true);
+  };
 
   const handleSaveApiKey = (newKey) => {
     setGoogleApiKey(newKey);
@@ -550,10 +563,7 @@ export default function App() {
             type="button"
             className="btn-outline btn-add"
             aria-label="Add a venue"
-            onClick={() => {
-              setClickedCoords(null); // no position chosen yet: the form finds the address (see AddVenueModal)
-              setAddVenueModalOpen(true);
-            }}
+            onClick={openAddVenue}
           >
             <PlusCircle size={14} color="#c8a45d" /> <span className="btn-label">Add a venue</span>
           </button>
@@ -699,6 +709,18 @@ export default function App() {
             )}
           </div>
 
+          {!promptHidden && (
+            <div className="add-prompt" role="note">
+              <span className="add-prompt-text">Know a place that serves Guinness?</span>
+              <button type="button" className="add-prompt-btn" onClick={openAddVenue}>
+                Tell us
+              </button>
+              <button type="button" className="add-prompt-close" aria-label="Hide this" onClick={hidePrompt}>
+                ×
+              </button>
+            </div>
+          )}
+
           <div className="venue-cards-scroll">
             {loading ? (
               <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#b8ab99', fontSize: '0.84rem' }}>
@@ -726,6 +748,9 @@ export default function App() {
                       </button>
                       <button type="button" className="filter-pill" onClick={scanAroundMe}>
                         Scan around me
+                      </button>
+                      <button type="button" className="filter-pill" onClick={openAddVenue}>
+                        Know one? Add it
                       </button>
                     </div>
                   </>

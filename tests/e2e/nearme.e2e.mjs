@@ -180,7 +180,7 @@ test('far from every venue: the empty state names the nearest one and offers way
   const nearestVenue = all.filter(serves).map((v) => ({ v, d: distanceKm({ lat: LONDON.latitude, lng: LONDON.longitude }, v) })).sort((a, b) => a.d - b.d)[0];
   assert.ok(text.includes(nearestVenue.v.name), 'names the nearest matching venue');
   assert.match(text, new RegExp(`${Math.round(nearestVenue.d)} km away`));
-  assert.deepEqual(await page.$$eval('.near-actions button', (b) => b.map((x) => x.textContent.trim())), ['Try 10 km', 'Show everywhere', 'Scan around me']);
+  assert.deepEqual(await page.$$eval('.near-actions button', (b) => b.map((x) => x.textContent.trim())), ['Try 10 km', 'Show everywhere', 'Scan around me', 'Know one? Add it']);
   await tap('.near-actions button:has-text("Try 10 km")');
   assert.equal(await page.getAttribute(radiusPill('10 km'), 'aria-pressed'), 'true');
   await tap('.near-actions button:has-text("Show everywhere")');
