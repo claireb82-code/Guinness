@@ -34,7 +34,11 @@ const GUINNESS_GOOGLE_MAP_STYLES = [
   },
 ];
 
-const NEAR_ME_VIEW_PAD = 0.5; // extra margin around the radius circle, as a fraction of its size (0.5 = the view is 2x the circle)
+// Margin around the radius circle, as a fraction of its size. At the default 500 m the view is twice the circle across, so you see
+// the street around you; a wider radius (used when nothing is within 500 m) is framed snugly so the nearest venue is in view
+// without zooming out further than needed.
+const NEAR_ME_VIEW_PAD = 0.5;
+const WIDE_VIEW_PAD = 0.1;
 
 export function MapCanvas({
   center,
@@ -46,6 +50,7 @@ export function MapCanvas({
   userLocation = null,
   radiusKm = null,
   onMapClickForNewVenue,
+  onViewChange,
 }) {
   const mapContainerRef = useRef(null);
   const leafletMapRef = useRef(null);
@@ -55,6 +60,10 @@ export function MapCanvas({
   const googleMarkersRef = useRef([]);
   const onMapClickRef = useRef(onMapClickForNewVenue);
   onMapClickRef.current = onMapClickForNewVenue;
+  const onViewChangeRef = useRef(onViewChange);
+  onViewChangeRef.current = onViewChange;
+  // A flight to a venue the visitor just picked must not rewrite the list (it would shrink to that neighbourhood).
+  const quietMoveRef = useRef(false);
   const [googleSdkReady, setGoogleSdkReady] = useState(false);
   const [googleSdkError, setGoogleSdkError] = useState(null);
 
@@ -198,14 +207,33 @@ export function MapCanvas({
       });
       map.on('dblclick zoomstart movestart', singleClick.cancel);
 
+      // The list follows the map: report what is visible each time the map stops moving (a pan, a zoom, a flight).
+      const reportView = () => {
+        if (quietMoveRef.current) {
+          quietMoveRef.current = false;
+          return;
+        }
+        const b = map.getBounds();
+        const c = map.getCenter();
+        const el = mapContainerRef.current;
+        if (el) {
+          el.dataset.viewNorth = b.getNorth().toFixed(5);
+          el.dataset.viewSouth = b.getSouth().toFixed(5);
+          el.dataset.viewEast = b.getEast().toFixed(5);
+          el.dataset.viewWest = b.getWest().toFixed(5);
+        }
+        onViewChangeRef.current?.({ north: b.getNorth(), south: b.getSouth(), east: b.getEast(), west: b.getWest(), center: { lat: c.lat, lng: c.lng } });
+      };
+      map.on('moveend', reportView);
       leafletMapRef.current = map;
+      reportView();
     } else if (!(userLocation && radiusKm)) {
       // (With Near me on, the map frames the visitor's radius instead; see the effect below.)
       leafletMapRef.current.flyTo([center.lat, center.lng], zoom, {
         duration: 0.85,
       });
     }
-  }, [center.lat, center.lng, zoom, googleApiKey, googleSdkReady]);
+  }, [center.lat, center.lng, center.nonce, zoom, googleApiKey, googleSdkReady]);
 
   // Render Leaflet Markers
   useEffect(() => {
@@ -272,7 +300,7 @@ export function MapCanvas({
     nearLayersRef.current = [circle, dot];
     // Frame the radius with its surroundings: the view is twice the circle across, so the circle takes up about
     // a third to a half of the screen (edge to edge felt too zoomed in, and showed nothing around you).
-    map.fitBounds(circle.getBounds().pad(NEAR_ME_VIEW_PAD), { padding: [0, 0], maxZoom: 17 });
+    map.fitBounds(circle.getBounds().pad(radiusKm <= 0.5 ? NEAR_ME_VIEW_PAD : WIDE_VIEW_PAD), { padding: [0, 0], maxZoom: 17, animate: false });
   }, [userLocation?.lat, userLocation?.lng, radiusKm, googleApiKey, googleSdkReady]);
 
   // Pan to selected venue smoothly
@@ -281,6 +309,10 @@ export function MapCanvas({
     if (googleMapRef.current && googleSdkReady) {
       googleMapRef.current.panTo({ lat: selectedVenue.lat, lng: selectedVenue.lng });
     } else if (leafletMapRef.current) {
+      quietMoveRef.current = true; // (cleared by the next moveend, or after the flight at the latest)
+      setTimeout(() => {
+        quietMoveRef.current = false;
+      }, 1500);
       leafletMapRef.current.flyTo([selectedVenue.lat, selectedVenue.lng], Math.max(zoom, 15), {
         duration: 0.65,
       });

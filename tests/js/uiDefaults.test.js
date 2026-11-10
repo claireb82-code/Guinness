@@ -28,7 +28,7 @@ test('"Show All" is still available as a filter option in both UIs', () => {
 
 test('header statistics are computed over all venues in the area, not the already-filtered list', () => {
   assert.match(read('public/standalone.html'), /statsPool/);
-  assert.match(read('src/App.jsx'), /const pool = venues\.filter\(\(v\) => matchesFilters\(v, 'all'\)\)/);
+  assert.match(read('src/App.jsx'), /const pool = venues\.filter\(\(v\) => matchesFilters\(v, 'all'\) && inView\(v, mapView\)\)/);
 });
 
 test('both UIs credit Overture Maps when a venue website came from it', () => {
