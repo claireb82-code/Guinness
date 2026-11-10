@@ -710,3 +710,42 @@ body {
 .card-meta { gap: 0.6rem; align-items: flex-start !important; }
 .card-reason { min-width: 0; flex: 1 1 auto; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card-price { flex: 0 0 auto; color: var(--harp-gold, #c8a45d); }
+
+/* "Know a place that serves Guinness? Tell us" prompt above the list */
+.add-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  background: rgba(200, 164, 93, 0.08);
+  border-bottom: 1px solid #332a21;
+  font-size: 0.78rem;
+  color: #d7cbb8;
+}
+.add-prompt-text { flex: 1 1 auto; min-width: 0; }
+.add-prompt-btn {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--harp-gold, #c8a45d);
+  background: transparent;
+  color: var(--harp-gold, #c8a45d);
+  font-weight: 700;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.add-prompt-btn:hover { background: rgba(200, 164, 93, 0.16); }
+.add-prompt-close {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: #9c8e7b;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+}
+@media (max-width: 768px), (max-height: 500px) and (orientation: landscape) {
+  .add-prompt { padding: 0.5rem 0.85rem; }
+  .add-prompt-btn, .add-prompt-close { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+}

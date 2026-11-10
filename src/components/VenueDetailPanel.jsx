@@ -484,7 +484,7 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 700, fontSize: '0.86rem' }}>
               <Users size={16} color="#c8a45d" />
-              <span>3. Community Pint Reports</span>
+              <span>3. Been here? Tell us</span>
             </div>
             <button
               type="button"
@@ -492,7 +492,7 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
               style={{ padding: '0.3rem 0.65rem', fontSize: '0.73rem' }}
               onClick={() => setShowReportForm(!showReportForm)}
             >
-              <Sparkles size={12} /> {showReportForm ? 'Cancel' : '+ Log Pint / Confirm'}
+              <Sparkles size={12} /> {showReportForm ? 'Cancel' : 'Tell us what you saw'}
             </button>
           </div>
 
