@@ -56,7 +56,7 @@ test.after(async () => {
 });
 
 // `venues`: what the API returns (default: evil, good, quiet, none); `real: true` keeps the server's own data.
-async function openPage({ dialogs = [], venues = [evil, good, quiet, none], real = false } = {}) {
+async function openPage({ dialogs = [], venues = [evil, good, quiet, none], real = false, advanced = false } = {}) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -69,7 +69,7 @@ async function openPage({ dialogs = [], venues = [evil, good, quiet, none], real
     if (!real) json.venues = venues;
     route.fulfill({ response: resp, json });
   });
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/${advanced ? '?advanced=1' : ''}`);
   await page.waitForSelector(venues.length || real ? '.venue-card, #btn-show-all' : '#sidebar-mount', { timeout: 15000 });
   return { page, errors, dialogs };
 }
@@ -98,7 +98,7 @@ test('the header counts every venue in the area, not just the visible ones', { s
   const { page } = await openPage();
   const text = await page.locator('#sidebar-mount').textContent();
   assert.match(text, /1 of 4 venues confirmed to serve Guinness/);
-  assert.match(text, /1 more are likely \(unverified\)/, 'guesses are counted apart from confirmed venues');
+  assert.match(text, /1 more is possible \(not checked yet\)/, 'guesses are counted apart from confirmed venues');
   await page.close();
 });
 
@@ -176,6 +176,7 @@ test('a rejected submission shows the server\'s reason instead of failing silent
   await page.route('**/api/crowd-report', (r) => r.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'note is too long (max 500 characters)' }) }));
   await page.click('.venue-card[data-vid="good-1"]');
   await page.click('#btn-toggle-report');
+  await page.selectOption('#rep-format', 'draught');
   await page.click('#form-crowd-report button[type=submit]');
   await page.waitForFunction(() => true);
   await new Promise((r) => setTimeout(r, 400));
@@ -188,14 +189,27 @@ test('"database not configured" is explained to the user', { skip: skip() }, asy
   await page.route('**/api/crowd-report', (r) => r.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Community submissions are not enabled on this deployment' }) }));
   await page.click('.venue-card[data-vid="good-1"]');
   await page.click('#btn-toggle-report');
+  await page.selectOption('#rep-format', 'draught');
   await page.click('#form-crowd-report button[type=submit]');
   await new Promise((r) => setTimeout(r, 400));
   assert.match(dialogs[0], /not enabled/);
   await page.close();
 });
 
+test('owner-only controls (scan all menus, the API key dialog) are hidden from visitors and shown with ?advanced=1', { skip: skip() }, async () => {
+  const visitor = await openPage();
+  assert.equal(await visitor.page.locator('#btn-batch-scan').count(), 0);
+  assert.equal(await visitor.page.locator('#btn-open-apikey').count(), 0);
+  assert.equal(await visitor.page.locator('#form-check-gmaps').isVisible().catch(() => false), false);
+  await visitor.page.close();
+  const owner = await openPage({ advanced: true });
+  assert.equal(await owner.page.locator('#btn-batch-scan').count(), 1);
+  assert.equal(await owner.page.locator('#btn-open-apikey').count(), 1);
+  await owner.page.close();
+});
+
 test('"scan all" stops at the first rate-limit response and tells the user', { skip: skip() }, async () => {
-  const { page, dialogs } = await openPage();
+  const { page, dialogs } = await openPage({ advanced: true });
   let calls = 0;
   await page.route('**/api/scan-menu', (r) => { calls += 1; r.fulfill({ status: 429, contentType: 'application/json', body: JSON.stringify({ error: 'Too many requests. Please slow down and try again later.' }) }); });
   await page.click('#btn-batch-scan');

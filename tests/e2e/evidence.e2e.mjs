@@ -34,7 +34,7 @@ test('the header says "confirmed", counts guesses separately, and never claims a
   const { page, context } = await open();
   const text = await page.locator('.sidebar-list').first().textContent();
   assert.match(text, /\d+ of \d+ venues confirmed to serve Guinness/);
-  assert.match(text, /\d+ more are likely \(unverified\)/);
+  assert.match(text, /\d+ more (is|are) possible \(not checked yet\)/);
   assert.doesNotMatch(text, /Venues Serve Guinness/);
   await context.close();
 });
@@ -44,20 +44,19 @@ test('no card or panel shows a rating, review count or visitor report that nobod
   const cards = await page.$$eval('.venue-card', (c) => c.map((x) => x.textContent));
   assert.ok(cards.length > 0);
   for (const t of cards) {
-    assert.match(t, /0 rev\./, t);
-    assert.match(t, /0 reports|CHF/, t);
-    assert.doesNotMatch(t, /Mentioned in Reviews/, 'that label is only for real review mentions');
+    assert.doesNotMatch(t, /\b0 rev\.|\b0 reports|No Menu Match/, 'zero-count noise is not shown');
+    assert.doesNotMatch(t, /Mentioned in Reviews|Starter list|unverified/, 'no internal jargon on a card');
   }
   await context.close();
 });
 
 test('a venue that is only a guess says so, and explains why', { skip: skip() }, async () => {
   const { page, context } = await open();
-  await page.locator('.venue-card:has-text("unverified")').first().click();
+  await page.locator('.venue-card:has-text("not checked")').first().click();
   await page.waitForSelector('.evidence-note');
   const note = await page.textContent('.evidence-note');
-  assert.match(note, /not (been )?checked|guess|volunteers/i);
-  assert.match(await page.textContent('.status-badge'), /unverified/i);
+  assert.match(note, /not checked/i);
+  assert.match(await page.textContent('.detail-drawer .status-badge'), /Possible/);
   await context.close();
 });
 
