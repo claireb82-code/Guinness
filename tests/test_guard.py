@@ -284,23 +284,24 @@ class SubmissionValidationTests(unittest.TestCase):
 
     def test_crowd_report_defaults_and_sanitising(self):
         r = guard.validate_crowd_report({"venueId": "v-1", "servingFormat": "draught", "note": "  great\x00 pint ", "price": "9.5", "hasZero": True})
-        self.assertEqual(r, {"venueId": "v-1", "user": "Swiss Guinness Scout", "servingFormat": "draught", "pintRating": None,
+        self.assertEqual(r, {"venueId": "v-1", "user": "Swiss Guinness Scout", "servingFormat": "draught",
                              "price": "CHF 9.50", "hasZero": True, "note": "great pint"})
 
-    def test_regression_a_report_must_say_how_it_is_served_and_a_rating_is_optional(self):
+    def test_regression_a_report_must_say_how_it_is_served(self):
         with self.assertRaises(guard.ValidationError) as ctx:
             guard.validate_crowd_report({"venueId": "v-1"})
         self.assertIn("servingFormat", str(ctx.exception))
-        self.assertIsNone(guard.validate_crowd_report({"venueId": "v-1", "servingFormat": "draught", "pintRating": ""})["pintRating"])
-        self.assertEqual(guard.validate_crowd_report({"venueId": "v-1", "servingFormat": "draught", "pintRating": "4.5"})["pintRating"], 4.5)
 
-    def test_crowd_report_none_format_has_no_rating(self):
-        r = guard.validate_crowd_report({"venueId": "v", "servingFormat": "none", "pintRating": "4.0"})
-        self.assertIsNone(r["pintRating"])
+    def test_regression_a_rating_sent_by_an_old_client_is_ignored(self):
+        """The pint score was removed: it is neither validated nor kept."""
+        r = guard.validate_crowd_report({"venueId": "v", "servingFormat": "draught", "pintRating": "9000"})
+        self.assertNotIn("pintRating", r)
+        v = guard.validate_new_venue({"name": "X", "lat": 47.37, "lng": 8.54, "servingFormat": "draught", "pintRating": "x"}, self.CITIES)
+        self.assertNotIn("pintRating", v)
 
     def test_crowd_report_rejects_bad_input(self):
         base = {"venueId": "v"}
-        for patch in [{"venueId": "bad id"}, {"servingFormat": "keg"}, {"pintRating": 9}, {"pintRating": "x"}, {"note": "x" * 501},
+        for patch in [{"venueId": "bad id"}, {"servingFormat": "keg"}, {"note": "x" * 501},
                       {"user": "x" * 41}, {"price": "lots"}]:
             with self.subTest(patch=patch), self.assertRaises(guard.ValidationError):
                 guard.validate_crowd_report({**base, **patch})

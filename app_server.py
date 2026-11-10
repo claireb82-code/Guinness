@@ -130,7 +130,6 @@ DEMO_VENUES = [
             "confirmedCount": 39,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.8,
             "reportedPrice": "CHF 9.80",
             "hasZero": True,
             "recentReports": [
@@ -138,7 +137,6 @@ DEMO_VENUES = [
                     "id": "ch-101",
                     "user": "Rory M.",
                     "servingFormat": "draught",
-                    "pintRating": 4.9,
                     "price": "CHF 9.80",
                     "note": "High turnover on the Guinness line, clean glasses, proper dome.",
                     "createdAt": "2026-11-05T20:15:00Z",
@@ -189,7 +187,6 @@ DEMO_VENUES = [
             "confirmedCount": 44,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.7,
             "reportedPrice": "CHF 9.50",
             "hasZero": True,
             "recentReports": [],
@@ -237,7 +234,6 @@ DEMO_VENUES = [
             "confirmedCount": 22,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.7,
             "reportedPrice": "CHF 10.20",
             "hasZero": False,
             "recentReports": [],
@@ -285,7 +281,6 @@ DEMO_VENUES = [
             "confirmedCount": 5,
             "deniedCount": 0,
             "servingFormat": "cans_bottles",
-            "avgPintRating": 4.2,
             "reportedPrice": "CHF 13.50",
             "hasZero": False,
             "recentReports": [],
@@ -326,7 +321,6 @@ DEMO_VENUES = [
             "confirmedCount": 0,
             "deniedCount": 6,
             "servingFormat": "none",
-            "avgPintRating": None,
             "reportedPrice": None,
             "hasZero": False,
             "recentReports": [],
@@ -376,7 +370,6 @@ DEMO_VENUES = [
             "confirmedCount": 34,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.7,
             "reportedPrice": "CHF 9.50",
             "hasZero": True,
             "recentReports": [],
@@ -422,7 +415,6 @@ DEMO_VENUES = [
             "confirmedCount": 29,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.8,
             "reportedPrice": "CHF 9.80",
             "hasZero": True,
             "recentReports": [],
@@ -468,7 +460,6 @@ DEMO_VENUES = [
             "confirmedCount": 8,
             "deniedCount": 0,
             "servingFormat": "cans_bottles",
-            "avgPintRating": 4.3,
             "reportedPrice": "CHF 14.00",
             "hasZero": False,
             "recentReports": [],
@@ -518,7 +509,6 @@ DEMO_VENUES = [
             "confirmedCount": 42,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.8,
             "reportedPrice": "CHF 9.60",
             "hasZero": True,
             "recentReports": [],
@@ -564,7 +554,6 @@ DEMO_VENUES = [
             "confirmedCount": 19,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.6,
             "reportedPrice": "CHF 9.50",
             "hasZero": False,
             "recentReports": [],
@@ -614,7 +603,6 @@ DEMO_VENUES = [
             "confirmedCount": 31,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.7,
             "reportedPrice": "CHF 9.20",
             "hasZero": True,
             "recentReports": [],
@@ -660,7 +648,6 @@ DEMO_VENUES = [
             "confirmedCount": 6,
             "deniedCount": 0,
             "servingFormat": "cans_bottles",
-            "avgPintRating": 4.1,
             "reportedPrice": "CHF 10.50",
             "hasZero": False,
             "recentReports": [],
@@ -707,7 +694,6 @@ DEMO_VENUES = [
             "confirmedCount": 27,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.7,
             "reportedPrice": "CHF 9.50",
             "hasZero": False,
             "recentReports": [],
@@ -746,7 +732,6 @@ DEMO_VENUES = [
             "confirmedCount": 4,
             "deniedCount": 0,
             "servingFormat": "cans_bottles",
-            "avgPintRating": 4.2,
             "reportedPrice": "CHF 14.50",
             "hasZero": False,
             "recentReports": [],
@@ -796,7 +781,6 @@ DEMO_VENUES = [
             "confirmedCount": 33,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.8,
             "reportedPrice": "CHF 9.50",
             "hasZero": True,
             "recentReports": [],
@@ -836,7 +820,6 @@ DEMO_VENUES = [
             "confirmedCount": 35,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.8,
             "reportedPrice": "CHF 9.60",
             "hasZero": True,
             "recentReports": [],
@@ -875,7 +858,6 @@ DEMO_VENUES = [
             "confirmedCount": 24,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.7,
             "reportedPrice": "CHF 9.80",
             "hasZero": False,
             "recentReports": [],
@@ -914,7 +896,6 @@ DEMO_VENUES = [
             "confirmedCount": 28,
             "deniedCount": 0,
             "servingFormat": "draught",
-            "avgPintRating": 4.8,
             "reportedPrice": "CHF 9.20",
             "hasZero": True,
             "recentReports": [],
@@ -945,7 +926,7 @@ DEMO_VENUES = [
             "snippets": ["PRESSION: Guinness Irish Stout — Pint CHF 9.50"],
         },
         "reviewCheck": {"mentionCount": 210, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 21, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.6, "reportedPrice": "CHF 9.50", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 21, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.50", "hasZero": False, "recentReports": []},
     },
     {
         "id": "ge-charly-oneills",
@@ -975,7 +956,7 @@ DEMO_VENUES = [
             ],
         },
         "reviewCheck": {"mentionCount": 260, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 25, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.50", "hasZero": True, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 25, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.50", "hasZero": True, "recentReports": []},
     },
     {
         "id": "ls-king-size",
@@ -1002,7 +983,7 @@ DEMO_VENUES = [
             "snippets": ["PRESSION IRLANDE: Guinness Draught (4.2%) — 5dl CHF 9.50"],
         },
         "reviewCheck": {"mentionCount": 190, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 26, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.50", "hasZero": True, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 26, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.50", "hasZero": True, "recentReports": []},
     },
     {
         "id": "ls-mccarthys-vevey",
@@ -1029,7 +1010,7 @@ DEMO_VENUES = [
             "snippets": ["ON TAP: Guinness Draught — Pint CHF 9.20"],
         },
         "reviewCheck": {"mentionCount": 145, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 19, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.20", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 19, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.20", "hasZero": False, "recentReports": []},
     },
     {
         "id": "ls-barrel-oak-montreux",
@@ -1056,7 +1037,7 @@ DEMO_VENUES = [
             "snippets": ["DRAUGHT BEERS: Guinness Irish Stout — Pint CHF 9.50"],
         },
         "reviewCheck": {"mentionCount": 130, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 16, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.7, "reportedPrice": "CHF 9.50", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 16, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.50", "hasZero": False, "recentReports": []},
     },
     {
         "id": "bs-pickwick-basel",
@@ -1083,7 +1064,7 @@ DEMO_VENUES = [
             "snippets": ["DRAUGHT: Guinness Draught — Pint CHF 9.40 | Guinness 0.0 — CHF 8.40"],
         },
         "reviewCheck": {"mentionCount": 230, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 28, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.7, "reportedPrice": "CHF 9.40", "hasZero": True, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 28, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.40", "hasZero": True, "recentReports": []},
     },
     {
         "id": "bs-trois-rois",
@@ -1110,7 +1091,7 @@ DEMO_VENUES = [
             "snippets": ["BIERE / BEERS: Guinness Irish Stout — CHF 14.00"],
         },
         "reviewCheck": {"mentionCount": 11, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 5, "deniedCount": 0, "servingFormat": "cans_bottles", "avgPintRating": 4.3, "reportedPrice": "CHF 14.00", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 5, "deniedCount": 0, "servingFormat": "cans_bottles", "reportedPrice": "CHF 14.00", "hasZero": False, "recentReports": []},
     },
     {
         "id": "bs-penny-farthing-aarau",
@@ -1137,7 +1118,7 @@ DEMO_VENUES = [
             "snippets": ["VOM FASS: Guinness Draught 5dl — CHF 9.20"],
         },
         "reviewCheck": {"mentionCount": 95, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 14, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.7, "reportedPrice": "CHF 9.20", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 14, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.20", "hasZero": False, "recentReports": []},
     },
     {
         "id": "be-mccarthys-bern",
@@ -1164,7 +1145,7 @@ DEMO_VENUES = [
             "snippets": ["ON TAP: Guinness Irish Stout — Pint CHF 9.40"],
         },
         "reviewCheck": {"mentionCount": 205, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 26, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.40", "hasZero": True, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 26, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.40", "hasZero": True, "recentReports": []},
     },
     {
         "id": "be-paddys-fribourg",
@@ -1191,7 +1172,7 @@ DEMO_VENUES = [
             "snippets": ["ON TAP: Guinness Draught — Pint CHF 9.20"],
         },
         "reviewCheck": {"mentionCount": 175, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 22, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.20", "hasZero": True, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 22, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.20", "hasZero": True, "recentReports": []},
     },
     {
         "id": "lu-shamrock-luzern",
@@ -1218,7 +1199,7 @@ DEMO_VENUES = [
             "snippets": ["ON TAP: Guinness Draught — Pint CHF 9.40"],
         },
         "reviewCheck": {"mentionCount": 210, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 24, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.40", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 24, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.40", "hasZero": False, "recentReports": []},
     },
     {
         "id": "lu-pickwick-zug",
@@ -1245,7 +1226,7 @@ DEMO_VENUES = [
             "snippets": ["DRAUGHT: Guinness Draught — Pint CHF 9.50 | Guinness 0.0 — CHF 8.50"],
         },
         "reviewCheck": {"mentionCount": 225, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 29, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.50", "hasZero": True, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 29, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.50", "hasZero": True, "recentReports": []},
     },
     {
         "id": "lu-rathaus-brauerei",
@@ -1272,7 +1253,7 @@ DEMO_VENUES = [
             "snippets": ["HAUSGEBRAUTE BIERE: Rathaus Naturtrüb & Rathaus Dunkel (No Guinness served — house brewery only)"],
         },
         "reviewCheck": {"mentionCount": 0, "sentiment": "none", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 0, "deniedCount": 5, "servingFormat": "none", "avgPintRating": None, "reportedPrice": None, "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 0, "deniedCount": 5, "servingFormat": "none", "reportedPrice": None, "hasZero": False, "recentReports": []},
     },
     {
         "id": "ea-oslatterys-stgallen",
@@ -1299,7 +1280,7 @@ DEMO_VENUES = [
             "snippets": ["ON TAP: Guinness Draught — Pint CHF 9.00 | Guinness 0.0 — CHF 8.20"],
         },
         "reviewCheck": {"mentionCount": 190, "sentiment": "exceptional", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 23, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.00", "hasZero": True, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 23, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.00", "hasZero": True, "recentReports": []},
     },
     {
         "id": "ea-einstein-stgallen",
@@ -1326,7 +1307,7 @@ DEMO_VENUES = [
             "snippets": ["INTERNATIONAL BEERS: Guinness — CHF 11.50"],
         },
         "reviewCheck": {"mentionCount": 14, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 6, "deniedCount": 0, "servingFormat": "cans_bottles", "avgPintRating": 4.3, "reportedPrice": "CHF 11.50", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 6, "deniedCount": 0, "servingFormat": "cans_bottles", "reportedPrice": "CHF 11.50", "hasZero": False, "recentReports": []},
     },
     {
         "id": "ea-domino-schaffhausen",
@@ -1353,7 +1334,7 @@ DEMO_VENUES = [
             "snippets": ["VOM FASS: Guinness Irish Stout — Pint CHF 8.80"],
         },
         "reviewCheck": {"mentionCount": 82, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 14, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.7, "reportedPrice": "CHF 8.80", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 14, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 8.80", "hasZero": False, "recentReports": []},
     },
     {
         "id": "al-brown-cow-zermatt",
@@ -1384,7 +1365,7 @@ DEMO_VENUES = [
             "sentiment": "exceptional",
             "excerpts": [{"author": "Callum R.", "rating": 5, "date": "3 days ago", "text": "Nothing beats a cold pint of Guinness at the Brown Cow after skiing down from Gornergrat."}],
         },
-        "crowdCheck": {"confirmedCount": 31, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.80", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 31, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.80", "hasZero": False, "recentReports": []},
     },
     {
         "id": "al-barrel-interlaken",
@@ -1411,7 +1392,7 @@ DEMO_VENUES = [
             "snippets": ["ON TAP: Guinness Draught — Pint CHF 9.50"],
         },
         "reviewCheck": {"mentionCount": 160, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 19, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.7, "reportedPrice": "CHF 9.50", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 19, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.50", "hasZero": False, "recentReports": []},
     },
     {
         "id": "al-victoria-jungfrau",
@@ -1438,7 +1419,7 @@ DEMO_VENUES = [
             "snippets": ["BEERS: Guinness Irish Stout — CHF 14.00"],
         },
         "reviewCheck": {"mentionCount": 12, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 6, "deniedCount": 0, "servingFormat": "cans_bottles", "avgPintRating": 4.3, "reportedPrice": "CHF 14.00", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 6, "deniedCount": 0, "servingFormat": "cans_bottles", "reportedPrice": "CHF 14.00", "hasZero": False, "recentReports": []},
     },
     {
         "id": "al-ex-bar-davos",
@@ -1465,7 +1446,7 @@ DEMO_VENUES = [
             "snippets": ["DRAUGHT: Guinness Irish Stout — Pint CHF 9.50"],
         },
         "reviewCheck": {"mentionCount": 115, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 17, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.7, "reportedPrice": "CHF 9.50", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 17, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.50", "hasZero": False, "recentReports": []},
     },
     {
         "id": "al-bobbys-stmoritz",
@@ -1492,7 +1473,7 @@ DEMO_VENUES = [
             "snippets": ["ON TAP: Guinness Draught — Pint CHF 10.50"],
         },
         "reviewCheck": {"mentionCount": 98, "sentiment": "positive", "excerpts": []},
-        "crowdCheck": {"confirmedCount": 15, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.6, "reportedPrice": "CHF 10.50", "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 15, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 10.50", "hasZero": False, "recentReports": []},
     },
     {
         "id": "al-shenanigans-lugano",
@@ -1523,7 +1504,7 @@ DEMO_VENUES = [
             "sentiment": "exceptional",
             "excerpts": [{"author": "Matteo F.", "rating": 5, "date": "5 days ago", "text": "La migliore pinta di Guinness a Lugano e in tutto il Ticino!"}],
         },
-        "crowdCheck": {"confirmedCount": 26, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.8, "reportedPrice": "CHF 9.20", "hasZero": True, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 26, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.20", "hasZero": True, "recentReports": []},
     },
 ]
 
@@ -1643,6 +1624,15 @@ def distance_km(lat1, lng1, lat2, lng2):
         return 0.0
 
 
+def drop_pint_score(venue):
+    """The pint score was removed. Venues saved before that (a community venue in the database, the crawl file) may still
+    carry an average rating; it is never served."""
+    cc = venue.get("crowdCheck") if isinstance(venue, dict) else None
+    if isinstance(cc, dict) and "avgPintRating" in cc:
+        return {**venue, "crowdCheck": {k: val for k, val in cc.items() if k != "avgPintRating"}}
+    return venue
+
+
 def place_community_venue(venue, locations):
     """A community venue re-placed from its address (see /api/relocate-venue) uses the stored position."""
     loc = (locations or {}).get(venue.get("id")) if isinstance(venue, dict) else None
@@ -1682,6 +1672,7 @@ def get_all_combined_venues(store):
     for v in raw_list:
         if not v or not v.get("id"):
             continue
+        v = drop_pint_score(v)
         norm_key = f"{(v.get('name') or '').strip().lower()}::{(v.get('city') or '').strip().lower()}"
         if v["id"] in seen_ids or norm_key in seen_names:
             continue
@@ -1789,7 +1780,12 @@ def compute_guinness_status(venue):
             reason = "Its website says cans or bottles" if menu_found and menu_says_cans else "Visitors report cans or bottles"
         elif known_format == "draught":
             status, label = "confirmed_draught", "Confirmed"
-            reason = "Its website lists Guinness on tap" if menu_found and menu_says_draught else "Visitors report it on tap"
+            if menu_found and menu_says_draught:
+                reason = "Its website lists Guinness on tap"
+            elif menu_found:
+                reason = "Its website mentions Guinness and a visitor reports it on tap"
+            else:
+                reason = "Visitors report it on tap"
         else:
             status, label = "confirmed_draught", "Confirmed"
             reason = (
@@ -1839,20 +1835,14 @@ def enrich_venue(venue, store):
         latest_price = next((r.get("price") for r in saved_reports if r.get("price")), cc.get("reportedPrice"))
         has_zero = any(r.get("hasZero") for r in saved_reports) or bool(cc.get("hasZero"))
 
-        base_count = (cc.get("confirmedCount") or 1) if cc.get("avgPintRating") else 0
-        base_total = base_count * (cc.get("avgPintRating") or 0)
-        rated_new = [float(r["pintRating"]) for r in pos if r.get("pintRating")]
-        total_count = base_count + len(rated_new)
-        avg_rating = round((base_total + sum(rated_new)) / total_count, 1) if total_count > 0 else None
-
         v["crowdCheck"] = {
             "confirmedCount": confirmed,
             "deniedCount": denied,
             "servingFormat": latest_format,
-            "avgPintRating": avg_rating,
             "reportedPrice": latest_price,
             "hasZero": has_zero,
-            "recentReports": (saved_reports + (cc.get("recentReports") or []))[:8],
+            # (stored reports from before the pint score was removed may still carry a rating: it is not served)
+            "recentReports": [{k: val for k, val in r.items() if k != "pintRating"} for r in (saved_reports + (cc.get("recentReports") or []))[:8]],
         }
 
     v["guinnessSummary"] = compute_guinness_status(v)
@@ -2702,7 +2692,6 @@ class GuinnessHandler(SimpleHTTPRequestHandler):
                     "confirmedCount": 1 if s_format != "none" else 0,
                     "deniedCount": 1 if s_format == "none" else 0,
                     "servingFormat": s_format,
-                    "avgPintRating": clean["pintRating"] if s_format != "none" else None,
                     "reportedPrice": clean["price"],
                     "hasZero": False,
                     "recentReports": [],

@@ -796,21 +796,6 @@ export default function App() {
                         )}
                       </div>
 
-                      {venue.crowdCheck?.avgPintRating && (
-                        <span
-                          style={{
-                            fontSize: '0.76rem',
-                            fontWeight: 700,
-                            color: '#f5efe6',
-                            background: 'rgba(200, 164, 93, 0.2)',
-                            padding: '0.12rem 0.45rem',
-                            borderRadius: 6,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          🍺 {venue.crowdCheck.avgPintRating}
-                        </span>
-                      )}
                     </div>
 
                     <h3

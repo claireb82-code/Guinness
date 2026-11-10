@@ -664,13 +664,6 @@
                               ${escapeHtml(summary.statusLabel)}
                             </span>
                           </div>
-                          ${
-                            venue.crowdCheck?.avgPintRating
-                              ? `<span style="font-size:0.76rem;font-weight:700;color:#f5efe6;background:rgba(200,164,93,0.2);padding:0.12rem 0.45rem;border-radius:6px;">🍺 ${escapeHtml(
-                                  venue.crowdCheck.avgPintRating
-                                )}</span>`
-                              : ''
-                          }
                         </div>
                         <h3 class="font-serif-guinness" style="font-size:1rem;color:#f5efe6;margin-bottom:0.2rem;">
                           ${escapeHtml(venue.name)}
@@ -841,7 +834,7 @@
                     ${
                       rep.servingFormat === 'none'
                         ? '❌ No Guinness'
-                        : `${rep.pintRating ? rep.pintRating + ' ★' : ''} ${rep.price ? '· ' + escapeHtml(rep.price) : ''}`
+                        : escapeHtml(rep.price || '')
                     }
                   </span>
                 </div>
@@ -901,13 +894,7 @@
                         )}</p>`
                       : ''
                   }
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;border-top:1px solid #332a21;padding-top:0.7rem;">
-                    <div>
-                      <div style="font-size:0.66rem;color:#9c8e7b;text-transform:uppercase;">Pint Score</div>
-                      <div style="font-size:0.95rem;font-weight:700;color:#f5efe6;margin-top:0.1rem;">
-                        ${crowdCheck.avgPintRating ? escapeHtml(crowdCheck.avgPintRating) + ' / 5.0 🍺' : 'Unrated'}
-                      </div>
-                    </div>
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.5rem;border-top:1px solid #332a21;padding-top:0.7rem;">
                     <div>
                       <div style="font-size:0.66rem;color:#9c8e7b;text-transform:uppercase;">Pint Price</div>
                       <div style="font-size:0.95rem;font-weight:700;color:#e2be75;margin-top:0.1rem;">
@@ -1017,20 +1004,12 @@
                       ? `
                     <form id="form-crowd-report" style="background:#120f0c;border:1px solid #c8a45d;border-radius:0.6rem;padding:0.8rem;display:flex;flex-direction:column;gap:0.6rem;margin-bottom:0.75rem;">
                       <div style="font-size:0.8rem;font-weight:700;color:#e2be75;">Submit Your Guinness Inspection</div>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                      <div style="display:grid;grid-template-columns:1fr;gap:0.5rem;">
                         <select id="rep-format" class="stout-select" required>
                           <option value="" disabled selected>What did you see? *</option>
                           <option value="draught">🍺 On Draught (Tap)</option>
                           <option value="cans_bottles">🥫 Cans / Bottles Only</option>
                           <option value="none">❌ No Guinness Served</option>
-                        </select>
-                        <select id="rep-rating" class="stout-select">
-                          <option value="">No rating</option>
-                          <option value="5.0">5.0 — Creamiest Dream Pint</option>
-                          <option value="4.8">4.8 — Exceptional Pour</option>
-                          <option value="4.5">4.5 — Very Solid Pint</option>
-                          <option value="4.0">4.0 — Good Standard Pour</option>
-                          <option value="3.5">3.5 — Average</option>
                         </select>
                       </div>
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
@@ -1096,7 +1075,6 @@
               venue: selectedVenue,
               user: document.getElementById('rep-user')?.value || 'Swiss Guinness Scout',
               servingFormat: document.getElementById('rep-format')?.value || '',
-              pintRating: document.getElementById('rep-rating')?.value ? Number(document.getElementById('rep-rating').value) : null,
               price: document.getElementById('rep-price')?.value || '',
               hasZero: Boolean(document.getElementById('rep-zero')?.checked),
               note: document.getElementById('rep-note')?.value || '',
@@ -1362,7 +1340,6 @@
                 website: document.getElementById('add-web')?.value || '',
                 servingFormat: document.getElementById('add-format')?.value || '',
                 price: document.getElementById('add-price')?.value || '',
-                pintRating: null,
                 note: document.getElementById('add-note')?.value || '',
               };
               const res = await fetch('/api/add-venue', {

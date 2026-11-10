@@ -23,7 +23,7 @@ def crawl_record(**kw):
         "menuCheck": {"checked": True, "lastChecked": "2026-11-06", "foundOnMenu": False, "typesFound": ["Guinness Draught (Irish Pub / Stout Venue)"],
                       "extractedPrice": None, "snippets": ["Verified Irish pub / stout venue in Zürich (Paddy's)."]},
         "reviewCheck": {"mentionCount": 4, "sentiment": "positive", "excerpts": [{"author": "Swiss Nationwide Crawler", "rating": 5, "date": "x", "text": "x"}]},
-        "crowdCheck": {"confirmedCount": 2, "deniedCount": 0, "servingFormat": "draught", "avgPintRating": 4.5, "reportedPrice": None, "hasZero": False, "recentReports": []},
+        "crowdCheck": {"confirmedCount": 2, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": None, "hasZero": False, "recentReports": []},
     }
     base.update(kw)
     return base
@@ -140,7 +140,8 @@ class BundledDataTests(unittest.TestCase):
         for v in self.venues:
             with self.subTest(venue=v["name"]):
                 c = v["crowdCheck"]
-                self.assertEqual((c["confirmedCount"], c["deniedCount"], c["avgPintRating"], c["reportedPrice"]), (0, 0, None, None))
+                self.assertEqual((c["confirmedCount"], c["deniedCount"], c["reportedPrice"]), (0, 0, None))
+                self.assertNotIn("avgPintRating", c)
                 self.assertEqual((v["googleRating"], v["googleReviewCount"]), (None, 0))
 
     def test_regression_found_on_menu_only_when_the_website_text_says_guinness(self):
