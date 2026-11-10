@@ -102,3 +102,18 @@ class NoSecondServerTests(unittest.TestCase):
         self.assertEqual(set(deps) & {"express", "cors", "cheerio", "dotenv"}, set())
         scripts = json.load(open(os.path.join(ROOT, "package.json"), encoding="utf-8"))["scripts"]
         self.assertEqual(scripts["start"], "python3 app_server.py")
+
+
+class NoPintScoreTests(unittest.TestCase):
+    def test_the_pint_score_is_gone_from_the_code(self):
+        """The 1-5 pint score was removed. app_server.py keeps one defensive mention (it strips old data)."""
+        allowed = {"app_server.py": 3}  # drop_pint_score() (2) and the recentReports filter (1)
+        offenders = {}
+        for base in ("app_server.py", "guard.py", "evidence.py", "src", "public", "scripts"):
+            path = os.path.join(ROOT, base)
+            files = [path] if os.path.isfile(path) else [os.path.join(d, f) for d, _s, fs in os.walk(path) for f in fs if f.endswith((".py", ".js", ".jsx", ".html"))]
+            for f in files:
+                n = len(re.findall(r"pintRating|avgPintRating|Pint Score|rep-rating", open(f, encoding="utf-8").read()))
+                if n > allowed.get(os.path.relpath(f, ROOT), 0):
+                    offenders[os.path.relpath(f, ROOT)] = n
+        self.assertEqual(offenders, {})

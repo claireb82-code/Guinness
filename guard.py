@@ -390,13 +390,10 @@ def validate_crowd_report(data):
     venue_id = clean_venue_id(data.get("venueId"))
     note = clean_text(data.get("note"), "note", 500)
     fmt = clean_serving_format(data.get("servingFormat"))
-    # A rating is optional: without one there is simply no rating (it used to default to 5.0).
-    rating = None if fmt == "none" else clean_number(data.get("pintRating"), "pintRating", 1.0, 5.0, None)
     return {
         "venueId": venue_id,
         "user": clean_text(data.get("user"), "user", 40) or "Swiss Guinness Scout",
         "servingFormat": fmt,
-        "pintRating": rating,
         "price": clean_price(data.get("price")),
         "hasZero": data.get("hasZero") is True,
         "note": note,
@@ -424,7 +421,6 @@ def validate_new_venue(data, city_ids):
         "lng": lng,
         "website": clean_website(data.get("website")),
         "servingFormat": fmt,
-        "pintRating": None if fmt == "none" else clean_number(data.get("pintRating"), "pintRating", 1.0, 5.0, None),
         "price": clean_price(data.get("price")),
         "note": clean_text(data.get("note"), "note", 500),
     }

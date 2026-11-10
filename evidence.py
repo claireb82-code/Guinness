@@ -82,7 +82,6 @@ def no_crowd():
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": None,
         "reportedPrice": None,
         "hasZero": False,
         "recentReports": [],

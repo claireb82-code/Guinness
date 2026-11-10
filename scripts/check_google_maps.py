@@ -430,7 +430,6 @@ def convert_google_place_to_venue(p, scrape_menus=True):
             "confirmedCount": 2 if menu_check.get("foundOnMenu") else (1 if mentions > 0 else 0),
             "deniedCount": 0,
             "servingFormat": "draught" if found_any else "unknown",
-            "avgPintRating": 4.6 if found_any else None,
             "reportedPrice": menu_check.get("extractedPrice"),
             "hasZero": any("0.0" in t for t in (menu_check.get("typesFound") or [])),
             "recentReports": [],

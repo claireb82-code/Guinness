@@ -23,7 +23,6 @@ export function AddVenueModal({
   const [website, setWebsite] = useState('');
   const [servingFormat, setServingFormat] = useState(''); // nothing is assumed: the visitor says whether it is served
   const [price, setPrice] = useState('');
-  const [pintRating, setPintRating] = useState(''); // optional: no rating unless the visitor gives one
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   // Where the position came from. Only a click on the map, a successful address lookup or typed coordinates count as
@@ -126,7 +125,6 @@ export function AddVenueModal({
         website,
         servingFormat,
         price,
-        pintRating: pintRating === '' ? null : Number(pintRating),
         note,
       });
       setName('');
@@ -134,7 +132,6 @@ export function AddVenueModal({
       setWebsite('');
       setNote('');
       setServingFormat('');
-      setPintRating('');
       onClose();
     } finally {
       setSubmitting(false);
@@ -337,7 +334,7 @@ export function AddVenueModal({
             />
           </div>
 
-          <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.55rem' }}>
+          <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.55rem' }}>
             <div>
               <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
                 Do they serve Guinness? *
@@ -355,25 +352,6 @@ export function AddVenueModal({
                 <option value="draught">Yes, on tap</option>
                 <option value="cans_bottles">Yes, cans / bottles only</option>
                 <option value="none">No</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-                Rating (optional)
-              </label>
-              <select
-                className="stout-select"
-                style={{ width: '100%' }}
-                value={pintRating}
-                onChange={(e) => setPintRating(e.target.value)}
-                disabled={servingFormat === 'none'}
-              >
-                <option value="">No rating</option>
-                <option value="5.0">5.0 ★</option>
-                <option value="4.8">4.8 ★</option>
-                <option value="4.5">4.5 ★</option>
-                <option value="4.0">4.0 ★</option>
-                <option value="3.5">3.5 ★</option>
               </select>
             </div>
             <div>

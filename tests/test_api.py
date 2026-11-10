@@ -160,7 +160,7 @@ class RequestHardeningTests(ApiTestCase):
 
 class CrowdReportTests(ApiTestCase):
     def test_valid_report_is_stored_and_reflected(self):
-        status, data, _ = self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught", "pintRating": "4.5", "price": "9.5", "note": " creamy ", "user": "Aoife"})
+        status, data, _ = self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught", "price": "9.5", "note": " creamy ", "user": "Aoife"})
         self.assertEqual(status, 200)
         self.assertEqual(data["report"]["price"], "CHF 9.50")
         self.assertEqual(data["report"]["note"], "creamy")
@@ -170,7 +170,6 @@ class CrowdReportTests(ApiTestCase):
     def test_invalid_reports_are_rejected_with_a_readable_reason(self):
         for body, needle in [
             ({"venueId": "../etc"}, "venueId"),
-            ({"venueId": "v", "servingFormat": "draught", "pintRating": 11}, "pintRating"),
             ({"venueId": "v", "note": "x" * 501}, "note"),
             ({"venueId": "v", "servingFormat": "keg"}, "servingFormat"),
         ]:
@@ -210,9 +209,13 @@ class AddVenueTests(ApiTestCase):
         self.assertIn("servingFormat", data["error"])
         self.assertEqual(self.backend.load()["customVenues"], [])
 
-    def test_a_rating_is_optional_and_absent_means_none(self):
-        v = self.post("/api/add-venue", self.OK)[1]["venue"]  # (OK has no pintRating)
-        self.assertIsNone(v["crowdCheck"]["avgPintRating"])
+    def test_regression_there_is_no_pint_score(self):
+        """A venue (or report) never carries a rating, even if the client still sends one."""
+        v = self.post("/api/add-venue", {**self.OK, "pintRating": 5})[1]["venue"]
+        self.assertNotIn("avgPintRating", v["crowdCheck"])
+        self.assertNotIn("pintRating", json.dumps(self.backend.load()["customVenues"]))
+        report = self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught", "pintRating": 5})[1]["report"]
+        self.assertNotIn("pintRating", report)
 
     def test_valid_venue(self):
         status, data, _ = self.post("/api/add-venue", self.OK)
@@ -420,7 +423,7 @@ class RedisIntegrationTests(unittest.TestCase):
             return case
 
         a, b = instance(), instance()
-        status, data, _ = a.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught", "pintRating": 4.5, "note": "from A"})
+        status, data, _ = a.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught", "note": "from A"})
         self.assertEqual(status, 200)
         status, data, _ = b.post("/api/add-venue", {"name": "From B", "lat": 47.37, "lng": 8.54, "servingFormat": "draught"})
         self.assertEqual(status, 200)

@@ -51,7 +51,6 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
   // Crowdsource Form State
   const [userName, setUserName] = useState('');
   const [servingFormat, setServingFormat] = useState(''); // nothing is assumed: the visitor says what they saw
-  const [pintRating, setPintRating] = useState(''); // optional
   const [price, setPrice] = useState('');
   const [hasZero, setHasZero] = useState(false);
   const [note, setNote] = useState('');
@@ -89,14 +88,12 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
         venueId: venue.id,
         user: userName || 'Guinness Scout',
         servingFormat,
-        pintRating: servingFormat === 'none' || pintRating === '' ? null : Number(pintRating),
         price,
         hasZero,
         note,
       });
       setNote('');
       setServingFormat('');
-      setPintRating('');
       setShowReportForm(false);
     } finally {
       setSubmitting(false);
@@ -258,18 +255,12 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '0.5rem',
               borderTop: '1px solid #332a21',
               paddingTop: '0.7rem',
             }}
           >
-            <div>
-              <div style={{ fontSize: '0.66rem', color: '#9c8e7b', textTransform: 'uppercase' }}>Pint Score</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f5efe6', marginTop: '0.1rem' }}>
-                {crowdCheck.avgPintRating ? `${crowdCheck.avgPintRating} / 5.0 🍺` : 'Unrated'}
-              </div>
-            </div>
             <div>
               <div style={{ fontSize: '0.66rem', color: '#9c8e7b', textTransform: 'uppercase' }}>Pint Price</div>
               <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#e2be75', marginTop: '0.1rem' }}>
@@ -481,7 +472,7 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
           )}
         </div>
 
-        {/* PILLAR 3: CROWDSOURCED PINT QUALITY & AVAILABILITY */}
+        {/* PILLAR 3: CROWDSOURCED AVAILABILITY */}
         <div
           style={{
             background: '#1b1612',
@@ -528,7 +519,7 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
                 Submit Your Guinness Inspection
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
                 <div>
                   <label style={{ fontSize: '0.7rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
                     What did you see? *
@@ -548,28 +539,6 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
                     <option value="none">❌ No Guinness Served</option>
                   </select>
                 </div>
-
-                {servingFormat !== 'none' && (
-                  <div>
-                    <label style={{ fontSize: '0.7rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-                      Pint quality (optional)
-                    </label>
-                    <select
-                      className="stout-select"
-                      style={{ width: '100%' }}
-                      value={pintRating}
-                      onChange={(e) => setPintRating(e.target.value)}
-                    >
-                      <option value="">No rating</option>
-                      <option value="5.0">5.0 — Creamiest Dream Pint</option>
-                      <option value="4.8">4.8 — Exceptional Pour</option>
-                      <option value="4.5">4.5 — Very Solid Pint</option>
-                      <option value="4.0">4.0 — Good Standard Pour</option>
-                      <option value="3.5">3.5 — Average / Acceptable</option>
-                      <option value="2.5">2.5 — Poor Pour / Warm</option>
-                    </select>
-                  </div>
-                )}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
@@ -639,9 +608,7 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
                     <span style={{ color: '#c8a45d', fontWeight: 600 }}>
                       {rep.servingFormat === 'none'
                         ? '❌ No Guinness'
-                        : `${rep.pintRating ? `${rep.pintRating} ★` : ''} ${
-                            rep.price ? `· ${rep.price}` : ''
-                          }`}
+                        : rep.price || ''}
                     </span>
                   </div>
                   {rep.note && <p style={{ color: '#d7cbb8', lineHeight: 1.35 }}>{rep.note}</p>}

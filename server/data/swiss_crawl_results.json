@@ -109,7 +109,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -154,7 +153,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -199,7 +197,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -242,7 +239,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -292,7 +288,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -333,7 +328,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -382,7 +376,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -425,7 +418,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -464,7 +456,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -512,7 +503,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -555,7 +545,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -598,7 +587,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -637,7 +625,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -680,7 +667,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -729,7 +715,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -772,7 +757,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -815,7 +799,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -854,7 +837,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -902,7 +884,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -948,7 +929,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -987,7 +967,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1034,7 +1013,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1073,7 +1051,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1116,7 +1093,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1163,7 +1139,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1206,7 +1181,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1247,7 +1221,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1290,7 +1263,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1333,7 +1305,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1383,7 +1354,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1424,7 +1394,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1467,7 +1436,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1514,7 +1482,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1553,7 +1520,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1600,7 +1566,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1639,7 +1604,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1686,7 +1650,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1732,7 +1695,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1771,7 +1733,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1814,7 +1775,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1857,7 +1817,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1900,7 +1859,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1943,7 +1901,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -1992,7 +1949,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2033,7 +1989,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2076,7 +2031,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2124,7 +2078,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2170,7 +2123,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2213,7 +2165,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2252,7 +2203,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2295,7 +2245,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2343,7 +2292,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2389,7 +2337,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2428,7 +2375,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2471,7 +2417,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2518,7 +2463,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2557,7 +2501,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2600,7 +2543,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2643,7 +2585,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2688,7 +2629,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2731,7 +2671,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2774,7 +2713,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2817,7 +2755,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2860,7 +2797,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2908,7 +2844,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2947,7 +2882,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -2990,7 +2924,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3033,7 +2966,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3076,7 +3008,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3123,7 +3054,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3162,7 +3092,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3205,7 +3134,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3248,7 +3176,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3295,7 +3222,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3336,7 +3262,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3377,7 +3302,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3418,7 +3342,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3459,7 +3382,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3500,7 +3422,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3541,7 +3462,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3582,7 +3502,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3623,7 +3542,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3664,7 +3582,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3705,7 +3622,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3746,7 +3662,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3787,7 +3702,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3828,7 +3742,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3869,7 +3782,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3910,7 +3822,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3951,7 +3862,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -3992,7 +3902,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4033,7 +3942,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4074,7 +3982,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4115,7 +4022,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4156,7 +4062,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4197,7 +4102,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4238,7 +4142,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4279,7 +4182,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4320,7 +4222,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4361,7 +4262,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4402,7 +4302,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4443,7 +4342,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4484,7 +4382,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4525,7 +4422,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4566,7 +4462,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4607,7 +4502,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4648,7 +4542,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4689,7 +4582,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4730,7 +4622,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4771,7 +4662,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4812,7 +4702,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4853,7 +4742,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4894,7 +4782,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4935,7 +4822,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -4976,7 +4862,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5017,7 +4902,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5058,7 +4942,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5099,7 +4982,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5140,7 +5022,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5181,7 +5062,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5222,7 +5102,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5263,7 +5142,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5304,7 +5182,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5345,7 +5222,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5386,7 +5262,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5427,7 +5302,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5468,7 +5342,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5509,7 +5382,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5550,7 +5422,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5591,7 +5462,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5632,7 +5502,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5673,7 +5542,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5714,7 +5582,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5755,7 +5622,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5796,7 +5662,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5837,7 +5702,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5878,7 +5742,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5919,7 +5782,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -5960,7 +5822,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6001,7 +5862,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6042,7 +5902,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6083,7 +5942,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6124,7 +5982,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6165,7 +6022,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6206,7 +6062,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6247,7 +6102,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6288,7 +6142,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6329,7 +6182,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6370,7 +6222,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6411,7 +6262,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6452,7 +6302,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6493,7 +6342,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6534,7 +6382,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6575,7 +6422,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6616,7 +6462,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6657,7 +6502,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6698,7 +6542,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6739,7 +6582,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6780,7 +6622,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6821,7 +6662,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6862,7 +6702,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6903,7 +6742,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6944,7 +6782,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -6985,7 +6822,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7026,7 +6862,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7067,7 +6902,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7108,7 +6942,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7149,7 +6982,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7190,7 +7022,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7231,7 +7062,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7272,7 +7102,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7313,7 +7142,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7354,7 +7182,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7395,7 +7222,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7436,7 +7262,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7477,7 +7302,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7518,7 +7342,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7559,7 +7382,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7600,7 +7422,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7641,7 +7462,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7682,7 +7502,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7723,7 +7542,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7764,7 +7582,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7805,7 +7622,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7846,7 +7662,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7887,7 +7702,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7928,7 +7742,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -7969,7 +7782,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -8010,7 +7822,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -8051,7 +7862,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -8092,7 +7902,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -8133,7 +7942,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
@@ -8174,7 +7982,6 @@
         "confirmedCount": 0,
         "deniedCount": 0,
         "servingFormat": "unknown",
-        "avgPintRating": null,
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []

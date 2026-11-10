@@ -173,7 +173,7 @@ test('regression: how it is served is never assumed: the form will not submit un
   await fillForm(page, { name: 'Undecided Pub', address: ADDRESS, serves: false });
   const chosen = await page.locator('.modal-card select:has(option:text("Yes, on tap"))').inputValue();
   assert.equal(chosen, '', 'nothing is pre-selected');
-  assert.equal(await page.locator('.modal-card select:has(option:text("No rating"))').inputValue(), '', 'and no rating is pre-filled');
+  assert.equal(await page.locator('.modal-card select:has(option:text("No rating"))').count(), 0, 'and there is no rating to fill in');
   await page.locator('button:has-text("Add venue")').click();
   await page.waitForTimeout(500);
   assert.equal(await page.locator('.modal-card').count(), 1, 'the form stays open');
@@ -181,13 +181,13 @@ test('regression: how it is served is never assumed: the form will not submit un
   await context.close();
 });
 
-test('a venue added without a rating has no rating (none is invented)', { skip: skip() }, async () => {
+test('a venue added through the form has no pint score', { skip: skip() }, async () => {
   const { page, context } = await openReact();
   await fillForm(page, { name: 'Unrated Pub', address: ADDRESS });
   await page.locator('button:has-text("Add venue")').click();
   await page.waitForSelector('.modal-card', { state: 'detached', timeout: 10000 });
   const [venue] = await venuesByName('Unrated Pub');
-  assert.equal(venue.crowdCheck.avgPintRating, null);
+  assert.equal('avgPintRating' in venue.crowdCheck, false, 'there is no pint score');
   assert.equal(venue.googleRating, null);
   await context.close();
 });

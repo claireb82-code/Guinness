@@ -34,6 +34,15 @@ class ComputeGuinnessStatusTests(unittest.TestCase):
         self.assertEqual((r["statusLabel"], r["reason"]), ("Confirmed", "Its website mentions Guinness"))  # "on tap" only when the page says so
         self.assertGreaterEqual(r["confidence"], 78)
 
+    def test_regression_the_reason_names_both_the_website_and_the_visitor(self):
+        """The Green Wildman: its website mentions Guinness (no serving wording) and a visitor said draught. The reason said
+        only 'Visitors report it on tap', hiding the website evidence."""
+        r = self.status(menuCheck={"checked": True, "foundOnMenu": True, "snippets": ["We pour Guinness"]},
+                        crowdCheck={"confirmedCount": 1, "servingFormat": "draught"})
+        self.assertEqual((r["statusLabel"], r["reason"]), ("Confirmed", "Its website mentions Guinness and a visitor reports it on tap"))
+        r = self.status(crowdCheck={"confirmedCount": 2, "servingFormat": "draught"})
+        self.assertEqual(r["reason"], "Visitors report it on tap")
+
     def test_menu_wording_decides_whether_it_is_on_tap(self):
         r = self.status(menuCheck={"foundOnMenu": True, "snippets": ["Guinness vom Fass 5dl CHF 9.80"]})
         self.assertEqual((r["servingFormat"], r["statusLabel"], r["reason"]), ("draught", "Confirmed", "Its website lists Guinness on tap"))
@@ -130,18 +139,25 @@ class EnrichVenueTests(unittest.TestCase):
 
     def test_community_reports_are_merged(self):
         reports = [
-            {"servingFormat": "draught", "pintRating": 4.0, "price": "CHF 9.50", "hasZero": True},
-            {"servingFormat": "draught", "pintRating": 5.0, "price": "CHF 8.00"},
-            {"servingFormat": "none", "pintRating": None},
+            {"servingFormat": "draught", "pintRating": 4.0, "price": "CHF 9.50", "hasZero": True},  # (an old report: it still carries a rating)
+            {"servingFormat": "draught", "price": "CHF 8.00"},
+            {"servingFormat": "none"},
         ]
-        v = venue(crowdCheck={"confirmedCount": 1, "deniedCount": 0, "avgPintRating": 4.0, "reportedPrice": "CHF 7.00"})
+        v = venue(crowdCheck={"confirmedCount": 1, "deniedCount": 0, "reportedPrice": "CHF 7.00"})
         cc = app.enrich_venue(v, {"menuScans": {}, "crowdReports": {"v1": reports}})["crowdCheck"]
         self.assertEqual((cc["confirmedCount"], cc["deniedCount"]), (3, 1))
         self.assertEqual(cc["servingFormat"], "draught")  # the newest report
         self.assertEqual(cc["reportedPrice"], "CHF 9.50")  # newest report that has a price
         self.assertTrue(cc["hasZero"])
-        self.assertEqual(cc["avgPintRating"], 4.3)  # (1*4.0 base + 4.0 + 5.0) / 3
         self.assertEqual(len(cc["recentReports"]), 3)
+
+    def test_regression_the_pint_score_is_gone_from_what_is_served(self):
+        """The rating was removed: no average, and an old report's rating is not passed on."""
+        reports = [{"servingFormat": "draught", "pintRating": 4.0, "price": "CHF 9.50"}]
+        cc = app.enrich_venue(venue(), {"menuScans": {}, "crowdReports": {"v1": reports}})["crowdCheck"]
+        self.assertNotIn("avgPintRating", cc)
+        self.assertNotIn("pintRating", cc["recentReports"][0])
+        self.assertNotIn("avgPintRating", app.enrich_venue(venue(), NO_STORE)["crowdCheck"] if venue().get("crowdCheck") else {})
 
     def test_recent_reports_are_limited_to_eight(self):
         reports = [{"servingFormat": "draught", "id": i} for i in range(20)]
@@ -182,6 +198,14 @@ class CombinedVenuesTests(unittest.TestCase):
         store = {"customVenues": [{"id": "c1", "name": "Pub", "city": "zurich", "address": "A"}], "googleMapsVenues": [{"id": "g1", "name": "pub ", "city": "Zurich"}]}
         out = self.combine(store, [{"id": "d1", "name": "Other", "city": "geneva"}, {"id": "c1", "name": "Dup id", "city": "bern"}], [{"id": "k1", "name": "Pub", "city": "basel"}])
         self.assertEqual([v["id"] for v in out], ["c1", "d1", "k1"])  # same name in another city is a different venue
+
+    def test_regression_a_saved_venue_with_the_old_pint_score_is_served_without_it(self):
+        """The Green Wildman was added when the form pre-filled 4.8; the rating is gone from what is served."""
+        saved = {"id": "custom-1", "name": "Old Pub", "city": "zurich", "crowdCheck": {"confirmedCount": 1, "avgPintRating": 4.8, "servingFormat": "draught"}}
+        out = {v["id"]: v for v in app.get_all_combined_venues({"customVenues": [saved]})}["custom-1"]
+        self.assertNotIn("avgPintRating", out["crowdCheck"])
+        self.assertEqual(out["crowdCheck"]["confirmedCount"], 1)
+        self.assertIn("avgPintRating", saved["crowdCheck"], "the stored record itself is not modified")
 
     def test_skips_entries_without_an_id_and_adds_a_maps_link(self):
         out = self.combine({}, [{"name": "No id"}, None, {"id": "x", "name": "A B", "address": "Bahnhofstrasse 1"}], [])
