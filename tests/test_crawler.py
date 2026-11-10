@@ -1,0 +1,234 @@
+"""The website crawler (scripts/crawl_switzerland.py): safe fetching, robots.txt, which sites it reads, Overture websites,
+the restaurant/hotel "mention" tier and the check that stops a bad crawl from being published."""
+
+import importlib.util
+import json
+import os
+import tempfile
+import unittest
+from unittest import mock
+
+import evidence
+import guard
+import overture
+import app_server as app
+from tests.helpers import page_server, stop, QuietHandler, serve
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def load_script(name):
+    spec = importlib.util.spec_from_file_location(name, os.path.join(ROOT, "scripts", f"{name}.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+crawler = load_script("crawl_switzerland")
+checker = load_script("check_crawl_result")
+
+REAL_FETCH = guard.fetch_page
+
+
+def local_fetch(url, **kw):
+    """The crawler fetches through guard.fetch_page, which refuses loopback; let it reach the test's local servers."""
+    return REAL_FETCH(url, allow_private=True, **kw)
+
+
+class FetchTests(unittest.TestCase):
+    def setUp(self):
+        crawler._robots_cache.clear()
+
+    def site(self, routes):
+        server, base = page_server(routes)
+        self.addCleanup(stop, server)
+        patch = mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch)
+        patch.start()
+        self.addCleanup(patch.stop)
+        return base
+
+    def test_regression_it_never_fetches_internal_addresses(self):
+        """Website addresses come from OpenStreetMap tags anyone can edit: never fetch loopback or cloud-metadata hosts."""
+        for url in ("http://127.0.0.1:9/", "http://localhost/", "http://169.254.169.254/latest/meta-data/", "http://10.0.0.5/"):
+            with self.subTest(url=url):
+                status, reason = crawler.fetch_html(url)
+                self.assertIsNone(status)
+                self.assertRegex(reason, r"unsafe|not allowed|public|refus", msg=reason)
+
+    def test_reads_a_page_and_respects_robots_txt(self):
+        base = self.site({
+            "/robots.txt": (200, {"Content-Type": "text/plain"}, b"User-agent: *\nDisallow: /private\n"),
+            "/": (200, {}, b"<html>" + b"x" * 60 + b" Guinness on tap 9.50 CHF</html>"),
+            "/private": (200, {}, b"<html>" + b"y" * 60 + b"</html>"),
+        })
+        self.assertEqual(crawler.fetch_html(base + "/")[0], 200)
+        status, reason = crawler.fetch_html(base + "/private")
+        self.assertEqual((status, reason), (None, "disallowed by robots.txt"))
+
+    def test_a_site_that_bans_this_crawler_is_left_alone(self):
+        base = self.site({"/robots.txt": (200, {}, b"User-agent: GuinnessGuide\nDisallow: /\n"), "/": (200, {}, b"<html>" + b"x" * 60 + b"</html>")})
+        self.assertEqual(crawler.fetch_html(base + "/"), (None, "disallowed by robots.txt"))
+
+    def test_a_missing_robots_txt_allows_everything_and_is_asked_once_per_host(self):
+        hits = []
+        server, base = page_server({"/": (200, {}, b"<html>" + b"x" * 60 + b"</html>"), "/a": (200, {}, b"<html>" + b"x" * 60 + b"</html>")}, hits)
+        self.addCleanup(stop, server)
+        with mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch):
+            crawler.fetch_html(base + "/")
+            crawler.fetch_html(base + "/a")
+        self.assertEqual(hits.count("/robots.txt"), 1)
+
+    def test_scan_finds_guinness_follows_a_menu_link_and_skips_social_media(self):
+        base = self.site({
+            "/": (200, {}, b"<html><body><p>Welcome to our pub. " + b"w" * 40 + b'</p><a href="/drinks">Drinks</a></body></html>'),
+            "/drinks": (200, {}, b"<html><body>Draught: Guinness 5dl CHF 9.80, Kilkenny 8.00</body></html>"),
+        })
+        res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertTrue(res["foundOnMenu"])
+        self.assertTrue(res["checkedUrl"].endswith("/drinks"))
+        self.assertIn("Guinness", " ".join(res["snippets"]))
+        social = crawler.scan_venue_website({"website": "https://www.facebook.com/somepub"})
+        self.assertEqual((social["reachable"], social["foundOnMenu"]), (False, False))
+        self.assertFalse(crawler.scan_venue_website({"website": base + "/nope"})["reachable"])
+        self.assertFalse(crawler.scan_venue_website({})["scanned"])
+
+
+class SelectionTests(unittest.TestCase):
+    URLS = [f"u{i}" for i in range(10)]
+
+    def test_default_is_every_pub_and_bar_plus_400(self):
+        self.assertEqual(crawler.select_target_urls(self.URLS, 3), self.URLS)  # (only 10 exist: 3 + 400 covers them)
+        many = [f"u{i}" for i in range(1000)]
+        self.assertEqual(len(crawler.select_target_urls(many, 100)), 500)
+
+    def test_all_reads_every_site_and_max_urls_caps_it(self):
+        many = [f"u{i}" for i in range(1000)]
+        self.assertEqual(len(crawler.select_target_urls(many, 100, scan_all=True)), 1000)
+        self.assertEqual(crawler.select_target_urls(many, 100, scan_all=True, max_urls=7), many[:7])
+
+    def test_command_line(self):
+        a = crawler.parse_args(["--all", "--no-overture", "--max-urls", "50"])
+        self.assertEqual((a.all, a.no_overture, a.max_urls), (True, True, 50))
+        d = crawler.parse_args([])
+        self.assertEqual((d.all, d.no_overture, d.max_urls), (False, False, None))
+
+
+class OvertureFillTests(unittest.TestCase):
+    def index(self):
+        return overture.Index([
+            {"name": "The Old Stand", "lat": 47.3700, "lng": 8.5400, "website": "https://oldstand.example/"},
+            {"name": "Pizza Roma", "lat": 47.3800, "lng": 8.5500, "website": "pizza.example"},
+            {"name": "Evil", "lat": 47.3900, "lng": 8.5600, "website": "http://127.0.0.1/admin"},
+        ])
+
+    def venues(self):
+        mk = lambda name, cat, lat, lng, web=None: {"name": name, "category": cat, "lat": lat, "lng": lng, "website": web, "is_pub_or_candidate": cat == "pub"}
+        return [mk("Old Stand", "pub", 47.3701, 8.5401), mk("Pizza Roma", "restaurant", 47.3801, 8.5501), mk("Evil", "pub", 47.3901, 8.5601), mk("Has Site", "pub", 47.37, 8.54, "https://x.example")]
+
+    def test_pubs_get_their_overture_website_and_restaurants_only_with_all(self):
+        vs = self.venues()
+        self.assertEqual(crawler.fill_websites_from_overture(vs, index=self.index()), 1)
+        self.assertEqual((vs[0]["website"], vs[0]["website_source"]), ("https://oldstand.example/", "overture"))
+        self.assertIsNone(vs[1]["website"])
+        vs = self.venues()
+        self.assertEqual(crawler.fill_websites_from_overture(vs, index=self.index(), all_categories=True), 2)
+        self.assertEqual(vs[1]["website"], crawler.safe_website("pizza.example"))
+
+    def test_an_unsafe_overture_website_is_never_used_and_an_existing_one_is_kept(self):
+        vs = self.venues()
+        crawler.fill_websites_from_overture(vs, index=self.index(), all_categories=True)
+        self.assertIsNone(vs[2]["website"])
+        self.assertEqual(vs[3]["website"], "https://x.example")
+
+
+class MentionTierTests(unittest.TestCase):
+    """Once restaurants and hotels are read, a recipe must not become a "Confirmed" venue."""
+
+    def test_pubs_and_bars_that_name_guinness_count_as_serving_it(self):
+        self.assertEqual(evidence.website_mention_kind("pub", ["Gallus Pub: Geniesst frisches Guinness"]), "menu")
+        self.assertEqual(evidence.website_mention_kind("bar", ["we love Guinness"]), "menu")
+
+    def test_restaurants_and_hotels_need_serving_wording_or_a_price(self):
+        self.assertEqual(evidence.website_mention_kind("restaurant", ["Beef stew braised in Guinness, with carrots"]), "mention")
+        self.assertEqual(evidence.website_mention_kind("hotel", ["St Patrick's night: Guinness and live music"]), "mention")
+        self.assertEqual(evidence.website_mention_kind("restaurant", ["Guinness vom Fass 5dl CHF 9.80"]), "menu")
+        self.assertEqual(evidence.website_mention_kind("hotel", ["Hardy's: Guinness im Offenausschank"]), "menu")
+        self.assertEqual(evidence.website_mention_kind("restaurant", ["Guinness 0.0 alkoholfrei"]), "menu")
+
+    def test_text_from_page_metadata_never_counts_as_a_menu(self):
+        self.assertEqual(evidence.website_mention_kind("pub", ['<meta name="keywords" content="Goldau,Guinness,Kilkenny"']), "mention")
+
+    def crawl_record(self, category, snippets):
+        return {"id": "ch-node-9", "name": "X", "category": category, "address": "Switzerland", "lat": 47.3, "lng": 8.5, "website": "http://x.example",
+                "menuCheck": {"checked": True, "foundOnMenu": True, "typesFound": ["Guinness (Listed on Website Menu)"], "extractedPrice": None, "snippets": snippets}}
+
+    def test_a_restaurant_recipe_becomes_a_possible_hint_not_a_confirmation(self):
+        v = evidence.sanitise_static_venue(self.crawl_record("restaurant", ["our stew braised in Guinness"]))
+        self.assertEqual(v["tagCheck"]["kind"], evidence.TAG_WEB)
+        self.assertFalse(v["menuCheck"]["foundOnMenu"])
+        summary = app.compute_guinness_status(v)
+        self.assertEqual((summary["status"], summary["statusLabel"]), ("likely_serves", "Possible"))
+        self.assertEqual(summary["reason"], "Its website mentions Guinness (not clearly on a menu)")
+        # and it stays that way when loaded again
+        self.assertEqual(evidence.sanitise_static_venue(v), v)
+
+    def test_a_pub_that_names_guinness_stays_confirmed(self):
+        v = evidence.sanitise_static_venue(self.crawl_record("pub", ["Getränke: frisches Guinness, Kilkenny"]))
+        self.assertNotIn("tagCheck", v)
+        self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed")
+
+
+class CheckCrawlResultTests(unittest.TestCase):
+    def write(self, ids):
+        d = tempfile.mkdtemp()
+        self.addCleanup(__import__("shutil").rmtree, d, True)
+        path = os.path.join(d, "r.json")
+        with open(path, "w") as f:
+            json.dump({"confirmedVenues": [{"id": i} for i in ids]}, f)
+        return path
+
+    def test_a_normal_update_passes(self):
+        ok, msg = checker.check(self.write(["a", "b", "c", "d"]), self.write(["a", "b", "c", "e", "f"]))
+        self.assertTrue(ok, msg)
+        self.assertIn("2 new", msg)
+
+    def test_regression_a_crawl_that_lost_most_known_venues_is_refused(self):
+        ok, msg = checker.check(self.write(list("abcdefghij")), self.write(["a", "b"]))
+        self.assertFalse(ok)
+        self.assertIn("network trouble", msg)
+
+    def test_empty_missing_or_malformed_new_results_are_refused(self):
+        old = self.write(["a"])
+        self.assertFalse(checker.check(old, self.write([]))[0])
+        self.assertFalse(checker.check(old, "/nonexistent.json")[0])
+        bad = os.path.join(tempfile.mkdtemp(), "bad.json")
+        with open(bad, "w") as f:
+            f.write('{"nope": 1}')
+        self.assertFalse(checker.check(old, bad)[0])
+
+    def test_no_previous_results_is_fine(self):
+        self.assertTrue(checker.check("/nonexistent.json", self.write(["a"]))[0])
+
+    def test_command_line_exit_codes(self):
+        import contextlib
+        import io
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(checker.main(["--old", self.write(["a", "b"]), "--new", self.write(["a", "b"])]), 0)
+            self.assertEqual(checker.main(["--old", self.write(list("abcdef")), "--new", self.write(["a"])]), 1)
+
+
+class WorkflowTests(unittest.TestCase):
+    def test_the_crawl_workflow_publishes_a_branch_not_a_pull_request_and_checks_first(self):
+        with open(os.path.join(ROOT, ".github", "workflows", "crawl.yml"), encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn("workflow_dispatch", text)
+        self.assertIn("check_crawl_result.py", text)
+        self.assertIn("git push origin", text)
+        self.assertNotIn("gh pr create", text, "a PR made by the workflow would not run the checks that protect main")
+        self.assertNotIn("git push origin main", text)
+        self.assertLess(text.index("check_crawl_result.py"), text.index("git push origin"))
+
+
+if __name__ == "__main__":
+    unittest.main()

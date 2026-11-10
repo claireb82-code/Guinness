@@ -1,0 +1,53 @@
+name: Crawl venue websites
+
+# Reads the websites of Swiss venues (from OpenStreetMap, plus Overture Maps websites) looking for Guinness, and pushes the result
+# to a branch named data/crawl-<date>. It does NOT open the pull request itself: a pull request created by this workflow would
+# not run the test checks that protect `main`. Open the PR from that branch (the run summary says which) so CI runs on it.
+#
+# Run it by hand (Actions -> "Crawl venue websites" -> Run workflow) or let the monthly schedule do it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      all:
+        description: "Read every website (restaurants and hotels too), not only pubs and bars"
+        type: boolean
+        default: true
+  schedule:
+    - cron: "17 3 1 * *"
+
+permissions:
+  contents: write
+
+jobs:
+  crawl:
+    name: Crawl and publish to a branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Keep the previous results to compare against
+        run: cp server/data/swiss_crawl_results.json "$RUNNER_TEMP/previous_results.json"
+      - name: Crawl
+        run: python3 scripts/crawl_switzerland.py ${{ (github.event_name == 'schedule' || inputs.all) && '--all' || '' }}
+      - name: Check the result before publishing it
+        run: |
+          python3 scripts/check_crawl_result.py --old "$RUNNER_TEMP/previous_results.json" --new server/data/swiss_crawl_results.json
+          python3 -m unittest tests.test_evidence tests.test_repo tests.test_crawler
+      - name: Push the result to a branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- server/data/swiss_crawl_results.json; then
+            echo "The crawl found nothing new; nothing to publish." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          BRANCH="data/crawl-$(date -u +%Y-%m-%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git add server/data/swiss_crawl_results.json
+          git commit -m "Update website crawl results ($(date -u +%F))"
+          git push origin "$BRANCH"
+          echo "Pushed branch \`$BRANCH\`. Open a pull request from it into main." | tee -a "$GITHUB_STEP_SUMMARY"

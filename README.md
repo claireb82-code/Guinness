@@ -8,7 +8,7 @@ A full-stack application that maps **hotels, bars, pubs, and restaurants across 
 
 ### 1. Three-Pillar Guinness Verification Engine
 - **Pillar 1 — Online Menu & Website Scraper ([`server/services/menuScraper.js`](server/services/menuScraper.js) & [`app_server.py`](app_server.py))**: Crawls a venue's homepage and discovered drink/menu subpages (`/menu`, `/drinks`, `/getraenke`, `/karte`, `/bar`, `/boissons`, etc.) to strictly detect Guinness variants (*Guinness Draught*, *Guinness 0.0*, *Guinness Foreign Extra Stout*, *Guinness Extra Cold*, *Guinness Surger*) and extract CHF pint prices.
-- **Pillar 2 — OpenStreetMap & Google Places Verification ([`server/services/googlePlaces.js`](server/services/googlePlaces.js) & [`scripts/crawl_switzerland.py`](scripts/crawl_switzerland.py))**: Evaluates OpenStreetMap `brewery`/`beer`/`cuisine` metadata across **26,613 Swiss hospitality venues** (`840` pubs, `2,843` bars, `18,950` restaurants, `3,980` hotels; `9,459` with websites, `1,912` live venue websites / `1,823` unique domains crawled — covering **100% of Swiss pubs & bars with websites**) via the Swiss OpenStreetMap Association Overpass server (`overpass.osm.ch`) and scans Google Places reviews/editorial summaries specifically for `"guinness"` mentions.
+- **Pillar 2 — OpenStreetMap & Google Places Verification ([`scripts/crawl_switzerland.py`](scripts/crawl_switzerland.py))**: Evaluates OpenStreetMap `brewery`/`beer`/`cuisine` metadata across **26,613 Swiss hospitality venues** (`840` pubs, `2,843` bars, `18,950` restaurants, `3,980` hotels; `9,459` with websites, `1,912` live venue websites / `1,823` unique domains crawled — covering **100% of Swiss pubs & bars with websites**) via the Swiss OpenStreetMap Association Overpass server (`overpass.osm.ch`) and scans Google Places reviews/editorial summaries specifically for `"guinness"` mentions.
 - **Pillar 3 — Community Crowdsourcing ([`app_server.py`](app_server.py))**: Users can confirm or deny Guinness availability, log serving format (`On Draught` vs `Cans / Bottles` vs `No Guinness`), record pint prices in CHF, and flag `Guinness 0.0` availability.
 
 ### 2. Nationwide Swiss Coverage & Interactive Map
@@ -104,7 +104,7 @@ Visitors see one of four plain tiers (the `statusLabel`) and a one-line `reason`
 | Tier | When | Example reason |
 | :--- | :--- | :--- |
 | **Confirmed** / **Confirmed (cans / bottles)** | the venue's website mentions Guinness, or two visitors report it, or five Google review mentions | "Its website lists Guinness on tap" (only when the page or a visitor said so), "Its website mentions Guinness", "Reported by several visitors" |
-| **Possible** | one Google review mention, one visitor report, or a hint (`tagCheck`) | "Reported by 1 visitor", "OpenStreetMap lists Guinness here (not checked)", "Irish-sounding name (not checked)", "On our list of Irish pubs (not checked)" |
+| **Possible** | one Google review mention, one visitor report, or a hint (`tagCheck`: an OpenStreetMap tag, an Irish-sounding name, the starter list, or a restaurant/hotel website that mentions Guinness without saying it is served) | "Reported by 1 visitor", "OpenStreetMap lists Guinness here (not checked)", "Irish-sounding name (not checked)", "On our list of Irish pubs (not checked)", "Its website mentions Guinness (not clearly on a menu)" |
 | **No Guinness found** | a website was read without a mention (60%), or three visitors deny it (85%); never overrides a hint or a report | "Its website doesn't mention Guinness" |
 | **Not checked yet** | nothing is known | "No information about Guinness here yet" |
 
@@ -192,6 +192,7 @@ npm run test:e2e    # builds the React app, then drives real pages in Chromium (
 | `tests/test_overture.py`, `tests/test_import_overture.py` | name matching and the spatial lookup (including cases measured on real data), how OpenStreetMap importers use it, and the importer end to end against synthetic Parquet files in Overture's real schema served by a fake S3 (needs `pyarrow`; skipped without it) |
 | `tests/test_evidence.py`, `tests/e2e/evidence.e2e.mjs` | **honest evidence**: the bundled data files and every importer carry no invented ratings, review counts, quotes or visitor reports (checked over all ~230 real venues); a tag or a name is a labelled hint, never "confirmed" or "found on a menu"; an unreadable website is *unknown*, not *no Guinness*; "On Tap" only when the page says so; the header counts confirmed and likely apart; the venue panel explains a hint; **prices**: the one printed after "Guinness" (not a neighbouring beer's) is extracted from a scan, starter-list prices stay visible but marked "unchecked" |
 | `tests/test_geocode.py`, `tests/e2e/location.e2e.mjs` | **venues land at their address**: the geocoder against a fake Nominatim (Switzerland only, polite User-Agent, cache, busy vs not-found, malformed answers), `/api/geocode`, `/api/relocate-venue` (only a venue's own stored address is used, bundled venues are never moved, errors), and the form in both UIs (the address is looked up when no spot was clicked, a clicked spot is kept, an unknown address blocks the submit, a venue saved in the wrong place can be moved) |
+| `tests/test_crawler.py` | the website crawler: it never fetches internal addresses (loopback, cloud metadata, private ranges) and honours `robots.txt`, finds Guinness and follows a menu link on real local pages, picks which sites to read (`--all`, `--max-urls`), fills websites from Overture (unsafe ones refused), keeps a restaurant recipe out of *Confirmed*, refuses a crawl that lost most known venues, and the workflow publishes a branch (never a PR or `main`) after checking |
 | `tests/test_repo.py` | repository hygiene: nothing that `.gitignore` excludes is tracked, the old product name is gone, city fallbacks name cities that exist, the UI mentions no other countries, the Python server is the only API server, and the `.env` reader |
 | `tests/e2e/evidence.e2e.mjs`, `tests/js/mobileLayout.test.js` (UI part) | plain labels and reasons on cards and in the panel, no zero-count noise, nothing auto-opens, owner-only controls hidden unless `?advanced=1`, the Add and report forms assume nothing (no pre-selected serving format) and there is no pint score |
 | `tests/test_deploy_info.py` | the deployed-commit report in `/api/config` (nothing else from the environment leaks, malformed values dropped) and `scripts/check_deploy.py` (match/mismatch/old/unreachable, `--wait` polling, usage errors) |
@@ -211,11 +212,18 @@ When fixing a bug, add a failing test first (name it `regression: ...`). Tests n
 
 ## Nationwide Switzerland Crawler & Google Maps Venue Checker
 
-To re-run the nationwide OpenStreetMap Overpass query and high-concurrency website menu scanner across all 26 Swiss cantons:
+### Finding more venues: the website crawl
+
+The crawler (`scripts/crawl_switzerland.py`) asks OpenStreetMap for Swiss pubs, bars, restaurants and hotels, adds the website Overture Maps knows for venues OpenStreetMap lists without one, and reads each website looking for Guinness. A hit is real evidence (the page text is kept). It re-runs the nationwide OpenStreetMap query and a 120-worker website scanner across all 26 cantons:
 
 ```bash
-python3 scripts/crawl_switzerland.py
+python3 scripts/crawl_switzerland.py          # every pub/bar website plus 400 hotels/restaurants (about 2,000 sites)
+python3 scripts/crawl_switzerland.py --all    # every website, restaurants and hotels too (about 8,000 sites, roughly 10 minutes)
 ```
+
+Options: `--max-urls N`, `--no-overture`. It only fetches through the app's SSRF-safe fetcher (`guard.fetch_page`: public hosts only, TLS verified, size and time limits, never an address from a tag without validating it), honours each site's `robots.txt`, and uses the app's Overpass client (mirrors and retries). A pub or bar that names Guinness counts as serving it; a restaurant or hotel needs serving wording or a price, otherwise it becomes a *Possible* hint ("Its website mentions Guinness (not clearly on a menu)"), so a recipe or an event is never shown as Confirmed.
+
+**Running it on GitHub (recommended):** Actions -> **Crawl venue websites** -> *Run workflow* (it also runs monthly). The job crawls, checks the result (`scripts/check_crawl_result.py` refuses a crawl that lost more than 30% of the venues we already know, which means it ran into network trouble; `tests/test_evidence.py` re-checks the data) and pushes the new `server/data/swiss_crawl_results.json` to a branch named `data/crawl-<date>`. It does not open the pull request itself, because a pull request made by a workflow does not run the checks that protect `main`: open the PR from that branch yourself.
 
 To check bars, pubs, restaurants, cafés, and hotels on Google Maps (via Google Places API New `places:searchNearby` & `places:searchText`, or by cross-checking Swiss venues and Google Maps URLs), scrape their online menus for Guinness, and feed the verified input directly into the Guinness Finder:
 
@@ -264,6 +272,7 @@ Guinness/
 ├── overpass.py                      # Overpass API access: backup servers, retries, cache, friendly errors (stdlib only)
 ├── tests/                           # python3 -m unittest suites; tests/js (UI helpers), tests/e2e (browser), tests/fixtures
 ├── .github/workflows/test.yml       # CI: runs every test suite on push / PR
+├── .github/workflows/crawl.yml      # Crawl venue websites (manual + monthly); pushes the result to a data/crawl-<date> branch
 ├── index.html                       # Vite React entry HTML
 ├── package.json                     # React/Vite build and test scripts (no Node server)
 ├── public/
@@ -273,6 +282,7 @@ Guinness/
 │   ├── import_overture.py           # Builds server/data/overture_ch.json from Overture Maps (needs pyarrow)
 │   ├── README.md                    # Documentation for scripts & automation utilities
 │   ├── check_google_maps.py         # Google Maps venue & review verifier / importer
+│   ├── check_crawl_result.py        # Refuses a crawl that lost most of the known venues (used by crawl.yml)
 │   └── crawl_switzerland.py         # Nationwide Swiss OSM Overpass + website menu crawler
 ├── server/
 │   └── data/                        # swiss_crawl_results.json (website scans), overture_ch.json (websites), attribution

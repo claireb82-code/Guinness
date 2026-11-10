@@ -157,7 +157,7 @@ class BundledDataTests(unittest.TestCase):
                 with self.subTest(venue=v["name"]):
                     self.assertEqual(v["guinnessSummary"]["status"], "likely_serves")
                     self.assertEqual(v["guinnessSummary"]["statusLabel"], "Possible")
-                    self.assertIn("not checked", v["guinnessSummary"]["reason"])
+                    self.assertRegex(v["guinnessSummary"]["reason"], r"not checked|not clearly on a menu")
 
     def test_regression_every_scanned_price_is_printed_after_guinness_in_the_snippets(self):
         for v in self.venues:

@@ -1804,6 +1804,8 @@ def compute_guinness_status(venue):
         return possible("Reported by 1 visitor", max(55, confidence), known_format)
     if tag == evidence.TAG_OSM:
         return possible("OpenStreetMap lists Guinness here (not checked)", 50)
+    if tag == evidence.TAG_WEB:
+        return possible("Its website mentions Guinness (not clearly on a menu)", 45)
     if tag == evidence.TAG_NAME:
         return possible("Irish-sounding name (not checked)", 35)
     if tag == evidence.TAG_STARTER:
