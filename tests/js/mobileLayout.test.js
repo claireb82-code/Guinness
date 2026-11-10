@@ -32,7 +32,7 @@ test('desktop never shows the phone-only pieces', () => {
 
 test('the React app keeps the hooks the phone layout depends on', () => {
   const app = read('src/App.jsx');
-  for (const needle of ['app-shell m-ui', 'mobile-nav', 'data-view={mobileView}', 'toolbar-strip ${filtersOpen', 'header-search', 'city-pills', 'header-actions', "aria-label=\"Add or check a venue\"", 'isPhoneLayout()', "useState('map')"]) {
+  for (const needle of ['app-shell m-ui', 'mobile-nav', 'data-view={mobileView}', 'toolbar-strip ${filtersOpen', 'header-search', 'city-pills', 'header-actions', "aria-label=\"Add a venue\"", "useState('map')"]) {
     assert.ok(app.includes(needle), needle);
   }
   assert.ok(read('src/components/VenueDetailPanel.jsx').includes('drawer-close'));
@@ -40,8 +40,17 @@ test('the React app keeps the hooks the phone layout depends on', () => {
   assert.equal((read('src/components/AddVenueModal.jsx').match(/stack-sm/g) || []).length, 2);
 });
 
-test('the standalone page opts in to the phone layout and does not auto-open a sheet on a phone', () => {
+test('the standalone page opts in to the phone layout', () => {
   const html = read('public/standalone.html');
   assert.match(html, /class="app-shell standalone-ui"/);
-  assert.match(html, /!isPhoneLayout\(\)/);
+  assert.match(html, /function isPhoneLayout\(\)/);
+});
+
+test('regression: neither UI opens a venue panel by itself when the venues load (it covered half the map)', () => {
+  const app = read('src/App.jsx');
+  const html = read('public/standalone.html');
+  assert.doesNotMatch(app, /setSelectedVenueId\(data\.venues\[0\]\.id\);\s*\n\s*}\s*\n\s*}\s*\n\s*} catch/);
+  assert.doesNotMatch(app, /opens the first venue in the side panel/);
+  assert.doesNotMatch(html, /opens the first venue in the side panel/);
+  assert.ok(!/state\.venues = data\.venues;[^]{0,400}state\.selectedVenueId = data\.venues\[0\]\.id/.test(html));
 });

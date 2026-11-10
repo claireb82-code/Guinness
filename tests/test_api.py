@@ -82,7 +82,7 @@ class ConfigAndKeyTests(ApiTestCase):
     def test_cors_only_on_reads(self):
         _, _, get = self.call("GET", "/api/config")
         self.assertEqual(get.getheader("Access-Control-Allow-Origin"), "*")
-        _, _, post = self.post("/api/crowd-report", {"venueId": "v"})
+        _, _, post = self.post("/api/crowd-report", {"venueId": "v", "servingFormat": "draught"})
         self.assertIsNone(post.getheader("Access-Control-Allow-Origin"))
 
 
@@ -170,7 +170,7 @@ class CrowdReportTests(ApiTestCase):
     def test_invalid_reports_are_rejected_with_a_readable_reason(self):
         for body, needle in [
             ({"venueId": "../etc"}, "venueId"),
-            ({"venueId": "v", "pintRating": 11}, "pintRating"),
+            ({"venueId": "v", "servingFormat": "draught", "pintRating": 11}, "pintRating"),
             ({"venueId": "v", "note": "x" * 501}, "note"),
             ({"venueId": "v", "servingFormat": "keg"}, "servingFormat"),
         ]:
@@ -182,7 +182,7 @@ class CrowdReportTests(ApiTestCase):
 
     def test_stored_html_is_data_not_markup_server_side(self):
         """The server stores text verbatim (escaping is the UI's job); it must never execute or reinterpret it."""
-        _, data, _ = self.post("/api/crowd-report", {"venueId": "v-known", "note": "<img src=x onerror=alert(1)>", "user": "<b>x</b>"})
+        _, data, _ = self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught", "note": "<img src=x onerror=alert(1)>", "user": "<b>x</b>"})
         self.assertEqual(data["report"]["note"], "<img src=x onerror=alert(1)>")
 
 
@@ -191,7 +191,7 @@ class SubmissionsDisabledOnEphemeralDeployTests(ApiTestCase):
 
     def test_writes_are_refused_instead_of_silently_lost(self):
         self.assertFalse(self.call("GET", "/api/config")[1]["communitySubmissions"])
-        for path, body in [("/api/crowd-report", {"venueId": "v-known"}), ("/api/add-venue", {"name": "X", "lat": 47.37, "lng": 8.54})]:
+        for path, body in [("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught"}), ("/api/add-venue", {"name": "X", "lat": 47.37, "lng": 8.54})]:
             status, data, _ = self.post(path, body)
             self.assertEqual(status, 503)
             self.assertIn("no database", data["error"])
@@ -201,6 +201,18 @@ class SubmissionsDisabledOnEphemeralDeployTests(ApiTestCase):
 
 class AddVenueTests(ApiTestCase):
     OK = {"name": "New Pub", "lat": 47.37, "lng": 8.54, "category": "bar", "city": "zurich", "servingFormat": "draught", "price": "CHF 9"}
+
+    def test_regression_how_it_is_served_must_be_said_not_assumed(self):
+        """Missing servingFormat used to default to draught, and a missing rating to 4.8: invented evidence."""
+        body = {k: v for k, v in self.OK.items() if k != "servingFormat"}
+        status, data, _ = self.post("/api/add-venue", body)
+        self.assertEqual(status, 400)
+        self.assertIn("servingFormat", data["error"])
+        self.assertEqual(self.backend.load()["customVenues"], [])
+
+    def test_a_rating_is_optional_and_absent_means_none(self):
+        v = self.post("/api/add-venue", self.OK)[1]["venue"]  # (OK has no pintRating)
+        self.assertIsNone(v["crowdCheck"]["avgPintRating"])
 
     def test_valid_venue(self):
         status, data, _ = self.post("/api/add-venue", self.OK)
@@ -216,7 +228,8 @@ class AddVenueTests(ApiTestCase):
         self.assertEqual(v["reviewCheck"]["mentionCount"], 0)
         self.assertFalse(v["menuCheck"]["foundOnMenu"], "no website was read")
         self.assertEqual(v["crowdCheck"]["confirmedCount"], 1, "the visitor's own report is real evidence")
-        self.assertEqual((v["guinnessSummary"]["status"], v["guinnessSummary"]["statusLabel"]), ("likely_serves", "Reported by 1 visitor"))
+        summary = v["guinnessSummary"]
+        self.assertEqual((summary["status"], summary["statusLabel"], summary["reason"]), ("likely_serves", "Possible", "Reported by 1 visitor"))
 
     def test_dangerous_or_internal_websites_are_rejected(self):
         for site in ["javascript:alert(document.cookie)", "data:text/html,<script>alert(1)</script>", "http://localhost:8080/admin",
@@ -320,7 +333,7 @@ class ScanMenuTests(ApiTestCase):
 
     def test_default_scan_uses_the_venues_own_menu_url(self):
         with mock.patch.object(app_server, "FETCH_ALLOW_PRIVATE", True):
-            status, data, _ = self.post("/api/scan-menu", {"venueId": "v-known"})
+            status, data, _ = self.post("/api/scan-menu", {"venueId": "v-known", "servingFormat": "draught"})
         self.assertTrue(data["scanResult"]["foundOnMenu"])
         self.assertEqual(self.hits, ["/menu"])
 
@@ -361,8 +374,8 @@ class RateLimitTests(ApiTestCase):
 
     def test_writes_are_limited_per_client_with_retry_after(self):
         with mock.patch.object(app_server, "RATE_WRITES", (3, 3600)):
-            codes = [self.post("/api/crowd-report", {"venueId": "v-known"})[0] for _ in range(5)]
-            status, data, resp = self.post("/api/crowd-report", {"venueId": "v-known"})
+            codes = [self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught"})[0] for _ in range(5)]
+            status, data, resp = self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught"})
         self.assertEqual(codes, [200, 200, 200, 429, 429])
         self.assertEqual(status, 429)
         self.assertEqual(resp.getheader("Retry-After"), "3600")
@@ -370,8 +383,8 @@ class RateLimitTests(ApiTestCase):
 
     def test_limits_are_independent_per_bucket(self):
         with mock.patch.object(app_server, "RATE_WRITES", (1, 3600)), mock.patch.object(app_server, "RATE_SCANS", (50, 600)):
-            self.post("/api/crowd-report", {"venueId": "v-known"})
-            self.assertEqual(self.post("/api/crowd-report", {"venueId": "v-known"})[0], 429)
+            self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught"})
+            self.assertEqual(self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught"})[0], 429)
             self.assertEqual(self.post("/api/scan-menu", {})[0], 200)  # scans use a different budget, unaffected
 
     def test_heavy_nationwide_scan_has_its_own_tight_limit(self):
@@ -383,8 +396,8 @@ class RateLimitTests(ApiTestCase):
 
     def test_spoofed_forwarded_for_is_ignored_off_vercel(self):
         with mock.patch.object(app_server, "RATE_WRITES", (1, 3600)):
-            a = self.post("/api/crowd-report", {"venueId": "v-known"}, headers={"X-Forwarded-For": "1.1.1.1"})[0]
-            b = self.post("/api/crowd-report", {"venueId": "v-known"}, headers={"X-Forwarded-For": "2.2.2.2"})[0]
+            a = self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught"}, headers={"X-Forwarded-For": "1.1.1.1"})[0]
+            b = self.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught"}, headers={"X-Forwarded-For": "2.2.2.2"})[0]
         self.assertEqual((a, b), (200, 429))  # rotating the header does not reset the limit
 
 
@@ -409,7 +422,7 @@ class RedisIntegrationTests(unittest.TestCase):
         a, b = instance(), instance()
         status, data, _ = a.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught", "pintRating": 4.5, "note": "from A"})
         self.assertEqual(status, 200)
-        status, data, _ = b.post("/api/add-venue", {"name": "From B", "lat": 47.37, "lng": 8.54})
+        status, data, _ = b.post("/api/add-venue", {"name": "From B", "lat": 47.37, "lng": 8.54, "servingFormat": "draught"})
         self.assertEqual(status, 200)
 
         # Instance C starts later, cold, with an empty /tmp: it still sees both.
@@ -431,7 +444,7 @@ class RedisIntegrationTests(unittest.TestCase):
         case.start_server(backend)
         redis.fail = True
         with mock.patch("sys.stderr"):
-            status, data, _ = case.post("/api/crowd-report", {"venueId": "v-known"})
+            status, data, _ = case.post("/api/crowd-report", {"venueId": "v-known", "servingFormat": "draught"})
         self.assertEqual(status, 503)
         self.assertIn("temporarily unavailable", data["error"])
 

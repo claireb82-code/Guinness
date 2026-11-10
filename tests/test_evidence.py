@@ -39,14 +39,14 @@ class SanitiseStaticVenueTests(unittest.TestCase):
         self.assertFalse(v["menuCheck"]["foundOnMenu"])
         self.assertEqual(v["menuCheck"]["typesFound"], [])
         summary = app.compute_guinness_status(v)
-        self.assertEqual((summary["status"], summary["statusLabel"]), ("likely_serves", "Irish pub by name (unverified)"))
+        self.assertEqual((summary["status"], summary["statusLabel"], summary["reason"]), ("likely_serves", "Possible", "Irish-sounding name (not checked)"))
 
     def test_an_osm_tag_is_not_a_menu_check(self):
         rec = crawl_record(menuCheck={"checked": True, "foundOnMenu": True, "typesFound": ["Guinness Draught (OSM Brewery/Beer Tag Verified)"],
                                       "extractedPrice": None, "snippets": ["OpenStreetMap Switzerland tag confirms Guinness (brewery=guinness)."]})
         v = evidence.sanitise_static_venue(rec)
         self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"]), (False, False))
-        self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Listed on OpenStreetMap (unverified)")
+        self.assertIn("OpenStreetMap lists Guinness", app.compute_guinness_status(v)["reason"])
 
     def test_a_website_the_crawler_really_read_keeps_what_it_found(self):
         rec = crawl_record(menuCheck={"checked": True, "lastChecked": "2026-11-06", "foundOnMenu": True, "typesFound": ["Guinness Draught (On Tap)"],
@@ -55,14 +55,14 @@ class SanitiseStaticVenueTests(unittest.TestCase):
         self.assertTrue(v["menuCheck"]["foundOnMenu"])
         self.assertNotIn("tagCheck", v)
         self.assertEqual(v["reviewCheck"], evidence.no_reviews(), "the invented review still goes")
-        self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed Guinness On Tap")
+        self.assertEqual(app.compute_guinness_status(v)["reason"], "Its website lists Guinness on tap")
 
     def test_a_scan_with_nothing_found_stays_a_modest_negative(self):
         rec = crawl_record(id="ch-no-1", menuCheck={"checked": True, "foundOnMenu": False, "typesFound": [], "snippets": ["Scanned http://x (HTTP 200) — 0 mentions of Guinness."]},
                            reviewCheck=evidence.no_reviews(), crowdCheck={**evidence.no_crowd(), "deniedCount": 1, "servingFormat": "none"})
         v = evidence.sanitise_static_venue(rec)
         summary = app.compute_guinness_status(v)
-        self.assertEqual((summary["status"], summary["statusLabel"]), ("no_guinness", "No Guinness found on website"))
+        self.assertEqual((summary["status"], summary["statusLabel"], summary["reason"]), ("no_guinness", "No Guinness found", "Its website doesn't mention Guinness"))
         self.assertLess(summary["confidence"], 90, "an absent word is not proof that none is served")
         self.assertEqual(v["crowdCheck"]["deniedCount"], 0, "the crawler is not a visitor")
 
@@ -70,7 +70,7 @@ class SanitiseStaticVenueTests(unittest.TestCase):
         v = evidence.sanitise_static_venue({**crawl_record(id="zh-kennedys"), "menuCheck": {"checked": True, "foundOnMenu": True, "typesFound": ["Guinness Draught (On Tap)"], "snippets": ["Guinness 5dl CHF 9.80"], "extractedPrice": "CHF 9.80"}})
         self.assertEqual(v["tagCheck"]["kind"], "starter_list")
         self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"], v["menuCheck"]["extractedPrice"]), (False, False, None))
-        self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Starter list (unverified)")
+        self.assertEqual(app.compute_guinness_status(v)["reason"], "On our list of Irish pubs (not checked)")
 
     def test_crawled_prices_come_from_the_text_after_guinness(self):
         rec = crawl_record(menuCheck={"checked": True, "foundOnMenu": True, "typesFound": ["x"], "extractedPrice": "CHF 5",
@@ -155,7 +155,8 @@ class BundledDataTests(unittest.TestCase):
             if v.get("tagCheck") and not v["menuCheck"]["foundOnMenu"]:
                 with self.subTest(venue=v["name"]):
                     self.assertEqual(v["guinnessSummary"]["status"], "likely_serves")
-                    self.assertIn("unverified", v["guinnessSummary"]["statusLabel"])
+                    self.assertEqual(v["guinnessSummary"]["statusLabel"], "Possible")
+                    self.assertIn("not checked", v["guinnessSummary"]["reason"])
 
     def test_regression_every_scanned_price_is_printed_after_guinness_in_the_snippets(self):
         for v in self.venues:
@@ -164,6 +165,16 @@ class BundledDataTests(unittest.TestCase):
                 with self.subTest(venue=v["name"]):
                     self.assertTrue(v["menuCheck"]["foundOnMenu"])
                     self.assertEqual(price, evidence.price_near_guinness(v["menuCheck"]["snippets"]))
+
+    def test_labels_are_the_plain_tiers_and_every_venue_says_why(self):
+        """A visitor sees a short tier and one line of reason, never internal jargon."""
+        tiers = {"Confirmed", "Confirmed (cans / bottles)", "Possible", "No Guinness found", "Not checked yet"}
+        for v in self.enriched:
+            summary = v["guinnessSummary"]
+            with self.subTest(venue=v["name"]):
+                self.assertIn(summary["statusLabel"], tiers)
+                self.assertTrue(summary["reason"])
+                self.assertNotRegex(summary["reason"] + summary["statusLabel"], r"(?i)starter|crawl|heuristic|tagCheck|confidence")
 
     def test_every_confirmed_venue_has_a_website_that_really_mentions_guinness(self):
         for v in self.enriched:
@@ -191,9 +202,9 @@ class LiveImporterTests(unittest.TestCase):
         out = self.run_osm(app.fetch_osm_switzerland_nationwide)
         self.assertEqual(out["Brew House"]["tagCheck"]["kind"], "osm_tag")
         self.assertEqual(out["The Old Stand"]["tagCheck"]["kind"], "irish_name")
-        label = lambda n: app.enrich_venue(out[n], NO_STORE)["guinnessSummary"]["statusLabel"]
-        self.assertEqual(label("Brew House"), "Listed on OpenStreetMap (unverified)")
-        self.assertEqual(label("The Old Stand"), "Irish pub by name (unverified)")
+        reason = lambda n: app.enrich_venue(out[n], NO_STORE)["guinnessSummary"]["reason"]
+        self.assertIn("OpenStreetMap lists Guinness", reason("Brew House"))
+        self.assertEqual(reason("The Old Stand"), "Irish-sounding name (not checked)")
 
     def test_a_venue_with_no_irish_signal_is_simply_unverified(self):
         out = self.run_osm(app.fetch_osm_overpass_live, 47.37, 8.54)
@@ -214,7 +225,7 @@ class ScanFailureTests(unittest.TestCase):
             check = app.scrape_menu_url("https://pub.example")
         self.assertTrue(check["foundOnMenu"])
         self.assertEqual(check["typesFound"], ["Guinness (mentioned on website)"])
-        self.assertNotEqual(app.compute_guinness_status({"menuCheck": check})["statusLabel"], "Confirmed Guinness On Tap")
+        self.assertNotIn("on tap", app.compute_guinness_status({"menuCheck": check})["reason"])
 
 
 if __name__ == "__main__":

@@ -1767,7 +1767,8 @@ def compute_guinness_status(venue):
         reported = crowd_denied >= 3
         return {
             "status": "no_guinness",
-            "statusLabel": "Reported not served" if reported else "No Guinness found on website",
+            "statusLabel": "No Guinness found",
+            "reason": "Visitors say it isn't served" if reported else "Its website doesn't mention Guinness",
             "confidence": 85 if reported else 60,
             "servingFormat": "none",
         }
@@ -1781,34 +1782,41 @@ def compute_guinness_status(venue):
         score += min(25, 10 + crowd_confirmed * 2)
     confidence = min(99, int(round(score)))
 
+    # Wording shown to visitors: a short tier ("Confirmed", "Possible", ...) and, separately, the reason.
     if menu_found or crowd_confirmed >= 2 or review_mentions >= 5:
         if known_format == "cans_bottles":
-            status, label = "cans_or_bottles", "Confirmed (Bottles / Cans)"
+            status, label = "cans_or_bottles", "Confirmed (cans / bottles)"
+            reason = "Its website says cans or bottles" if menu_found and menu_says_cans else "Visitors report cans or bottles"
         elif known_format == "draught":
-            status, label = "confirmed_draught", "Confirmed Guinness On Tap"
+            status, label = "confirmed_draught", "Confirmed"
+            reason = "Its website lists Guinness on tap" if menu_found and menu_says_draught else "Visitors report it on tap"
         else:
-            status = "confirmed_draught"
-            label = (
-                "Guinness confirmed on website" if menu_found
-                else "Confirmed by visitor reports" if crowd_confirmed >= 2
+            status, label = "confirmed_draught", "Confirmed"
+            reason = (
+                "Its website mentions Guinness" if menu_found
+                else "Reported by several visitors" if crowd_confirmed >= 2
                 else "Mentioned in several Google reviews"
             )
-        return {"status": status, "statusLabel": label, "confidence": max(78, confidence), "servingFormat": known_format}
+        return {"status": status, "statusLabel": label, "reason": reason, "confidence": max(78, confidence), "servingFormat": known_format}
+
+    def possible(reason, conf, fmt="unknown"):
+        return {"status": "likely_serves", "statusLabel": "Possible", "reason": reason, "confidence": conf, "servingFormat": fmt}
 
     if review_mentions >= 1:
-        return {"status": "likely_serves", "statusLabel": "Mentioned in Google reviews", "confidence": max(55, confidence), "servingFormat": known_format}
+        return possible("Mentioned in a Google review", max(55, confidence), known_format)
     if crowd_confirmed == 1:
-        return {"status": "likely_serves", "statusLabel": "Reported by 1 visitor", "confidence": max(55, confidence), "servingFormat": known_format}
+        return possible("Reported by 1 visitor", max(55, confidence), known_format)
     if tag == evidence.TAG_OSM:
-        return {"status": "likely_serves", "statusLabel": "Listed on OpenStreetMap (unverified)", "confidence": 50, "servingFormat": "unknown"}
+        return possible("OpenStreetMap lists Guinness here (not checked)", 50)
     if tag == evidence.TAG_NAME:
-        return {"status": "likely_serves", "statusLabel": "Irish pub by name (unverified)", "confidence": 35, "servingFormat": "unknown"}
+        return possible("Irish-sounding name (not checked)", 35)
     if tag == evidence.TAG_STARTER:
-        return {"status": "likely_serves", "statusLabel": "Starter list (unverified)", "confidence": 35, "servingFormat": "unknown"}
+        return possible("On our list of Irish pubs (not checked)", 35)
 
     return {
         "status": "unverified",
-        "statusLabel": "Needs Menu / Crowd Check",
+        "statusLabel": "Not checked yet",
+        "reason": "No information about Guinness here yet",
         "confidence": max(15, confidence),
         "servingFormat": "unknown",
     }

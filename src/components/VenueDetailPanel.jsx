@@ -50,8 +50,8 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
 
   // Crowdsource Form State
   const [userName, setUserName] = useState('');
-  const [servingFormat, setServingFormat] = useState('draught');
-  const [pintRating, setPintRating] = useState('4.8');
+  const [servingFormat, setServingFormat] = useState(''); // nothing is assumed: the visitor says what they saw
+  const [pintRating, setPintRating] = useState(''); // optional
   const [price, setPrice] = useState('');
   const [hasZero, setHasZero] = useState(false);
   const [note, setNote] = useState('');
@@ -82,18 +82,21 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
 
   const handleCrowdSubmit = async (e) => {
     e.preventDefault();
+    if (!servingFormat) return;
     setSubmitting(true);
     try {
       await onSubmitCrowdReport({
         venueId: venue.id,
         user: userName || 'Guinness Scout',
         servingFormat,
-        pintRating: servingFormat === 'none' ? null : Number(pintRating),
+        pintRating: servingFormat === 'none' || pintRating === '' ? null : Number(pintRating),
         price,
         hasZero,
         note,
       });
       setNote('');
+      setServingFormat('');
+      setPintRating('');
       setShowReportForm(false);
     } finally {
       setSubmitting(false);
@@ -238,14 +241,10 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
               )}
               {summary.statusLabel}
             </span>
-            <span style={{ fontSize: '0.76rem', color: '#c8a45d', fontWeight: 700 }}>
-              {summary.confidence}% Match Confidence
-            </span>
           </div>
-
-          {venue.tagCheck?.text && (
-            <p className="evidence-note" style={{ fontSize: '0.74rem', color: '#9c8e7b', lineHeight: 1.4, marginBottom: '0.6rem' }}>
-              {venue.tagCheck.text}
+          {summary.reason && (
+            <p className="evidence-note" style={{ fontSize: '0.8rem', color: '#d7cbb8', lineHeight: 1.4, margin: '0 0 0.6rem' }} title={venue.tagCheck?.text}>
+              {summary.reason}
             </p>
           )}
 
@@ -532,14 +531,18 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                 <div>
                   <label style={{ fontSize: '0.7rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-                    Serving Format
+                    What did you see? *
                   </label>
                   <select
                     className="stout-select"
                     style={{ width: '100%' }}
                     value={servingFormat}
+                    required
                     onChange={(e) => setServingFormat(e.target.value)}
                   >
+                    <option value="" disabled>
+                      Choose…
+                    </option>
                     <option value="draught">🍺 On Draught (Tap)</option>
                     <option value="cans_bottles">🥫 Cans / Bottles Only</option>
                     <option value="none">❌ No Guinness Served</option>
@@ -549,7 +552,7 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
                 {servingFormat !== 'none' && (
                   <div>
                     <label style={{ fontSize: '0.7rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-                      Pint Quality (1-5)
+                      Pint quality (optional)
                     </label>
                     <select
                       className="stout-select"
@@ -557,6 +560,7 @@ export function VenueDetailPanel({ venue, distanceKm = null, onClose, onScanMenu
                       value={pintRating}
                       onChange={(e) => setPintRating(e.target.value)}
                     >
+                      <option value="">No rating</option>
                       <option value="5.0">5.0 — Creamiest Dream Pint</option>
                       <option value="4.8">4.8 — Exceptional Pour</option>
                       <option value="4.5">4.5 — Very Solid Pint</option>

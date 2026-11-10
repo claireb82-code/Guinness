@@ -283,9 +283,16 @@ class SubmissionValidationTests(unittest.TestCase):
     CITIES = {"all", "zurich", "geneva"}
 
     def test_crowd_report_defaults_and_sanitising(self):
-        r = guard.validate_crowd_report({"venueId": "v-1", "note": "  great\x00 pint ", "price": "9.5", "hasZero": True})
-        self.assertEqual(r, {"venueId": "v-1", "user": "Swiss Guinness Scout", "servingFormat": "draught", "pintRating": 5.0,
+        r = guard.validate_crowd_report({"venueId": "v-1", "servingFormat": "draught", "note": "  great\x00 pint ", "price": "9.5", "hasZero": True})
+        self.assertEqual(r, {"venueId": "v-1", "user": "Swiss Guinness Scout", "servingFormat": "draught", "pintRating": None,
                              "price": "CHF 9.50", "hasZero": True, "note": "great pint"})
+
+    def test_regression_a_report_must_say_how_it_is_served_and_a_rating_is_optional(self):
+        with self.assertRaises(guard.ValidationError) as ctx:
+            guard.validate_crowd_report({"venueId": "v-1"})
+        self.assertIn("servingFormat", str(ctx.exception))
+        self.assertIsNone(guard.validate_crowd_report({"venueId": "v-1", "servingFormat": "draught", "pintRating": ""})["pintRating"])
+        self.assertEqual(guard.validate_crowd_report({"venueId": "v-1", "servingFormat": "draught", "pintRating": "4.5"})["pintRating"], 4.5)
 
     def test_crowd_report_none_format_has_no_rating(self):
         r = guard.validate_crowd_report({"venueId": "v", "servingFormat": "none", "pintRating": "4.0"})
@@ -299,15 +306,15 @@ class SubmissionValidationTests(unittest.TestCase):
                 guard.validate_crowd_report({**base, **patch})
 
     def test_hasZero_must_be_a_real_boolean(self):
-        self.assertFalse(guard.validate_crowd_report({"venueId": "v", "hasZero": "false"})["hasZero"])
+        self.assertFalse(guard.validate_crowd_report({"venueId": "v", "servingFormat": "draught", "hasZero": "false"})["hasZero"])
 
     def test_new_venue_valid(self):
-        v = guard.validate_new_venue({"name": " The Pub ", "lat": "47.37", "lng": 8.54, "website": "pub.ch", "city": "all", "price": "CHF 9"}, self.CITIES)
+        v = guard.validate_new_venue({"name": " The Pub ", "lat": "47.37", "lng": 8.54, "website": "pub.ch", "city": "all", "price": "CHF 9", "servingFormat": "draught"}, self.CITIES)
         self.assertEqual((v["name"], v["city"], v["lat"], v["website"], v["price"], v["category"]),
                          ("The Pub", "zurich", 47.37, "https://pub.ch", "CHF 9.00", "pub"))
 
     def test_new_venue_rejections(self):
-        ok = {"name": "X", "lat": 47.37, "lng": 8.54}
+        ok = {"name": "X", "lat": 47.37, "lng": 8.54, "servingFormat": "draught"}
         for patch in [{"name": ""}, {"name": "x" * 101}, {"category": "casino"}, {"city": "atlantis"}, {"lat": 10}, {"lng": 50},
                       {"lat": "nan"}, {"website": "javascript:alert(1)"}, {"servingFormat": "keg"}, {"address": "x" * 201}]:
             with self.subTest(patch=patch), self.assertRaises(guard.ValidationError):

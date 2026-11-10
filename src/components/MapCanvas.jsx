@@ -349,7 +349,7 @@ export function MapCanvas({
               display: 'inline-block',
             }}
           />
-          <span>Confirmed Draught On Tap</span>
+          <span>Confirmed (on tap)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
           <span
@@ -361,7 +361,7 @@ export function MapCanvas({
               display: 'inline-block',
             }}
           />
-          <span>Confirmed Bottles / Cans</span>
+          <span>Confirmed (cans / bottles)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
           <span
@@ -373,7 +373,7 @@ export function MapCanvas({
               display: 'inline-block',
             }}
           />
-          <span>Mentioned in Google Reviews</span>
+          <span>Possible (not checked)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
           <span
@@ -385,7 +385,19 @@ export function MapCanvas({
               display: 'inline-block',
             }}
           />
-          <span>Confirmed No Guinness</span>
+          <span>No Guinness found</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: '#8c7e6d',
+              display: 'inline-block',
+            }}
+          />
+          <span>Not checked yet</span>
         </div>
       </div>
     </div>

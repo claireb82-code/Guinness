@@ -6,6 +6,7 @@ export function AddVenueModal({
   onClose,
   initialCoords,
   coordsFromClick = false,
+  advanced = false,
   activeCity,
   onAddVenue,
   onCheckGoogleMaps,
@@ -20,9 +21,9 @@ export function AddVenueModal({
   const [lat, setLat] = useState(initialCoords?.lat || 47.3745);
   const [lng, setLng] = useState(initialCoords?.lng || 8.5385);
   const [website, setWebsite] = useState('');
-  const [servingFormat, setServingFormat] = useState('draught');
+  const [servingFormat, setServingFormat] = useState(''); // nothing is assumed: the visitor says whether it is served
   const [price, setPrice] = useState('');
-  const [pintRating, setPintRating] = useState('4.8');
+  const [pintRating, setPintRating] = useState(''); // optional: no rating unless the visitor gives one
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   // Where the position came from. Only a click on the map, a successful address lookup or typed coordinates count as
@@ -91,6 +92,10 @@ export function AddVenueModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
+    if (!servingFormat) {
+      setFormError('Please say whether this place serves Guinness.');
+      return;
+    }
     setFormError('');
     setSubmitting(true);
     try {
@@ -121,13 +126,15 @@ export function AddVenueModal({
         website,
         servingFormat,
         price,
-        pintRating: Number(pintRating),
+        pintRating: pintRating === '' ? null : Number(pintRating),
         note,
       });
       setName('');
       setAddress('');
       setWebsite('');
       setNote('');
+      setServingFormat('');
+      setPintRating('');
       onClose();
     } finally {
       setSubmitting(false);
@@ -141,7 +148,7 @@ export function AddVenueModal({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <PlusCircle size={20} color="#c8a45d" />
             <h3 className="font-serif-guinness" style={{ fontSize: '1.15rem' }}>
-              Check Google Maps & Add Bars / Restaurants to Guinness Finder
+              Add a venue
             </h3>
           </div>
           <button
@@ -154,8 +161,13 @@ export function AddVenueModal({
           </button>
         </div>
 
-        {/* Google Maps Direct Checker & Importer */}
-        <form
+        <p style={{ fontSize: '0.78rem', color: '#b8ab99', margin: '0 0 0.85rem', lineHeight: 1.4 }}>
+          Know a place in Switzerland that serves Guinness? Add it so others can find it. Only say what you know: a venue
+          becomes confirmed once its website or a second visitor agrees.
+        </p>
+
+        {/* Google Maps Direct Checker & Importer (owner-only) */}
+        {advanced && <form
           onSubmit={handleGmapsCheckSubmit}
           style={{
             background: '#120f0c',
@@ -170,7 +182,7 @@ export function AddVenueModal({
         >
           <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#e2be75', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Globe2 size={15} color="#c8a45d" />
-            1. Check Google Maps Bars, Pubs, Restaurants & Hotels → Feed into Finder
+            Import from Google Maps (advanced)
           </div>
           <div style={{ fontSize: '0.74rem', color: '#b8ab99', lineHeight: 1.4 }}>
             Paste any Google Maps place link, bar/restaurant name, or multiple lines of venues (or leave blank to check all bars & restaurants in the current map area) and automatically scan their menus & reviews for Guinness.
@@ -196,11 +208,7 @@ export function AddVenueModal({
               {checkingGmaps ? 'Checking Google Maps...' : 'Check on Google Maps & Import'}
             </button>
           </div>
-        </form>
-
-        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#d7cbb8', marginBottom: '0.55rem' }}>
-          2. Or Add & Inspect a Specific Venue Directly
-        </div>
+        </form>}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
           <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.55rem' }}>
@@ -275,6 +283,9 @@ export function AddVenueModal({
             )}
           </div>
 
+          <details style={{ fontSize: '0.74rem', color: '#9c8e7b' }}>
+            <summary style={{ cursor: 'pointer' }}>Exact position (advanced)</summary>
+            <div style={{ marginTop: '0.5rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.55rem' }}>
             <div>
               <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
@@ -309,10 +320,12 @@ export function AddVenueModal({
               />
             </div>
           </div>
+            </div>
+          </details>
 
           <div>
             <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-              Website or Online Menu URL (Auto-scanned for Guinness)
+              Website or menu link (optional, we read it for Guinness)
             </label>
             <input
               type="text"
@@ -327,22 +340,26 @@ export function AddVenueModal({
           <div className="stack-sm" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.55rem' }}>
             <div>
               <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-                Guinness Status
+                Do they serve Guinness? *
               </label>
               <select
                 className="stout-select"
                 style={{ width: '100%' }}
                 value={servingFormat}
+                required
                 onChange={(e) => setServingFormat(e.target.value)}
               >
-                <option value="draught">Draught On Tap</option>
-                <option value="cans_bottles">Cans / Bottles</option>
-                <option value="none">No Guinness</option>
+                <option value="" disabled>
+                  Choose…
+                </option>
+                <option value="draught">Yes, on tap</option>
+                <option value="cans_bottles">Yes, cans / bottles only</option>
+                <option value="none">No</option>
               </select>
             </div>
             <div>
               <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-                Pint Score
+                Rating (optional)
               </label>
               <select
                 className="stout-select"
@@ -351,6 +368,7 @@ export function AddVenueModal({
                 onChange={(e) => setPintRating(e.target.value)}
                 disabled={servingFormat === 'none'}
               >
+                <option value="">No rating</option>
                 <option value="5.0">5.0 ★</option>
                 <option value="4.8">4.8 ★</option>
                 <option value="4.5">4.5 ★</option>
@@ -360,7 +378,7 @@ export function AddVenueModal({
             </div>
             <div>
               <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-                Pint Price
+                Pint price (optional)
               </label>
               <input
                 type="text"
@@ -375,7 +393,7 @@ export function AddVenueModal({
 
           <div>
             <label style={{ fontSize: '0.72rem', color: '#b8ab99', display: 'block', marginBottom: 3 }}>
-              Scout Notes / Review
+              Notes (optional)
             </label>
             <textarea
               className="stout-textarea"
@@ -392,7 +410,7 @@ export function AddVenueModal({
               Cancel
             </button>
             <button type="submit" className="btn-gold" disabled={submitting}>
-              <Search size={14} /> {submitting ? 'Scanning & Saving...' : 'Add Venue & Check Menu'}
+              <PlusCircle size={14} /> {submitting ? 'Saving…' : 'Add venue'}
             </button>
           </div>
         </form>
