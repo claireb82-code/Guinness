@@ -349,3 +349,31 @@ test('default on a phone: Near me is applied without flagging "Filters changed",
   assert.equal(await page.locator('.nav-dot').count(), 0, 'an automatic default is not a change the visitor made');
   await context.close();
 });
+
+// How much of the screen the radius circle takes up (its width over the smaller side of the map).
+async function circleShare(page) {
+  await page.waitForSelector('path.near-me-circle');
+  await page.waitForTimeout(1800); // the map animates to its final view
+  return page.evaluate(() => {
+    const map = document.querySelector('.leaflet-container').getBoundingClientRect();
+    const circle = document.querySelector('path.near-me-circle').getBoundingClientRect();
+    return circle.width / Math.min(map.width, map.height);
+  });
+}
+
+for (const [label, options] of [
+  ['desktop 1280x800', { viewport: { width: 1280, height: 800 } }],
+  ['desktop 1920x1080', { viewport: { width: 1920, height: 1080 } }],
+  ['iPhone 13', { device: 'iPhone 13' }],
+  ['iPhone SE', { device: 'iPhone SE' }],
+]) {
+  test(`regression: the 500 m view shows the surroundings, not just the circle edge to edge (${label})`, { skip: skip() }, async () => {
+    const { page, context } = await open({ geolocation: ZURICH_HB, auto: true, ...options });
+    await page.waitForSelector('.distance-badge', { state: 'attached' }); // (hidden on a phone: the map tab is showing)
+    const want = smallestRadiusWithVenues(ZURICH_HB);
+    if (want !== 0.5) return context.close(); // widened: the data has nothing within 500 m of this point
+    const share = await circleShare(page);
+    assert.ok(share >= 0.2 && share <= 0.55, `the circle should take a third to a half of the screen, not ${(share * 100).toFixed(0)}%`);
+    await context.close();
+  });
+}

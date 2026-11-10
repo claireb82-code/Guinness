@@ -34,6 +34,8 @@ const GUINNESS_GOOGLE_MAP_STYLES = [
   },
 ];
 
+const NEAR_ME_VIEW_PAD = 0.5; // extra margin around the radius circle, as a fraction of its size (0.5 = the view is 2x the circle)
+
 export function MapCanvas({
   center,
   zoom = 14,
@@ -268,7 +270,9 @@ export function MapCanvas({
       zIndexOffset: 1000,
     }).addTo(map);
     nearLayersRef.current = [circle, dot];
-    map.fitBounds(circle.getBounds(), { padding: [24, 24], maxZoom: 17 });
+    // Frame the radius with its surroundings: the view is twice the circle across, so the circle takes up about
+    // a third to a half of the screen (edge to edge felt too zoomed in, and showed nothing around you).
+    map.fitBounds(circle.getBounds().pad(NEAR_ME_VIEW_PAD), { padding: [0, 0], maxZoom: 17 });
   }, [userLocation?.lat, userLocation?.lng, radiusKm, googleApiKey, googleSdkReady]);
 
   // Pan to selected venue smoothly
