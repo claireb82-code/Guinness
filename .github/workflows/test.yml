@@ -34,5 +34,10 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - run: npm install --no-save playwright
-      - run: npx playwright install --with-deps chromium
+      # System packages (mostly fonts) come from Ubuntu's mirrors. When the runner cannot reach them apt retries for ~10 minutes
+      # and fails the whole job, before a single test has run. Give it three minutes, carry on with what the image has, and let
+      # the browser launch (or the tests) fail loudly if something really is missing.
+      - name: System packages for Chromium (best effort)
+        run: timeout 180 npx playwright install-deps chromium || echo "::warning::could not install Chromium system packages; continuing with the runner image's"
+      - run: npx playwright install chromium
       - run: npm run test:e2e
