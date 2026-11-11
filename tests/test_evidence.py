@@ -86,6 +86,68 @@ class SanitiseStaticVenueTests(unittest.TestCase):
         self.assertIsNone(evidence.sanitise_static_venue(None))
 
 
+class StarterSiteCheckTests(unittest.TestCase):
+    """Starter-list venues: no hand-typed deep links, and a website read by the crawler counts only for what it really said."""
+
+    def starter(self, **kw):
+        return evidence.sanitise_static_venue(crawl_record(id="al-shenanigans-lugano", name="The Shenanigans Irish Pub Lugano", website="https://shenaniganslugano.ch",
+                                                           menuUrl="https://shenaniganslugano.ch/birre", **kw))
+
+    def read(self, **kw):
+        return {"reachable": True, "checkedAt": "2026-11-11T10:00:00+00:00", "checkedUrl": "https://shenaniganslugano.ch/", "foundOnMenu": False,
+                "typesFound": [], "extractedPrice": None, "snippets": [], **kw}
+
+    def test_regression_a_hand_typed_menu_link_is_dropped_and_the_website_remains(self):
+        v = self.starter()
+        self.assertNotIn("menuUrl", v, "nothing in this app ever opened /birre")
+        self.assertEqual(v["website"], "https://shenaniganslugano.ch")
+
+    def test_every_starter_venue_has_a_website_and_no_guessed_deep_link(self):
+        self.assertGreaterEqual(len(app.DEMO_VENUES), 20)
+        for raw in app.DEMO_VENUES:
+            self.assertTrue(raw.get("website"), f"{raw['id']} would lose its only link")
+            self.assertNotIn("menuUrl", evidence.sanitise_static_venue(raw), raw["id"])
+
+    def test_a_crawled_venues_checked_page_is_kept(self):
+        self.assertEqual(evidence.sanitise_static_venue(crawl_record(menuUrl="http://paddys.example/drinks"))["menuUrl"], "http://paddys.example/drinks")
+
+    def test_an_unreadable_website_changes_nothing(self):
+        v = self.starter()
+        self.assertEqual(evidence.apply_site_check(v, {"reachable": False, "error": "timed out"}), v)
+        self.assertEqual(evidence.apply_site_check(v, None), v)
+        self.assertEqual(app.compute_guinness_status(evidence.apply_site_check(v, {"reachable": False}))["reason"], "On our list of Irish pubs (not checked)")
+
+    def test_a_pub_website_that_names_guinness_becomes_a_real_menu_check(self):
+        v = evidence.apply_site_check(self.starter(), self.read(foundOnMenu=True, checkedUrl="https://shenaniganslugano.ch/birre",
+                                                                snippets=["BIRRE ALLA SPINA: Guinness Draught — Pint CHF 9.20"]))
+        self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"], v["menuCheck"]["extractedPrice"]), (True, True, "CHF 9.20"))
+        self.assertEqual(v["menuCheck"]["lastChecked"], "2026-11-11T10:00:00+00:00")
+        self.assertNotIn("tagCheck", v, "evidence replaces the guess")
+        self.assertNotIn("priceHint", v)
+        self.assertEqual(v["menuUrl"], "https://shenaniganslugano.ch/birre", "the page that was really read")
+        self.assertEqual(app.compute_guinness_status(v)["status"], "confirmed_draught")
+
+    def test_a_read_site_without_guinness_is_not_proof_of_none(self):
+        v = evidence.apply_site_check(self.starter(), self.read())
+        self.assertTrue(v["menuCheck"]["checked"])
+        self.assertFalse(v["menuCheck"]["foundOnMenu"])
+        self.assertEqual(v["tagCheck"]["kind"], "starter_list", "the pub is still on our list")
+        self.assertNotEqual(app.compute_guinness_status(v)["status"], "no_guinness")
+        self.assertIn("website was read", v["menuCheck"]["snippets"][0])
+
+    def test_a_restaurant_that_only_mentions_guinness_stays_a_hint(self):
+        v = evidence.apply_site_check(self.starter(category="restaurant"), self.read(foundOnMenu=True, snippets=["Braised beef in Guinness"]))
+        self.assertEqual(v["tagCheck"]["kind"], evidence.TAG_WEB)
+        self.assertFalse(v["menuCheck"]["foundOnMenu"])
+        self.assertNotEqual(app.compute_guinness_status(v)["status"], "confirmed_draught")
+
+    def test_it_does_not_modify_its_input(self):
+        v = self.starter()
+        before = json.dumps(v, sort_keys=True)
+        evidence.apply_site_check(v, self.read(foundOnMenu=True, snippets=["Guinness on tap"]))
+        self.assertEqual(json.dumps(v, sort_keys=True), before)
+
+
 class PriceTests(unittest.TestCase):
     def test_the_price_is_the_one_printed_after_guinness_not_the_neighbouring_beer(self):
         # a real line from the crawl: the first price on it (7,80) belongs to a cider

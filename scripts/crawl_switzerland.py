@@ -427,6 +427,34 @@ def scan_venue_website(venue):
     }
 
 
+def scan_starter_venues(venues, scan=None, now_iso=None):
+    """Read the own website of each venue in the app's hand-written starter list.
+
+    Those venues are not in OpenStreetMap's output, so no earlier crawl ever looked at them. Only the venue's website is read:
+    their hand-typed deep links ("/birre", "/drinks") were guesses and are not used. Returns ``{venue id: record}`` for
+    ``starterChecks`` in the results file (see ``evidence.apply_site_check``).
+    """
+    scan = scan or scan_venue_website
+    now_iso = now_iso or datetime.now(timezone.utc).isoformat()
+    targets = {}
+    for v in venues:
+        site = safe_website(v.get("website"))
+        if v.get("id") and site:
+            targets[v["id"]] = {"website": site, "category": v.get("category")}
+    results = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(16, max(len(targets), 1))) as pool:
+        futures = {pool.submit(scan, t): vid for vid, t in targets.items()}
+        for fut in concurrent.futures.as_completed(futures):
+            vid = futures[fut]
+            try:
+                res = fut.result()
+            except Exception as exc:  # noqa: BLE001 - a failed read is "could not read", never "no Guinness"
+                res = {"scanned": True, "reachable": False, "error": str(exc)}
+            keep = ("reachable", "httpStatus", "checkedUrl", "foundOnMenu", "typesFound", "extractedPrice", "snippets", "error")
+            results[vid] = {"website": targets[vid]["website"], "checkedAt": now_iso, **{k: res[k] for k in keep if k in res}}
+    return dict(sorted(results.items()))
+
+
 def fill_websites_from_overture(venues, index=None, all_categories=False):
     """Give venues that OpenStreetMap lists without a website the one Overture Maps has for the same place (a similar name
     within 75 m). Pubs, bars and likely pubs by default; every category with ``all_categories``. Returns how many were filled."""
@@ -769,8 +797,18 @@ def main(argv=None):
     }
 
     # The records above are built with placeholder ratings/counts/quotes; keep only what was really observed.
+    import app_server  # noqa: E402 - the starter list lives there; imported late so the crawler stays light to load
+
+    starter_checks = scan_starter_venues(app_server.DEMO_VENUES, now_iso=now_iso)
+    print(
+        f"  Starter-list websites read: {sum(1 for c in starter_checks.values() if c.get('reachable'))} of {len(starter_checks)} reachable, "
+        f"{sum(1 for c in starter_checks.values() if c.get('foundOnMenu'))} name Guinness",
+        flush=True,
+    )
+
     payload = {
         "stats": stats,
+        "starterChecks": starter_checks,
         "confirmedVenues": [evidence.sanitise_static_venue(v) for v in confirmed_venues_output],
         "verifiedNoGuinnessSample": [evidence.sanitise_static_venue(v) for v in verified_no_guinness_sample],
     }

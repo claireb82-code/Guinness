@@ -218,6 +218,62 @@ class CheckCrawlResultTests(unittest.TestCase):
             self.assertEqual(checker.main(["--old", self.write(list("abcdef")), "--new", self.write(["a"])]), 1)
 
 
+class StarterListCrawlTests(unittest.TestCase):
+    """The hand-written starter list is not in OpenStreetMap's output, so the crawler reads those websites itself."""
+
+    VENUES = [
+        {"id": "a", "category": "pub", "website": "https://a.example", "menuUrl": "https://a.example/guessed-link"},
+        {"id": "b", "category": "bar", "website": "https://b.example"},
+        {"id": "c", "category": "pub", "website": "http://127.0.0.1/secret"},
+        {"id": "d", "category": "pub"},
+    ]
+
+    def test_it_reads_each_venues_website_and_never_the_guessed_deep_link(self):
+        seen = []
+
+        def fake_scan(venue):
+            seen.append(venue)
+            return {"scanned": True, "reachable": True, "httpStatus": 200, "checkedUrl": venue["website"], "foundOnMenu": venue["website"].startswith("https://a"),
+                    "typesFound": ["Guinness Draught (On Tap)"], "extractedPrice": None, "snippets": ["Guinness on tap"]}
+
+        res = crawler.scan_starter_venues(self.VENUES, scan=fake_scan, now_iso="2026-11-11T00:00:00+00:00")
+        self.assertEqual(sorted(res), ["a", "b"], "no address that is not a public website, and none without one")
+        self.assertTrue(all("menuUrl" not in v for v in seen))
+        self.assertEqual(res["a"]["checkedAt"], "2026-11-11T00:00:00+00:00")
+        self.assertTrue(res["a"]["foundOnMenu"] and not res["b"]["foundOnMenu"])
+
+    def test_a_crashing_scan_is_unreadable_not_no_guinness(self):
+        def boom(_venue):
+            raise RuntimeError("tls handshake failed")
+
+        res = crawler.scan_starter_venues(self.VENUES[:1], scan=boom)
+        self.assertFalse(res["a"]["reachable"])
+        self.assertNotIn("foundOnMenu", res["a"])
+
+    def test_the_overlay_reaches_the_venues_the_app_serves(self):
+        check = {"reachable": True, "checkedAt": "2026-11-11T00:00:00+00:00", "checkedUrl": "https://shenaniganslugano.ch/birre",
+                 "foundOnMenu": True, "snippets": ["Guinness Draught — Pint CHF 9.20"]}
+        with mock.patch.object(app, "load_starter_checks", return_value={"al-shenanigans-lugano": check}):
+            venues = {v["id"]: v for v in app.get_all_combined_venues({})}
+        v = venues["al-shenanigans-lugano"]
+        self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"]), (True, True))
+        self.assertEqual(v["menuUrl"], "https://shenaniganslugano.ch/birre")
+        other = venues["zh-kennedys"] if "zh-kennedys" in venues else next(x for x in venues.values() if str(x["id"]).startswith("zh-"))
+        self.assertFalse(other["menuCheck"]["checked"], "venues without a crawler record stay unchecked")
+        self.assertNotIn("menuUrl", other)
+
+    def test_a_missing_or_malformed_results_file_means_no_checks(self):
+        with mock.patch.object(app, "CRAWL_RESULTS_PATH", "/nonexistent.json"):
+            self.assertEqual(app.load_starter_checks(), {})
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump({"starterChecks": ["not", "a", "dict"]}, f)
+        try:
+            with mock.patch.object(app, "CRAWL_RESULTS_PATH", f.name):
+                self.assertEqual(app.load_starter_checks(), {})
+        finally:
+            os.unlink(f.name)
+
+
 class WorkflowTests(unittest.TestCase):
     def test_the_crawl_workflow_publishes_a_branch_not_a_pull_request_and_checks_first(self):
         with open(os.path.join(ROOT, ".github", "workflows", "crawl.yml"), encoding="utf-8") as f:

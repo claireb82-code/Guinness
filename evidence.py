@@ -189,6 +189,9 @@ def sanitise_static_venue(venue):
                 "extractedPrice": price_near_guinness(snippets) if menu.get("foundOnMenu") else None,
             }
     else:  # starter list: written by hand, never checked
+        # A hand-typed deep link (".../birre", ".../drinks") was a guess at the site's structure that nothing ever opened:
+        # drop it. The UI falls back to the venue's website, and apply_site_check() puts back the page a crawl really read.
+        v.pop("menuUrl", None)
         tag = tag_check(TAG_STARTER)
         hint = menu.get("extractedPrice") or (venue.get("crowdCheck") or {}).get("reportedPrice")
         if hint:  # kept, but shown as "unchecked": nothing in this app read it from the venue
@@ -199,4 +202,41 @@ def sanitise_static_venue(venue):
         v["tagCheck"] = tag
     else:
         v.pop("tagCheck", None)
+    return v
+
+
+def apply_site_check(venue, check):
+    """A copy of a sanitised starter-list venue with what the crawler really read on its own website.
+
+    ``check`` is the crawler's record for that venue (``starterChecks`` in the crawl results): ``reachable``, ``foundOnMenu``,
+    ``typesFound``, ``snippets``, ``extractedPrice``, ``checkedUrl``, ``checkedAt``. A site that could not be read changes
+    nothing (that is "unknown", never "no"). A site that was read but does not mention Guinness is recorded as read, but the
+    starter-list hint stays: a pub's website not naming its beer is not evidence that it does not pour it. A site that names
+    Guinness as something served becomes a real menu check; one that only mentions it (a recipe, an event) becomes a weaker hint.
+    """
+    if not isinstance(venue, dict) or not isinstance(check, dict) or not check.get("reachable"):
+        return venue
+    v = copy.deepcopy(venue)
+    read_at = check.get("checkedAt")
+    page = check.get("checkedUrl")
+    if page and not v.get("menuUrl"):
+        v["menuUrl"] = page  # a page this app really opened
+    snippets = check.get("snippets") or []
+    if check.get("foundOnMenu"):
+        if website_mention_kind(v.get("category"), snippets) == "menu":
+            v["menuCheck"] = {
+                "checked": True,
+                "lastChecked": read_at,
+                "foundOnMenu": True,
+                "typesFound": serving_types(snippets),
+                "extractedPrice": price_near_guinness(snippets),
+                "snippets": snippets,
+            }
+            v.pop("tagCheck", None)  # real evidence replaces the guess
+            v.pop("priceHint", None)
+        else:
+            v["tagCheck"] = tag_check(TAG_WEB)
+            v["menuCheck"] = {**not_checked("The website mentions Guinness without saying it is served."), "checked": True, "lastChecked": read_at}
+    else:
+        v["menuCheck"] = {**not_checked("The website was read: no Guinness text found."), "checked": True, "lastChecked": read_at}
     return v

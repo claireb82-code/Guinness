@@ -1604,6 +1604,18 @@ def load_crawl_venues():
     return []
 
 
+def load_starter_checks():
+    """What the crawler really read on the starter-list venues' own websites, keyed by venue id (see evidence.apply_site_check)."""
+    if os.path.exists(CRAWL_RESULTS_PATH):
+        try:
+            with open(CRAWL_RESULTS_PATH, "r", encoding="utf-8") as f:
+                checks = json.load(f).get("starterChecks")
+                return checks if isinstance(checks, dict) else {}
+        except Exception:
+            pass
+    return {}
+
+
 def load_crawl_stats():
     if os.path.exists(CRAWL_RESULTS_PATH):
         try:
@@ -1659,7 +1671,11 @@ def fix_legacy_community_venue(venue):
 def get_all_combined_venues(store):
     # The bundled files were generated with invented ratings, counts and quotes: strip them (see evidence.py).
     crawl_venues = [evidence.sanitise_static_venue(v) for v in load_crawl_venues()]
-    starter_venues = [evidence.sanitise_static_venue(v) for v in DEMO_VENUES]
+    starter_checks = load_starter_checks()
+    starter_venues = [
+        evidence.apply_site_check(evidence.sanitise_static_venue(v), starter_checks.get(v.get("id")) if isinstance(v, dict) else None)
+        for v in DEMO_VENUES
+    ]
     raw_list = (
         [place_community_venue(fix_legacy_community_venue(v), store.get("venueLocations")) for v in (store.get("customVenues") or [])]
         + (store.get("googleMapsVenues") or [])
