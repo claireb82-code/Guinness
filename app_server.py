@@ -1475,37 +1475,6 @@ DEMO_VENUES = [
         "reviewCheck": {"mentionCount": 98, "sentiment": "positive", "excerpts": []},
         "crowdCheck": {"confirmedCount": 15, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 10.50", "hasZero": False, "recentReports": []},
     },
-    {
-        "id": "al-shenanigans-lugano",
-        "city": "alps",
-        "name": "The Shenanigans Irish Pub Lugano",
-        "category": "pub",
-        "address": "Via Pioda 5, 6900 Lugano (Ticino), Switzerland",
-        "lat": 46.0056,
-        "lng": 8.9532,
-        "googleRating": 4.6,
-        "googleReviewCount": 940,
-        "priceLevel": "CHF ··",
-        "website": "https://shenaniganslugano.ch",
-        "menuUrl": "https://shenaniganslugano.ch/birre",
-        "phone": "+41 91 921 15 15",
-        "openNow": True,
-        "editorialSummary": "Ticino’s premier Irish pub in central Lugano pouring Guinness Draught and Guinness Foreign Extra.",
-        "menuCheck": {
-            "checked": True,
-            "lastChecked": "2026-11-06T09:18:00Z",
-            "foundOnMenu": True,
-            "typesFound": ["Guinness Draught (On Tap)", "Guinness 0.0"],
-            "extractedPrice": "CHF 9.20",
-            "snippets": ["BIRRE ALLA SPINA: Guinness Draught — Pint CHF 9.20 | Guinness 0.0 — CHF 8.20"],
-        },
-        "reviewCheck": {
-            "mentionCount": 215,
-            "sentiment": "exceptional",
-            "excerpts": [{"author": "Matteo F.", "rating": 5, "date": "5 days ago", "text": "La migliore pinta di Guinness a Lugano e in tutto il Ticino!"}],
-        },
-        "crowdCheck": {"confirmedCount": 26, "deniedCount": 0, "servingFormat": "draught", "reportedPrice": "CHF 9.20", "hasZero": True, "recentReports": []},
-    },
 ]
 
 
