@@ -17,6 +17,18 @@ class TrackedFilesTests(unittest.TestCase):
         self.assertEqual(out.split(), [])
 
 
+class CiWorkflowTests(unittest.TestCase):
+    def test_regression_the_browser_job_cannot_hang_for_ten_minutes_on_unreachable_package_mirrors(self):
+        """`playwright install --with-deps` runs apt, which retried for ten minutes and failed the job when the runner could not
+        reach Ubuntu's mirrors, before any test ran (PR runs on 2026-11-11). System packages are now a time-boxed best effort."""
+        with open(os.path.join(ROOT, ".github", "workflows", "test.yml"), encoding="utf-8") as f:
+            text = f.read()
+        self.assertNotIn("--with-deps", text)
+        self.assertRegex(text, r"timeout \d+ npx playwright install-deps chromium \|\|")
+        self.assertIn("npx playwright install chromium", text)
+        self.assertLess(text.index("install-deps"), text.index("npm run test:e2e"))
+
+
 class NamingTests(unittest.TestCase):
     def source_files(self):
         for base in ("app_server.py", "guard.py", "overpass.py", "evidence.py", "geocode.py", "storage.py", "api", "src", "public", "scripts"):
