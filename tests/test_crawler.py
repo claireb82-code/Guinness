@@ -141,6 +141,33 @@ class OvertureFillTests(unittest.TestCase):
         self.assertEqual(vs[3]["website"], "https://x.example")
 
 
+class DirectorySiteTests(unittest.TestCase):
+    """Regression: a Ticino tourism listing became The Trinity Irish Pub's "website" and was reported as "read: no Guinness text found"."""
+
+    def test_listing_and_social_pages_are_not_a_venues_own_website(self):
+        for url in ("http://www.ticino.ch/it/restaurants/details/The-Trinity-Irish-Pub/128703.html", "https://www.tripadvisor.ch/Restaurant_Review-x.html",
+                    "https://de.tripadvisor.com/x", "https://www.facebook.com/somepub", "https://m.facebook.com/somepub", "https://www.google.com/maps/place/x",
+                    "https://www.booking.com/hotel/ch/x.html", "https://www.local.ch/de/d/lugano/x"):
+            self.assertIsNone(crawler.safe_website(url), url)
+
+    def test_a_pubs_own_website_is_kept_even_when_its_name_contains_a_directory_word(self):
+        for url in ("https://www.thetrinity.ch/", "https://ticino-pub.example/", "https://notfacebook.com/", "https://maxbar.ch/menu", "https://boxing.example/"):
+            self.assertEqual(crawler.is_directory_site(url), False, url)
+            self.assertTrue(crawler.safe_website(url), url)
+
+    def test_an_overture_directory_page_is_not_filled_in(self):
+        vs = [{"name": "The Trinity Irish Pub", "category": "pub", "lat": 46.00688, "lng": 8.96029, "website": None, "is_pub_or_candidate": True}]
+        index = overture.Index([{"name": "The Trinity Irish Pub", "lat": 46.00689, "lng": 8.96031, "website": "http://www.ticino.ch/it/restaurants/details/The-Trinity-Irish-Pub/128703.html"}])
+        self.assertEqual(crawler.fill_websites_from_overture(vs, index=index), 0)
+        self.assertIsNone(vs[0]["website"])
+
+
+class StarterListContentTests(unittest.TestCase):
+    def test_regression_a_starter_venue_whose_website_is_dead_and_that_nothing_else_verifies_is_not_listed(self):
+        """The Shenanigans Irish Pub Lugano (Via Pioda 5) could not be verified anywhere and its website is dead."""
+        self.assertFalse([v for v in app.DEMO_VENUES if "shenanigan" in v["name"].lower() or "shenanigan" in str(v.get("website", "")).lower()])
+
+
 class MentionTierTests(unittest.TestCase):
     """Once restaurants and hotels are read, a recipe must not become a "Confirmed" venue."""
 
@@ -251,14 +278,15 @@ class StarterListCrawlTests(unittest.TestCase):
         self.assertNotIn("foundOnMenu", res["a"])
 
     def test_the_overlay_reaches_the_venues_the_app_serves(self):
-        check = {"reachable": True, "checkedAt": "2026-11-11T00:00:00+00:00", "checkedUrl": "https://shenaniganslugano.ch/birre",
+        target = app.DEMO_VENUES[0]["id"]
+        check = {"reachable": True, "checkedAt": "2026-11-11T00:00:00+00:00", "checkedUrl": "https://pub.example/birre",
                  "foundOnMenu": True, "snippets": ["Guinness Draught — Pint CHF 9.20"]}
-        with mock.patch.object(app, "load_starter_checks", return_value={"al-shenanigans-lugano": check}):
+        with mock.patch.object(app, "load_starter_checks", return_value={target: check}):
             venues = {v["id"]: v for v in app.get_all_combined_venues({})}
-        v = venues["al-shenanigans-lugano"]
+        v = venues[target]
         self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"]), (True, True))
-        self.assertEqual(v["menuUrl"], "https://shenaniganslugano.ch/birre")
-        other = venues["zh-kennedys"] if "zh-kennedys" in venues else next(x for x in venues.values() if str(x["id"]).startswith("zh-"))
+        self.assertEqual(v["menuUrl"], "https://pub.example/birre")
+        other = next(x for x in venues.values() if x["id"] != target and str(x["id"]).startswith(("zh-", "al-", "ge-", "ba-")))
         self.assertFalse(other["menuCheck"]["checked"], "venues without a crawler record stay unchecked")
         self.assertNotIn("menuUrl", other)
 

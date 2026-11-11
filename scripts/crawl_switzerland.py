@@ -183,12 +183,32 @@ out center tags;"""
     return bundle
 
 
-def safe_website(value):
-    """A normalised public http(s) address, or None."""
+# Directories, booking portals, review sites and social networks list a venue; they are not its own website. Reading one and
+# reporting "the website was read: no Guinness text found" would be wrong, and a listing page rarely names the beer anyway.
+DIRECTORY_DOMAINS = (
+    "ticino.ch", "tripadvisor.", "booking.com", "yelp.", "thefork.", "opentable.", "restaurantguru.", "local.ch", "search.ch",
+    "google.", "goo.gl", "maps.apple.com", "facebook.com", "instagram.com", "tiktok.com", "twitter.com", "x.com", "linkedin.com",
+    "ubereats.", "just-eat.", "eatsa.", "foursquare.com", "wikipedia.org", "wikidata.org", "myswitzerland.com", "gastro.ch",
+)
+
+
+def is_directory_site(url):
+    """True when ``url`` is a listing or social page about a venue rather than the venue's own website."""
     try:
-        return guard.clean_website(value)
+        host = (urllib.parse.urlsplit(url).hostname or "").lower()
+    except ValueError:
+        return False
+    host = host[4:] if host.startswith("www.") else host
+    return any(host == d.rstrip(".") or host.endswith("." + d.rstrip(".")) or (d.endswith(".") and (host.startswith(d) or f".{d}" in f".{host}")) for d in DIRECTORY_DOMAINS)
+
+
+def safe_website(value):
+    """A normalised public http(s) address that is a venue's own website, or None."""
+    try:
+        site = guard.clean_website(value)
     except guard.ValidationError:
         return None
+    return None if site and is_directory_site(site) else site
 
 
 def classify_element(el):
