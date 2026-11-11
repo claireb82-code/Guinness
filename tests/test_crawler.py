@@ -330,6 +330,32 @@ class StarterListCrawlTests(unittest.TestCase):
         self.assertFalse(other["menuCheck"]["checked"], "venues without a crawler record stay unchecked")
         self.assertNotIn("menuUrl", other)
 
+    def test_regression_the_app_stays_consistent_when_a_crawl_has_read_every_starter_website(self):
+        """The first crawl that wrote starterChecks failed its own post-crawl tests (a test assumed no starter venue had been read)."""
+        base = {"checkedAt": "2026-11-11T00:00:00+00:00", "reachable": True}
+        checks = {}
+        for i, v in enumerate(app.DEMO_VENUES):
+            site = v["website"]
+            checks[v["id"]] = [
+                {**base, "checkedUrl": site, "foundOnMenu": True, "snippets": ["Guinness Draught 5dl CHF 9.80"]},
+                {**base, "checkedUrl": site, "foundOnMenu": False, "snippets": []},
+                {"reachable": False, "error": "timed out"},
+            ][i % 3]
+        with mock.patch.object(app, "load_starter_checks", return_value=checks):
+            venues = {v["id"]: v for v in app.get_all_combined_venues({})}
+        for vid, check in checks.items():
+            v = venues[vid]
+            if check.get("foundOnMenu"):
+                self.assertTrue(v["menuCheck"]["foundOnMenu"], vid)
+                self.assertNotIn("priceHint", v, "a price read from the website replaces the unchecked hint")
+                self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", vid)
+            elif check.get("reachable"):
+                self.assertTrue(v["menuCheck"]["checked"], vid)
+                self.assertNotEqual(app.compute_guinness_status(v)["status"], "no_guinness", f"{vid}: a silent website is not proof")
+            else:
+                self.assertFalse(v["menuCheck"]["checked"], f"{vid}: an unreadable site changes nothing")
+                self.assertEqual(v["tagCheck"]["kind"], "starter_list", vid)
+
     def test_a_missing_or_malformed_results_file_means_no_checks(self):
         with mock.patch.object(app, "CRAWL_RESULTS_PATH", "/nonexistent.json"):
             self.assertEqual(app.load_starter_checks(), {})
