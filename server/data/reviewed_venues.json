@@ -1,0 +1,276 @@
+{
+  "note": "Venues the site owner has already checked by hand on Google Maps. A review page must never list these again. 'keep' = real and open (says nothing about Guinness); 'investigate' = being looked at, not yet decided. Removed venues are in excluded_venues.json.",
+  "checkedOn": "2026-11-12",
+  "reviewed": [
+    {
+      "id": "ch-node-506055264",
+      "name": "Dublin Cliff",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-f5ad5caf-947a-482a-8403-35387d1ba7c1",
+      "name": "The Green Harp",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-node-593639050",
+      "name": "Mr Pickwick",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-a7e2bef3-4794-40d0-be97-0d2ce8488058",
+      "name": "Paddy Reilly's Basel",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-f159eb7d-357c-42f3-a977-8bdce3fd71e8",
+      "name": "Shannon's Irish Pub",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-9de6a181-95ac-4da9-bf3e-73a8125f689d",
+      "name": "Nelson",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-0054d7d0-af0c-4521-bff0-7283485526bc",
+      "name": "Nelson Pub Bern",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-node-2447571422",
+      "name": "The Shamrock",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-a766c831-ca36-4e02-b65c-fdbb9486c711",
+      "name": "Irish Eyes Pub",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-node-292319290",
+      "name": "Nelson Pub",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-node-3421432243",
+      "name": "The Irish Pub",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-644987a6-454d-48a9-8c1b-b97021a71937",
+      "name": "UFO Bar",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-node-13473321101",
+      "name": "Flanagan's",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-6e8cb0a4-8e06-439d-9518-f2a0c054b35c",
+      "name": "Hotel Pickwick Luzern",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-b3a8e24e-8b1f-4f71-aecc-5987693ee1d7",
+      "name": "O'Hanlons Irish Pub",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-1db310ad-a34b-46dc-904b-8e7b110c3210",
+      "name": "The Core Irish Pub",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-a64ee7ed-3fdc-4621-8e89-86d15f3ae641",
+      "name": "Mr. Pickwick Pub Baden",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-4085a610-e95a-4d64-9008-c9c3a4b2c485",
+      "name": "Ned Kelly Lounge",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-node-279180955",
+      "name": "Nelson",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-03932a63-0cf2-4056-b547-79130f610813",
+      "name": "Peggy O'Neill's Irish Bar",
+      "decision": "keep",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-node-2712805853",
+      "name": "Britannia Pub",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-way-467892260",
+      "name": "Nelson",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-ebdbb0f0-4a20-4daa-87d8-5d4789801e5c",
+      "name": "O'Neills Irish Pub",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-b8270c69-4cc2-481a-87d6-6644ed7a79fb",
+      "name": "Kreuz Herzogenbuchsee",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-a4904b49-521b-4efb-b348-4f10da9c9442",
+      "name": "Brian's Irish Bar",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-8840ee7e-8463-4b70-a285-1d3aa88d982c",
+      "name": "MFG",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-b73a9300-f309-4550-91c4-2746346f5c24",
+      "name": "2 Potes O'Feu",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-42f45407-c49f-4761-aeba-4528c8076f8c",
+      "name": "Lord Nelson Pub",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-86a7aaf7-5452-444a-918a-a447aa2794d2",
+      "name": "Inferno",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-node-1553431869",
+      "name": "Shamrock Irish Pub",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "ch-ov-71c546d7-b07e-49c5-a5a7-2bf84ccdcde8",
+      "name": "Dublin City",
+      "decision": "investigate",
+      "list": "overture-possible"
+    },
+    {
+      "id": "zh-paddy-reillys",
+      "name": "Paddy Reilly's Irish Pub & Restaurant",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "ge-mulligans",
+      "name": "Mulligan's Irish Pub Geneva",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "bs-flanagans",
+      "name": "Flanagan's Irish Pub Basel",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "ls-great-escape",
+      "name": "The Great Escape",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "zh-lion-pub",
+      "name": "The Lion Pub",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "ge-flannagans",
+      "name": "Flannagan's Irish Bar",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "ge-charly-oneills",
+      "name": "Charly O'Neill's Irish Pub & Restaurant",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "ls-mccarthys-vevey",
+      "name": "McCarthy's Irish Pub Vevey",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "ls-barrel-oak-montreux",
+      "name": "Barrel Oak Pub Montreux",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "bs-penny-farthing-aarau",
+      "name": "Penny Farthing Pub Aarau",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "be-mccarthys-bern",
+      "name": "McCarthy's Irish Pub Bern",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "lu-shamrock-luzern",
+      "name": "Shamrock Irish Pub Luzern",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "al-ex-bar-davos",
+      "name": "Ex Bar Davos",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    },
+    {
+      "id": "al-bobbys-stmoritz",
+      "name": "Bobby's Pub St. Moritz",
+      "decision": "keep",
+      "list": "starter-dead-website"
+    }
+  ]
+}

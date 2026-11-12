@@ -1438,6 +1438,29 @@ def load_google_place_ids():
     return {k: v for k, v in ids.items() if isinstance(k, str) and isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9_-]{10,200}", v)} if isinstance(ids, dict) else {}
 
 
+EXCLUDED_VENUES_PATH = os.path.join(ROOT_DIR, "server", "data", "excluded_venues.json")
+REVIEWED_VENUES_PATH = os.path.join(ROOT_DIR, "server", "data", "reviewed_venues.json")
+
+
+def _ids_in(path, key):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            rows = json.load(f).get(key)
+    except (OSError, ValueError):
+        return set()
+    return {r["id"] for r in rows if isinstance(r, dict) and isinstance(r.get("id"), str)} if isinstance(rows, list) else set()
+
+
+def load_excluded_ids():
+    """Venue ids the site owner checked on Google Maps and found missing or permanently closed: never served, whatever a crawl finds."""
+    return _ids_in(EXCLUDED_VENUES_PATH, "excluded")
+
+
+def load_reviewed_ids():
+    """Every venue the owner has already checked by hand (kept, still being investigated, or removed). A review list must never show these again."""
+    return _ids_in(REVIEWED_VENUES_PATH, "reviewed") | load_excluded_ids()
+
+
 def google_maps_link(name, address, place_id=None):
     """A Google Maps link that opens the exact place when its ID is known, and a search for it otherwise."""
     url = "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote_plus(f"{name or ''} {address or 'Switzerland'}")
@@ -1511,11 +1534,12 @@ def get_all_combined_venues(store):
         + crawl_venues
     )
     place_ids = load_google_place_ids()
+    excluded = load_excluded_ids()
     seen_ids = set()
     seen_names = set()
     deduped = []
     for v in raw_list:
-        if not v or not v.get("id"):
+        if not v or not v.get("id") or v["id"] in excluded:
             continue
         v = drop_pint_score(v)
         norm_key = f"{(v.get('name') or '').strip().lower()}::{(v.get('city') or '').strip().lower()}"
