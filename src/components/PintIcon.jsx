@@ -3,9 +3,9 @@ import React from 'react';
 export function PintIcon({ size = 24, status = 'confirmed_draught' }) {
   const borderColor =
     status === 'confirmed_draught'
-      ? '#c8a45d'
+      ? '#15803d'
       : status === 'cans_or_bottles'
-      ? '#e2be75'
+      ? '#4ade80'
       : status === 'likely_serves'
       ? '#fbbf24'
       : status === 'no_guinness'
@@ -51,9 +51,9 @@ export function createMarkerSvgDataUrl(status = 'confirmed_draught', isSelected 
   const ringColor = isSelected
     ? '#ffffff'
     : status === 'confirmed_draught'
-    ? '#34d399'
+    ? '#15803d'
     : status === 'cans_or_bottles'
-    ? '#c8a45d'
+    ? '#4ade80'
     : status === 'likely_serves'
     ? '#fbbf24'
     : status === 'no_guinness'

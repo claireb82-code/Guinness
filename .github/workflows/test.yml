@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
-      - run: pip install pyarrow   # only for the Overture importer tests (they skip themselves without it)
+      - run: pip install pyarrow pypdf   # pyarrow: Overture importer tests; pypdf: PDF menu tests (both skip themselves without it)
       - run: npm test        # python3 -m unittest && node --test tests/js (no network, no browser)
       - run: npm run build   # the React UI must keep compiling
 

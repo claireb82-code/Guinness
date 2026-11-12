@@ -39,3 +39,25 @@ test('both UIs credit Overture Maps when a venue website came from it', () => {
     assert.match(text, /CDLA-Permissive-2\.0/, file);
   }
 });
+
+// "Confirmed, on tap" is a dark green and "Confirmed, cans / bottles" a lighter green, everywhere a status is coloured: pins, the key,
+// and the status chips (the standalone page shares src/styles.css).
+test('on tap is dark green and cans / bottles a lighter green in both UIs', () => {
+  const DARK = '#15803d';
+  const LIGHT = '#4ade80';
+  for (const file of ['src/components/PintIcon.jsx', 'public/standalone.html']) {
+    const text = read(file);
+    assert.match(text, new RegExp(`confirmed_draught'\\s*\\?\\s*'${DARK}'`), `${file}: pin ring for on tap`);
+    assert.match(text, new RegExp(`cans_or_bottles'\\s*\\?\\s*'${LIGHT}'`), `${file}: pin ring for cans / bottles`);
+  }
+  assert.match(read('public/standalone.html'), new RegExp(`color:${DARK};">●</span> Confirmed \\(on tap\\)`));
+  assert.match(read('public/standalone.html'), new RegExp(`color:${LIGHT};">●</span> Confirmed \\(cans / bottles\\)`));
+  const key = read('src/components/MapCanvas.jsx');
+  assert.match(key, new RegExp(`background: '${DARK}',[\\s\\S]*?Confirmed \\(on tap\\)`));
+  assert.match(key, new RegExp(`background: '${LIGHT}',[\\s\\S]*?Confirmed \\(cans / bottles\\)`));
+  const css = read('src/styles.css');
+  assert.match(css, /\.status-confirmed_draught[^{]*\{[^}]*background: #14532d/);
+  assert.match(css, /\.status-cans_or_bottles[^{]*\{[^}]*rgba\(74, 222, 128/);
+  // the old colours (emerald for on tap, gold for cans) are gone from the status rings
+  assert.doesNotMatch(read('src/components/PintIcon.jsx'), /confirmed_draught'\s*\?\s*'#34d399'/);
+});

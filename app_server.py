@@ -1493,6 +1493,19 @@ def drop_excluded(venues, ids=None, index=None):
     return [v for v in (venues or []) if isinstance(v, dict) and v.get("id") not in ids and not _is_same_as_excluded(v, index)]
 
 
+MENU_READINGS_PATH = os.path.join(ROOT_DIR, "server", "data", "menu_readings.json")
+
+
+def load_menu_readings():
+    """Menus read by eye (venue id -> a crawl-style record) where the text cannot be extracted; applied like a crawler result."""
+    try:
+        with open(MENU_READINGS_PATH, "r", encoding="utf-8") as f:
+            readings = json.load(f).get("readings")
+    except (OSError, ValueError):
+        return {}
+    return {k: v for k, v in readings.items() if isinstance(k, str) and isinstance(v, dict)} if isinstance(readings, dict) else {}
+
+
 def load_reviewed_ids():
     """Every venue the owner has already checked by hand (kept, still being investigated, or removed). A review list must never show these again."""
     return _ids_in(REVIEWED_VENUES_PATH, "reviewed") | load_excluded_ids()
@@ -1593,6 +1606,15 @@ def get_all_combined_venues(store):
             v["googleMapsUri"] = google_maps_link(v.get("name"), v.get("address"))
         v["googleMapsChecked"] = True
         deduped.append(v)
+    readings = load_menu_readings()
+    if readings:
+        for i, v in enumerate(deduped):
+            reading = readings.get(v["id"])
+            if reading:
+                v = evidence.apply_site_check(v, reading)
+                if reading.get("checkedUrl") and reading.get("foundOnMenu"):
+                    v["menuUrl"] = reading["checkedUrl"]  # the menu that was read, not an older link
+                deduped[i] = v
     return drop_excluded(deduped, ids=excluded)
 
 

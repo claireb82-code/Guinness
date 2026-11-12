@@ -202,7 +202,12 @@ def _make_opener(allow_private, sockets):
 
 
 def fetch_page(url, timeout=5, max_bytes=MAX_PAGE_BYTES, deadline=10, allow_private=False):
-    """Fetch a public web page and return its text.
+    """Fetch a public web page and return its text (see ``fetch_bytes`` for the rules)."""
+    return fetch_bytes(url, timeout=timeout, max_bytes=max_bytes, deadline=deadline, allow_private=allow_private).decode("utf-8", errors="ignore")
+
+
+def fetch_bytes(url, timeout=5, max_bytes=MAX_PAGE_BYTES, deadline=10, allow_private=False):
+    """Fetch a public page or file and return its bytes.
 
     Raises :class:`UnsafeURL` for unsafe targets (including unsafe redirect hops) and the usual
     ``urllib`` / ``OSError`` exceptions for ordinary network failures. The body is capped at
@@ -245,7 +250,7 @@ def fetch_page(url, timeout=5, max_bytes=MAX_PAGE_BYTES, deadline=10, allow_priv
                 size += len(chunk)
         if timed_out.is_set():
             raise TimeoutError("page took too long to download")
-        return b"".join(chunks).decode("utf-8", errors="ignore")
+        return b"".join(chunks)
     except UnsafeURL:
         raise
     except Exception:

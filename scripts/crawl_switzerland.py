@@ -10,6 +10,7 @@ parallel (120 workers) to build a complete nationwide Guinness dataset.
 import argparse
 import concurrent.futures
 import html
+import io
 import json
 import math
 import os
@@ -406,6 +407,56 @@ def _parse_guinness(raw_html):
     return True, types_found, extracted_price, snippets
 
 
+# Many pubs publish their drinks list as a PDF. Read the ones the venue's own site links, with the same safe fetching and robots.txt rules.
+PDF_LINK_RE = re.compile(r'<a\b[^>]*?href=["\']([^"\'#]+?\.pdf(?:\?[^"\'#]*)?)["\'][^>]*>(.*?)</a>', re.I | re.S)
+PDF_MENU_WORDS_RE = re.compile(r"drink|getr[aä]nk|menu|men[uü]|karte|bier|beer|bi[eè]re|boisson|carte|cocktail|wein|wine|speise|food|tap", re.I)
+MAX_PDFS_PER_SITE = 2
+MAX_PDF_BYTES = 3_000_000
+MAX_PDF_PAGES = 8
+
+
+def _host_without_www(url):
+    host = (urllib.parse.urlsplit(url).hostname or "").lower()
+    return host[4:] if host.startswith("www.") else host
+
+
+def find_pdf_menu_links(body, base_url):
+    """Up to two PDF links on the same site whose address or link text says drinks / menu / karte / carte."""
+    found = []
+    for href, label in PDF_LINK_RE.findall(body or ""):
+        url = urllib.parse.urljoin(base_url, html.unescape(href.strip()))
+        if _host_without_www(url) != _host_without_www(base_url) or url in found:
+            continue
+        if PDF_MENU_WORDS_RE.search(urllib.parse.unquote(href)) or PDF_MENU_WORDS_RE.search(re.sub(r"<[^>]+>", " ", label)):
+            found.append(url)
+    return found[:MAX_PDFS_PER_SITE]
+
+
+def pdf_text(data):
+    """The text of a PDF (first pages only), or "" when pypdf is not installed, the file is encrypted or damaged, or its text is drawn as
+    shapes (such menus cannot be read automatically)."""
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return ""
+    try:
+        reader = PdfReader(io.BytesIO(data))
+        return " ".join((page.extract_text() or "") for page in reader.pages[:MAX_PDF_PAGES])
+    except Exception:  # noqa: BLE001 - any broken or hostile PDF is simply unreadable
+        return ""
+
+
+def fetch_pdf_text(url, max_time=6):
+    """The text of a public PDF, or None. Goes through guard.fetch_bytes (public hosts only, also on redirects, size and time limits)."""
+    try:
+        if not robots_allows(url):
+            return None
+        data = guard.fetch_bytes(url, timeout=max_time, deadline=max_time + 4, max_bytes=MAX_PDF_BYTES)
+    except Exception:  # noqa: BLE001
+        return None
+    return pdf_text(data) if data[:5] == b"%PDF-" else None
+
+
 def scan_venue_website(venue):
     url = venue.get("menuUrl") or venue.get("website")
     if not url:
@@ -432,6 +483,7 @@ def scan_venue_website(venue):
 
     found, types_found, price, snippets = parse_guinness_from_html(body)
     checked_subpage = None
+    page_bodies = [(url, body)]
 
     if not found and "<a " in body.lower():
         candidate_links = MENU_LINK_RE.findall(body)
@@ -443,9 +495,22 @@ def scan_venue_website(venue):
                 checked_subpage = sub_url
                 s_status, s_body = fetch_html(sub_url, max_time=2.5)
                 if s_status and s_body:
+                    page_bodies.append((sub_url, s_body))
                     found, types_found, price, snippets = parse_guinness_from_html(s_body)
                     if found:
                         break
+
+    if not found:
+        pdfs = []
+        for page_url, page_body in page_bodies:
+            pdfs += [u for u in find_pdf_menu_links(page_body, page_url) if u not in pdfs]
+        for pdf_url in pdfs[:MAX_PDFS_PER_SITE]:
+            text = fetch_pdf_text(pdf_url)
+            if text:
+                found, types_found, price, snippets = parse_guinness_from_html(text)
+                if found:
+                    checked_subpage = pdf_url
+                    break
 
     return {
         "scanned": True,
