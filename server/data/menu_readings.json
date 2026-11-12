@@ -10,6 +10,16 @@
         "DRAUGHT BEERS & CIDERS: GUINNESS - IRL - 4.2% - An Irish stout. Creamy & smooth. 5dl CHF 10.00 (2.5dl CHF 5.50). Also on draught: GUINNESS HOPHOUSE 13 - IRL - 5%, 5dl CHF 10.00. Bottles: Guinness 0.0, 44cl CHF 9.50."
       ],
       "readBy": "Read by eye from the venue's drinks menu PDF (published Jan 2026, last modified 15 Jan 2026); its text is drawn as shapes, so no program can extract it. Prices are CHF including 8.1% VAT, as the menu states."
+    },
+    "ch-ov-b8270c69-4cc2-481a-87d6-6644ed7a79fb": {
+      "reachable": true,
+      "foundOnMenu": true,
+      "checkedAt": "2026-11-12T14:10:00+00:00",
+      "checkedUrl": "https://www.kreuz-herzogenbuchsee.ch/application/files/6717/7185/5316/Getraenkekarte_2026.pdf",
+      "snippets": [
+        "Bier offen (on draught): Guinness Pint CHF 8.80, 1/2 Pint CHF 6.30, 4.2% vol. Prices in CHF incl. VAT, as the menu states."
+      ],
+      "readBy": "Text read from the venue's own 2026 drinks menu PDF (Getraenkekarte_2026.pdf), at the address the site owner supplied. Guinness is listed under 'Bier offen' (beer on draught) with half-pint and pint prices. The crawler had not found this PDF."
     }
   }
 }

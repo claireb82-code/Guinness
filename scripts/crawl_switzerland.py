@@ -516,6 +516,21 @@ def scan_venue_website(venue):
     }
 
 
+def carry_over_reviewed(new_venues, previous_venues, reviewed_ids):
+    """Venues the owner has reviewed by hand (kept or being investigated) that this crawl did not find keep their earlier record.
+
+    One crawl can miss a real venue (its site was slow or changed, a rule got stricter); without this it would disappear from the map
+    while the owner is still looking into it. Only reviewed venues are carried over: a miss for any other venue is left as the crawl saw it.
+    """
+    out = list(new_venues)
+    have = {v.get("id") for v in out if isinstance(v, dict)}
+    for v in previous_venues or []:
+        if isinstance(v, dict) and v.get("id") in reviewed_ids and v["id"] not in have:
+            out.append(v)
+            have.add(v["id"])
+    return out
+
+
 def scan_starter_venues(venues, scan=None, now_iso=None):
     """Read the own website of each venue in the app's hand-written starter list.
 
@@ -964,11 +979,23 @@ def main(argv=None):
         flush=True,
     )
 
+    try:
+        with open(RESULTS_PATH, "r", encoding="utf-8") as f:
+            previous = json.load(f)
+    except (OSError, ValueError):
+        previous = {}
+    reviewed = app_server._ids_in(app_server.REVIEWED_VENUES_PATH, "reviewed")
+    confirmed_final = [evidence.sanitise_static_venue(v) for v in confirmed_venues_output]
+    sample_final = [evidence.sanitise_static_venue(v) for v in verified_no_guinness_sample]
+    kept = carry_over_reviewed(confirmed_final, previous.get("confirmedVenues"), reviewed)
+    kept = carry_over_reviewed(kept, previous.get("verifiedNoGuinnessSample"), reviewed)
+    if len(kept) > len(confirmed_final):
+        print(f"  Reviewed venues this crawl missed, kept from the previous results: {len(kept) - len(confirmed_final)}", flush=True)
     payload = {
         "stats": stats,
         "starterChecks": starter_checks,
-        "confirmedVenues": [evidence.sanitise_static_venue(v) for v in confirmed_venues_output],
-        "verifiedNoGuinnessSample": [evidence.sanitise_static_venue(v) for v in verified_no_guinness_sample],
+        "confirmedVenues": kept,
+        "verifiedNoGuinnessSample": sample_final,
     }
 
     with open(RESULTS_PATH, "w", encoding="utf-8") as f:

@@ -728,3 +728,20 @@ class WorkflowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CarryOverReviewedTests(unittest.TestCase):
+    """Regression (crawl of 2026-11-12): Kreuz Herzogenbuchsee, which the owner marked "investigate", was simply not found by one crawl
+    (site slow or changed) and vanished from the map. A venue the owner reviewed keeps its earlier record when a crawl misses it."""
+
+    def test_a_reviewed_venue_the_crawl_missed_keeps_its_earlier_record(self):
+        old = [{"id": "a", "name": "Seen again"}, {"id": "b", "name": "Missed"}, {"id": "c", "name": "Never reviewed"}]
+        new = [{"id": "a", "name": "Seen again (new)"}]
+        out = crawler.carry_over_reviewed(new, old, {"a", "b"})
+        self.assertEqual([v["name"] for v in out], ["Seen again (new)", "Missed"], "the fresh record wins; unreviewed misses are not resurrected")
+
+    def test_nothing_changes_when_nothing_was_missed_and_bad_input_is_ignored(self):
+        new = [{"id": "a"}]
+        self.assertEqual(crawler.carry_over_reviewed(new, [{"id": "a"}], {"a"}), new)
+        self.assertEqual(crawler.carry_over_reviewed(new, None, {"a"}), new)
+        self.assertEqual(crawler.carry_over_reviewed(new, [{"name": "no id"}, "x"], {"a"}), new)

@@ -268,3 +268,18 @@ class OwnerReviewDataTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class KreuzReadingTests(unittest.TestCase):
+    """Kreuz Herzogenbuchsee (hotel, marked "investigate"): its own 2026 drinks PDF lists Guinness under "Bier offen" (on draught)."""
+
+    KREUZ = "ch-ov-b8270c69-4cc2-481a-87d6-6644ed7a79fb"
+
+    def test_it_stays_on_the_map_and_is_confirmed_on_tap_from_its_own_menu(self):
+        v = next((x for x in app.get_all_combined_venues({}) if x["id"] == self.KREUZ), None)
+        self.assertIsNotNone(v, "a venue the owner is investigating must not vanish because one crawl missed it")
+        s = app.compute_guinness_status(v)
+        self.assertEqual((s["statusLabel"], s["servingFormat"]), ("Confirmed", "draught"))
+        self.assertEqual(v["menuCheck"]["extractedPrice"], "CHF 8.80", "the pint")
+        self.assertTrue(v["menuUrl"].endswith("/Getraenkekarte_2026.pdf"))
+        self.assertNotIn("tagCheck", v)
