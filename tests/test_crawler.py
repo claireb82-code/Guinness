@@ -145,11 +145,11 @@ class WwwFallbackTests(unittest.TestCase):
     """Regression: a site that only answers on www (kennedys.ch vs www.kennedys.ch) must not be reported as unreachable."""
 
     def test_the_other_host_form(self):
-        self.assertEqual(crawler.other_host_form("https://kennedys.ch/drinks?x=1"), "https://www.kennedys.ch/drinks?x=1")
-        self.assertEqual(crawler.other_host_form("https://www.kennedys.ch/"), "https://kennedys.ch/")
-        self.assertEqual(crawler.other_host_form("http://pub.example:8080/a"), "http://www.pub.example:8080/a")
+        self.assertEqual(guard.other_host_form("https://kennedys.ch/drinks?x=1"), "https://www.kennedys.ch/drinks?x=1")
+        self.assertEqual(guard.other_host_form("https://www.kennedys.ch/"), "https://kennedys.ch/")
+        self.assertEqual(guard.other_host_form("http://pub.example:8080/a"), "http://www.pub.example:8080/a")
         for url in ("http://127.0.0.1/x", "http://[::1]/x", "http://localhost/x", "nonsense"):
-            self.assertIsNone(crawler.other_host_form(url), url)
+            self.assertIsNone(guard.other_host_form(url), url)
 
     def test_a_site_that_only_answers_on_www_is_read_there(self):
         calls = []
@@ -176,6 +176,43 @@ class WwwFallbackTests(unittest.TestCase):
         with mock.patch.object(crawler, "fetch_html", blocked):
             self.assertFalse(crawler.scan_venue_website({"website": "https://nobots.example"})["reachable"])
         self.assertEqual(calls, ["https://nobots.example"], "a robots.txt refusal is not retried on another host")
+
+    def test_the_live_menu_scan_also_tries_the_other_form(self):
+        calls = []
+
+        def fake_fetch(url, **kw):
+            calls.append(url)
+            if url.startswith("https://www."):
+                return "<li>Guinness Draught 5dl CHF 9.80</li>"
+            raise OSError("could not resolve host")
+
+        with mock.patch.object(guard, "fetch_page", fake_fetch):
+            check = app.scrape_menu_url("https://pub.example")
+        self.assertTrue(check["checked"] and check["foundOnMenu"])
+        self.assertEqual(calls, ["https://pub.example", "https://www.pub.example"])
+
+    def test_the_live_menu_scan_of_a_dead_site_is_unknown_after_trying_both_forms(self):
+        calls = []
+
+        def dead(url, **kw):
+            calls.append(url)
+            raise OSError("could not resolve host")
+
+        with mock.patch.object(guard, "fetch_page", dead):
+            check = app.scrape_menu_url("https://dead.example")
+        self.assertFalse(check["checked"], "could not read: unknown, never 'no Guinness'")
+        self.assertEqual(calls, ["https://dead.example", "https://www.dead.example"])
+
+    def test_the_live_menu_scan_does_not_retry_an_unsafe_address(self):
+        calls = []
+
+        def unsafe(url, **kw):
+            calls.append(url)
+            raise guard.UnsafeURL("private address")
+
+        with mock.patch.object(guard, "fetch_page", unsafe):
+            self.assertFalse(app.scrape_menu_url("https://pub.example")["checked"])
+        self.assertEqual(calls, ["https://pub.example"])
 
     def test_kennedys_is_stored_with_the_address_that_works(self):
         self.assertEqual(next(v for v in app.DEMO_VENUES if v["id"] == "zh-kennedys")["website"], "https://www.kennedys.ch")

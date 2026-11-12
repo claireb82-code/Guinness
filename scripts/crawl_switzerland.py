@@ -401,20 +401,6 @@ def parse_guinness_from_html(raw_html):
     return True, types_found, extracted_price, snippets
 
 
-def other_host_form(url):
-    """The same address with "www." added, or removed when it is there (None when the host is not an ordinary domain name)."""
-    try:
-        parts = urllib.parse.urlsplit(url)
-        host = parts.hostname or ""
-    except ValueError:
-        return None
-    if not host or host.replace(".", "").isdigit() or ":" in host or "." not in host:
-        return None
-    new_host = host[4:] if host.startswith("www.") else f"www.{host}"
-    netloc = new_host + (f":{parts.port}" if parts.port else "")
-    return urllib.parse.urlunsplit((parts.scheme, netloc, parts.path, parts.query, ""))
-
-
 def scan_venue_website(venue):
     url = venue.get("menuUrl") or venue.get("website")
     if not url:
@@ -431,7 +417,7 @@ def scan_venue_website(venue):
     status, body = fetch_html(url, max_time=3.5)
     if (status is None or not body) and not str(body).startswith("disallowed"):
         # Many sites only answer on "www." (or only without it): try the other form once before calling a site unreachable.
-        alt = other_host_form(url)
+        alt = guard.other_host_form(url)
         if alt:
             status, body = fetch_html(alt, max_time=3.5)
             if status and body:
