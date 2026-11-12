@@ -1,5 +1,5 @@
 {
-  "note": "Venues the site owner checked on Google Maps and found missing or permanently closed. The app never shows these ids, and a new crawl cannot bring them back.",
+  "note": "Venues the site owner checked on Google Maps and found missing or permanently closed ('excluded'), or that are the same place listed twice ('duplicates'). The app never shows these ids, and a new crawl cannot bring them back.",
   "checkedOn": "2026-11-12",
   "excluded": [
     {
@@ -76,6 +76,26 @@
       "id": "ch-ov-77e91f4e-4293-44d2-9b23-374ba2cc197b",
       "name": "O'SAFRAN",
       "city": "lausanne"
+    }
+  ],
+  "duplicates": [
+    {
+      "id": "ch-ov-a4904b49-521b-4efb-b348-4f10da9c9442",
+      "name": "Brian's Irish Bar",
+      "duplicateOf": "ch-node-3421432243",
+      "reason": "Same website and 92 m from The Irish Pub, St. Gallen."
+    },
+    {
+      "id": "ch-node-1553431869",
+      "name": "Shamrock Irish Pub",
+      "duplicateOf": "lu-shamrock-luzern",
+      "reason": "111 m from Shamrock Irish Pub Luzern; its website, shamrock-luzern.ch, now belongs to the starter entry."
+    },
+    {
+      "id": "ch-ov-8840ee7e-8463-4b70-a285-1d3aa88d982c",
+      "name": "MFG",
+      "duplicateOf": "ch-ov-644987a6-454d-48a9-8c1b-b97021a71937",
+      "reason": "Same hotel-freihof.ch website and address as UFO Bar, Glarus."
     }
   ]
 }

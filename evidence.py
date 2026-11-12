@@ -182,6 +182,16 @@ def _kind_of_crawl_menu(menu):
     return None
 
 
+def _recheck_name_guess(v):
+    """An "Irish-sounding name" guess about a restaurant or hotel whose own website was read and does not name Guinness is dropped:
+    the name is a coincidence ("2 Potes O'Feu"), and the site was read. Pubs and bars keep the guess; so do sites that could not be read."""
+    menu = v.get("menuCheck") or {}
+    if v.get("category") in ("restaurant", "hotel") and menu.get("checked") and not menu.get("foundOnMenu"):
+        v.pop("tagCheck", None)
+        return sanitise_static_venue(v)
+    return v
+
+
 def _recheck_web_mention(v):
     """A stored "its website mentions Guinness, not clearly on a menu" hint, judged again by today's rules.
 
@@ -213,7 +223,12 @@ def sanitise_static_venue(venue):
         return venue
     v = copy.deepcopy(venue)
     if "tagCheck" in v:  # already clean (e.g. written by the fixed crawler): leave it alone, except a stored website hint
-        return _recheck_web_mention(v) if (v["tagCheck"] or {}).get("kind") == TAG_WEB else v
+        kind = (v["tagCheck"] or {}).get("kind")
+        if kind == TAG_WEB:
+            return _recheck_web_mention(v)
+        if kind == TAG_NAME:
+            return _recheck_name_guess(v)
+        return v
     is_crawl = str(v.get("id", "")).startswith("ch-")
     menu = v.get("menuCheck") or {}
 

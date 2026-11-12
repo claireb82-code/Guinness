@@ -296,6 +296,28 @@ class StoredHintRecheckTests(unittest.TestCase):
         self.assertEqual(evidence.sanitise_static_venue(v), v)
 
 
+class NameGuessRecheckTests(unittest.TestCase):
+    """Regression: a restaurant called "2 Potes O'Feu" was "Possible: Irish-sounding name" although its website was read and says nothing."""
+
+    def stored(self, category, checked=True, found=False):
+        return {"id": "ch-ov-5", "name": "2 Potes O'Feu", "category": category, "address": "x", "lat": 46.2, "lng": 6.2, "website": "http://x.example",
+                "tagCheck": {"kind": evidence.TAG_NAME, "text": evidence.TAG_TEXT[evidence.TAG_NAME]},
+                "menuCheck": {"checked": checked, "lastChecked": "2026-11-12" if checked else None, "foundOnMenu": found, "typesFound": [], "extractedPrice": None,
+                              "snippets": ["The website was read: no Guinness text found."] if checked else []}}
+
+    def test_a_restaurant_or_hotel_with_a_read_silent_website_loses_the_name_guess(self):
+        for category in ("restaurant", "hotel"):
+            v = evidence.sanitise_static_venue(self.stored(category))
+            self.assertNotIn("tagCheck", v)
+            self.assertEqual(app.compute_guinness_status(v)["status"], "no_guinness", category)
+            self.assertEqual(evidence.sanitise_static_venue(v), v, "stable on a second load")
+
+    def test_pubs_bars_and_unread_sites_keep_the_guess(self):
+        for stored in (self.stored("pub"), self.stored("bar"), self.stored("restaurant", checked=False)):
+            self.assertEqual(evidence.sanitise_static_venue(stored), stored)
+            self.assertEqual(app.compute_guinness_status(stored)["reason"], "Irish-sounding name (not checked)")
+
+
 class HostNotFoundTests(unittest.TestCase):
     """A domain that does not resolve is "could not resolve", not "unsafe", and is retried on the other www form."""
 
