@@ -212,6 +212,58 @@ class NotTheBeerTests(unittest.TestCase):
         self.assertEqual(evidence.website_mention_kind("pub", []), "mention")
 
 
+class OvertureCrawlEvidenceTests(unittest.TestCase):
+    """Regression (Overture crawl of 2026-11-12): records, shop filter lists, shots and machine data were "Confirmed"."""
+
+    NOT_THE_BEER = (
+        "Größte Whisky-Bar Die größte Whisky-Bar der Welt - über 2.500 Flaschen und Guinness-Weltrekord seit 1999",
+        "Im Juli 2015 wurde die Destille beim Guinness Buch angemeldet",
+        "Seit 5 Jahren Guinness World Rekord Halter der grössten Kirschtorte",
+        "laut Guinness Buch der Rekorde das tiefste Tal der Alpen",
+        "établissent un record inscrit dans le Livre Guinness 2010",
+        "offrant un spectacle depuis le Guinness Village, parfaitement placé",
+        "dschlösschen (2) Forged Irish Stout (1) Friesische Brauhaus (1) Granda (6) Guinness (2) Gusswerk (1) Hall & Woodhouse Ltd (2)",
+        'zone":[0,"CLUB"],"price":[0,"CHF 6.00"],"item_de":[0,"Baby Guinness (2cl)"],"item_en":[0,"Baby Guinness (2cl)"]',
+        'pagesMap":{"ihyhd":{"pageId":"ihyhd","title":"guinness de retour","pageUriSEO":"popup-ihyhd"',
+        "Malta Guinness (Non Alcoholic) 33cl 5.00",
+        "avec des ossobuchi à cuisson lente, cottura nella birra Guinness, les affettati",
+    )
+
+    def test_none_of_these_is_guinness_on_the_menu(self):
+        for text in self.NOT_THE_BEER:
+            self.assertEqual(evidence.serving_snippets([text]), [], text)
+            for category in ("pub", "bar", "restaurant", "hotel"):
+                self.assertEqual(evidence.website_mention_kind(category, [text]), "mention", (category, text))
+
+    def test_real_serving_evidence_survives(self):
+        for text in ("6chf Pints of Guinness during the match!!", "Guinness Stout 4.20% Half 6.5 Pint 9.5", "GUINNESS STOUT 7.5% 33cl - 6.00 60cl - 12.00", "Verschiedene Biere im Offenausschank (vom Lager bis hin zu Guinness)",
+                     "Guinness – Frisch gezapftes Irish Stout", "Guinness 5,0% 33cl 7.-", "Balanced abbey beer 2.5dl - CHF 6 | 5dl - CHF 9.8 Guinness Ireland's cult beer 2.5dl - CHF 6"):
+            self.assertEqual(evidence.serving_snippets([text]), [text], text)
+            self.assertEqual(evidence.website_mention_kind("restaurant", [text]), "menu", text)
+
+    def test_a_beer_compared_with_guinness_is_not_guinness(self):
+        text = "à 4.5%, carbonaté à l'azote pour une mousse crémeuse, pour les amateurs de Guinness. La Pointe L'Apaisée WIPA ǀ 6,5% 5 5"
+        self.assertEqual(evidence.website_mention_kind("bar", [text]), "mention")
+
+    def test_a_record_found_on_a_crawled_page_is_not_a_hint_either(self):
+        rec = {"id": "ch-ov-1", "name": "Le Grand Restaurant", "category": "restaurant", "address": "x", "lat": 47.0, "lng": 8.0, "website": "http://x.example",
+               "menuCheck": {"checked": True, "foundOnMenu": True, "typesFound": ["Guinness (Listed on Website Menu)"], "extractedPrice": None,
+                             "snippets": [self.NOT_THE_BEER[0]]}}
+        v = evidence.sanitise_static_venue(rec)
+        self.assertNotIn("tagCheck", v)
+        self.assertEqual(app.compute_guinness_status(v)["status"], "no_guinness")
+        self.assertEqual(evidence.sanitise_static_venue(v), v)
+
+    def test_one_real_snippet_among_unusable_ones_keeps_the_venue_confirmed_and_prices_only_the_real_one(self):
+        rec = {"id": "ch-ov-2", "name": "TUSK", "category": "restaurant", "address": "x", "lat": 47.0, "lng": 8.0, "website": "http://x.example",
+               "menuCheck": {"checked": True, "foundOnMenu": True, "typesFound": ["x"], "extractedPrice": None,
+                             "snippets": ["Malta Guinness (Non Alcoholic) 33cl 5.00", "GUINNESS STOUT 7.5% 33cl - 6.00 60cl - 12.00"]}}
+        v = evidence.sanitise_static_venue(rec)
+        self.assertEqual(v["menuCheck"]["snippets"], ["GUINNESS STOUT 7.5% 33cl - 6.00 60cl - 12.00"])
+        self.assertIsNone(v["menuCheck"]["extractedPrice"], "no currency printed next to it: not guessed")
+        self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", "served, but how is not said: not guessed")
+
+
 class HostNotFoundTests(unittest.TestCase):
     """A domain that does not resolve is "could not resolve", not "unsafe", and is retried on the other www form."""
 
@@ -349,7 +401,10 @@ class MentionTierTests(unittest.TestCase):
 
     def test_pubs_and_bars_that_name_guinness_count_as_serving_it(self):
         self.assertEqual(evidence.website_mention_kind("pub", ["Gallus Pub: Geniesst frisches Guinness"]), "menu")
-        self.assertEqual(evidence.website_mention_kind("bar", ["we love Guinness"]), "menu")
+        # a "bar" can be a shop or a wholesaler (the 2026-11-12 crawl): it needs wording that says how Guinness is served
+        self.assertEqual(evidence.website_mention_kind("bar", ["we love Guinness"]), "mention")
+        self.assertEqual(evidence.website_mention_kind("bar", ["Guinness vom Fass 5dl"]), "menu")
+        self.assertEqual(evidence.website_mention_kind("bar", ["Guinness Stout 4.20% Half 6.5 Pint 9.5"]), "menu")
 
     def test_restaurants_and_hotels_need_serving_wording_or_a_price(self):
         self.assertEqual(evidence.website_mention_kind("restaurant", ["Beef stew braised in Guinness, with carrots"]), "mention")
@@ -365,8 +420,14 @@ class MentionTierTests(unittest.TestCase):
         return {"id": "ch-node-9", "name": "X", "category": category, "address": "Switzerland", "lat": 47.3, "lng": 8.5, "website": "http://x.example",
                 "menuCheck": {"checked": True, "foundOnMenu": True, "typesFound": ["Guinness (Listed on Website Menu)"], "extractedPrice": None, "snippets": snippets}}
 
-    def test_a_restaurant_recipe_becomes_a_possible_hint_not_a_confirmation(self):
+    def test_a_restaurant_dish_is_no_evidence_at_all_and_stays_that_way(self):
         v = evidence.sanitise_static_venue(self.crawl_record("restaurant", ["our stew braised in Guinness"]))
+        self.assertNotIn("tagCheck", v)
+        self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"]), (True, False))
+        self.assertEqual(evidence.sanitise_static_venue(v), v)
+
+    def test_a_restaurant_that_mentions_guinness_without_saying_it_is_served_is_a_possible_hint_not_a_confirmation(self):
+        v = evidence.sanitise_static_venue(self.crawl_record("restaurant", ["St Patrick's night: Guinness and live music"]))
         self.assertEqual(v["tagCheck"]["kind"], evidence.TAG_WEB)
         self.assertFalse(v["menuCheck"]["foundOnMenu"])
         summary = app.compute_guinness_status(v)
