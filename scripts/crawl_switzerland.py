@@ -415,6 +415,13 @@ def scan_venue_website(venue):
         }
 
     status, body = fetch_html(url, max_time=3.5)
+    if (status is None or not body) and not str(body).startswith("disallowed"):
+        # Many sites only answer on "www." (or only without it): try the other form once before calling a site unreachable.
+        alt = guard.other_host_form(url)
+        if alt:
+            status, body = fetch_html(alt, max_time=3.5)
+            if status and body:
+                url = alt
     if status is None or not body:
         return {"scanned": True, "reachable": False, "foundOnMenu": False, "error": body or "Unreachable"}
 

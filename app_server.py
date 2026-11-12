@@ -91,7 +91,7 @@ DEMO_VENUES = [
         "googleRating": 4.5,
         "googleReviewCount": 2410,
         "priceLevel": "CHF ··",
-        "website": "https://kennedys.ch",
+        "website": "https://www.kennedys.ch",
         "menuUrl": "https://kennedys.ch/drinks",
         "phone": "+41 44 242 11 00",
         "openNow": True,
@@ -1896,7 +1896,17 @@ def scrape_menu_url(url, existing_check=None):
     except guard.UnsafeURL as exc:
         return _not_scanned(now_iso, str(exc))
     try:
-        html = guard.fetch_page(url, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
+        try:
+            html = guard.fetch_page(url, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
+        except guard.UnsafeURL:
+            raise
+        except Exception:
+            # Never call a site unreachable before trying its other form (with / without "www.").
+            alt = guard.other_host_form(url)
+            if not alt:
+                raise
+            html = guard.fetch_page(alt, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
+            url = alt
         text_lines = [
             re.sub(r"\s+", " ", line).strip()
             for line in re.sub(r"<[^>]+>", "\n", html).splitlines()

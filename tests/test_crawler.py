@@ -141,6 +141,83 @@ class OvertureFillTests(unittest.TestCase):
         self.assertEqual(vs[3]["website"], "https://x.example")
 
 
+class WwwFallbackTests(unittest.TestCase):
+    """Regression: a site that only answers on www (kennedys.ch vs www.kennedys.ch) must not be reported as unreachable."""
+
+    def test_the_other_host_form(self):
+        self.assertEqual(guard.other_host_form("https://kennedys.ch/drinks?x=1"), "https://www.kennedys.ch/drinks?x=1")
+        self.assertEqual(guard.other_host_form("https://www.kennedys.ch/"), "https://kennedys.ch/")
+        self.assertEqual(guard.other_host_form("http://pub.example:8080/a"), "http://www.pub.example:8080/a")
+        for url in ("http://127.0.0.1/x", "http://[::1]/x", "http://localhost/x", "nonsense"):
+            self.assertIsNone(guard.other_host_form(url), url)
+
+    def test_a_site_that_only_answers_on_www_is_read_there(self):
+        calls = []
+
+        def fake_fetch(url, max_time=3.5):
+            calls.append(url)
+            return (200, "<p>Guinness Draught 5dl CHF 9.80</p>") if url.startswith("https://www.") else (None, "could not resolve host")
+
+        with mock.patch.object(crawler, "fetch_html", fake_fetch):
+            res = crawler.scan_venue_website({"website": "https://pub.example"})
+        self.assertTrue(res["reachable"] and res["foundOnMenu"])
+        self.assertEqual(res["checkedUrl"], "https://www.pub.example")
+        self.assertEqual(calls[:2], ["https://pub.example", "https://www.pub.example"])
+
+    def test_a_truly_dead_site_is_still_unreachable_and_robots_is_still_respected(self):
+        with mock.patch.object(crawler, "fetch_html", lambda url, max_time=3.5: (None, "could not resolve host")):
+            self.assertFalse(crawler.scan_venue_website({"website": "https://dead.example"})["reachable"])
+        calls = []
+
+        def blocked(url, max_time=3.5):
+            calls.append(url)
+            return None, "disallowed by robots.txt"
+
+        with mock.patch.object(crawler, "fetch_html", blocked):
+            self.assertFalse(crawler.scan_venue_website({"website": "https://nobots.example"})["reachable"])
+        self.assertEqual(calls, ["https://nobots.example"], "a robots.txt refusal is not retried on another host")
+
+    def test_the_live_menu_scan_also_tries_the_other_form(self):
+        calls = []
+
+        def fake_fetch(url, **kw):
+            calls.append(url)
+            if url.startswith("https://www."):
+                return "<li>Guinness Draught 5dl CHF 9.80</li>"
+            raise OSError("could not resolve host")
+
+        with mock.patch.object(guard, "fetch_page", fake_fetch):
+            check = app.scrape_menu_url("https://pub.example")
+        self.assertTrue(check["checked"] and check["foundOnMenu"])
+        self.assertEqual(calls, ["https://pub.example", "https://www.pub.example"])
+
+    def test_the_live_menu_scan_of_a_dead_site_is_unknown_after_trying_both_forms(self):
+        calls = []
+
+        def dead(url, **kw):
+            calls.append(url)
+            raise OSError("could not resolve host")
+
+        with mock.patch.object(guard, "fetch_page", dead):
+            check = app.scrape_menu_url("https://dead.example")
+        self.assertFalse(check["checked"], "could not read: unknown, never 'no Guinness'")
+        self.assertEqual(calls, ["https://dead.example", "https://www.dead.example"])
+
+    def test_the_live_menu_scan_does_not_retry_an_unsafe_address(self):
+        calls = []
+
+        def unsafe(url, **kw):
+            calls.append(url)
+            raise guard.UnsafeURL("private address")
+
+        with mock.patch.object(guard, "fetch_page", unsafe):
+            self.assertFalse(app.scrape_menu_url("https://pub.example")["checked"])
+        self.assertEqual(calls, ["https://pub.example"])
+
+    def test_kennedys_is_stored_with_the_address_that_works(self):
+        self.assertEqual(next(v for v in app.DEMO_VENUES if v["id"] == "zh-kennedys")["website"], "https://www.kennedys.ch")
+
+
 class DirectorySiteTests(unittest.TestCase):
     """Regression: a Ticino tourism listing became The Trinity Irish Pub's "website" and was reported as "read: no Guinness text found"."""
 
@@ -289,6 +366,32 @@ class StarterListCrawlTests(unittest.TestCase):
         other = next(x for x in venues.values() if x["id"] != target and str(x["id"]).startswith(("zh-", "al-", "ge-", "ba-")))
         self.assertFalse(other["menuCheck"]["checked"], "venues without a crawler record stay unchecked")
         self.assertNotIn("menuUrl", other)
+
+    def test_regression_the_app_stays_consistent_when_a_crawl_has_read_every_starter_website(self):
+        """The first crawl that wrote starterChecks failed its own post-crawl tests (a test assumed no starter venue had been read)."""
+        base = {"checkedAt": "2026-11-11T00:00:00+00:00", "reachable": True}
+        checks = {}
+        for i, v in enumerate(app.DEMO_VENUES):
+            site = v["website"]
+            checks[v["id"]] = [
+                {**base, "checkedUrl": site, "foundOnMenu": True, "snippets": ["Guinness Draught 5dl CHF 9.80"]},
+                {**base, "checkedUrl": site, "foundOnMenu": False, "snippets": []},
+                {"reachable": False, "error": "timed out"},
+            ][i % 3]
+        with mock.patch.object(app, "load_starter_checks", return_value=checks):
+            venues = {v["id"]: v for v in app.get_all_combined_venues({})}
+        for vid, check in checks.items():
+            v = venues[vid]
+            if check.get("foundOnMenu"):
+                self.assertTrue(v["menuCheck"]["foundOnMenu"], vid)
+                self.assertNotIn("priceHint", v, "a price read from the website replaces the unchecked hint")
+                self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", vid)
+            elif check.get("reachable"):
+                self.assertTrue(v["menuCheck"]["checked"], vid)
+                self.assertNotEqual(app.compute_guinness_status(v)["status"], "no_guinness", f"{vid}: a silent website is not proof")
+            else:
+                self.assertFalse(v["menuCheck"]["checked"], f"{vid}: an unreadable site changes nothing")
+                self.assertEqual(v["tagCheck"]["kind"], "starter_list", vid)
 
     def test_a_missing_or_malformed_results_file_means_no_checks(self):
         with mock.patch.object(app, "CRAWL_RESULTS_PATH", "/nonexistent.json"):

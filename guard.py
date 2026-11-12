@@ -357,6 +357,22 @@ def clean_venue_id(value):
     return value
 
 
+def other_host_form(url):
+    """The same address with "www." added, or removed when it is there (None when the host is not an ordinary domain name).
+
+    Rule: a site is never called unreachable until both forms have been tried, since many answer on only one of them."""
+    try:
+        parts = urllib.parse.urlsplit(url)
+        host = parts.hostname or ""
+    except ValueError:
+        return None
+    if not host or host.replace(".", "").isdigit() or ":" in host or "." not in host:
+        return None
+    new_host = host[4:] if host.startswith("www.") else f"www.{host}"
+    netloc = new_host + (f":{parts.port}" if parts.port else "")
+    return urllib.parse.urlunsplit((parts.scheme, netloc, parts.path, parts.query, ""))
+
+
 def clean_website(value):
     """Empty -> None. Otherwise a normalized http(s) URL (no private-address lookup here)."""
     if value is None or (isinstance(value, str) and not value.strip()):
