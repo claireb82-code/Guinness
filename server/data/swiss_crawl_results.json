@@ -1,7 +1,7 @@
 {
   "stats": {
-    "crawledAt": "2026-11-12T09:02:00.554730+00:00",
-    "durationSeconds": 1855.0,
+    "crawledAt": "2026-11-12T13:03:42.469554+00:00",
+    "durationSeconds": 2731.5,
     "totalSwissVenuesChecked": 26614,
     "byCategoryTotal": {
       "pub": 840,
@@ -18,69 +18,69 @@
     },
     "uniqueWebsitesScanned": 26557,
     "venuesWithWebsiteScanned": 28238,
-    "websitesReachableHttp200": 18830,
-    "venuesWithWebsiteReachable": 20144,
+    "websitesReachableHttp200": 17326,
+    "venuesWithWebsiteReachable": 18561,
     "websitesFromOverture": 534,
     "venuesOnlyInOverture": 18349,
-    "guinnessWebsiteHits": 73,
+    "guinnessWebsiteHits": 83,
     "guinnessOsmTagHits": 88,
-    "totalGuinnessVenuesFound": 152,
-    "verifiedNoGuinnessCount": 20071,
+    "totalGuinnessVenuesFound": 160,
+    "verifiedNoGuinnessCount": 18478,
     "byRegion": {
       "zurich": {
         "totalVenues": 2742,
         "websitesScanned": 6530,
-        "guinnessConfirmed": 28,
-        "noGuinnessVerified": 4621
+        "guinnessConfirmed": 34,
+        "noGuinnessVerified": 4243
       },
       "geneva": {
         "totalVenues": 684,
         "websitesScanned": 2029,
-        "guinnessConfirmed": 15,
-        "noGuinnessVerified": 1327
+        "guinnessConfirmed": 13,
+        "noGuinnessVerified": 1226
       },
       "lausanne": {
         "totalVenues": 851,
         "websitesScanned": 2384,
         "guinnessConfirmed": 13,
-        "noGuinnessVerified": 1696
+        "noGuinnessVerified": 1549
       },
       "basel": {
         "totalVenues": 683,
         "websitesScanned": 2025,
-        "guinnessConfirmed": 13,
-        "noGuinnessVerified": 1417
+        "guinnessConfirmed": 14,
+        "noGuinnessVerified": 1299
       },
       "bern": {
         "totalVenues": 1569,
         "websitesScanned": 4123,
-        "guinnessConfirmed": 27,
-        "noGuinnessVerified": 2896
+        "guinnessConfirmed": 31,
+        "noGuinnessVerified": 2667
       },
       "lucerne": {
         "totalVenues": 732,
         "websitesScanned": 2381,
-        "guinnessConfirmed": 15,
-        "noGuinnessVerified": 1724
+        "guinnessConfirmed": 17,
+        "noGuinnessVerified": 1546
       },
       "east": {
         "totalVenues": 948,
         "websitesScanned": 2400,
-        "guinnessConfirmed": 18,
-        "noGuinnessVerified": 1751
+        "guinnessConfirmed": 20,
+        "noGuinnessVerified": 1620
       },
       "alps": {
         "totalVenues": 2200,
         "websitesScanned": 6366,
-        "guinnessConfirmed": 23,
-        "noGuinnessVerified": 4596
+        "guinnessConfirmed": 18,
+        "noGuinnessVerified": 4289
       }
     }
   },
   "starterChecks": {
     "al-brown-cow-zermatt": {
       "website": "https://hotelpost.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://hotelpost.ch/de/bars-clubs/",
@@ -91,7 +91,7 @@
     },
     "al-victoria-jungfrau": {
       "website": "https://victoria-jungfrau.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://victoria-jungfrau.ch",
@@ -102,7 +102,7 @@
     },
     "be-kornhauskeller": {
       "website": "https://kornhauskeller.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://kornhauskeller.ch",
@@ -113,7 +113,7 @@
     },
     "be-pickwick-bern": {
       "website": "https://pickwick.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://pickwick.ch",
@@ -124,7 +124,7 @@
     },
     "bs-paddys": {
       "website": "https://paddys.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://paddys.ch",
@@ -135,7 +135,7 @@
     },
     "bs-pickwick-basel": {
       "website": "https://pickwick.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://pickwick.ch",
@@ -146,7 +146,7 @@
     },
     "bs-trois-rois": {
       "website": "https://lestroisrois.com",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://lestroisrois.com/en/restaurants-bars/",
@@ -157,7 +157,7 @@
     },
     "ea-einstein-stgallen": {
       "website": "https://einstein.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://einstein.ch/de/event/dj-shook-einstein-bar-19",
@@ -168,7 +168,7 @@
     },
     "ge-angleterre": {
       "website": "https://dangleterrehotel.com",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://dangleterrehotel.com/dining-and-drinks",
@@ -179,7 +179,7 @@
     },
     "ge-mr-pickwick": {
       "website": "https://pickwick.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://pickwick.ch",
@@ -190,7 +190,7 @@
     },
     "ls-beau-rivage": {
       "website": "https://brp.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://brp.ch/restaurants-and-bars/",
@@ -201,7 +201,7 @@
     },
     "ls-king-size": {
       "website": "https://kingsizepub.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://kingsizepub.ch",
@@ -212,7 +212,7 @@
     },
     "lu-pickwick-luzern": {
       "website": "https://pickwick.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://pickwick.ch",
@@ -223,7 +223,7 @@
     },
     "lu-pickwick-zug": {
       "website": "https://pickwick.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://pickwick.ch",
@@ -234,7 +234,7 @@
     },
     "lu-rathaus-brauerei": {
       "website": "https://rathausbrauerei.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://rathausbrauerei.ch/bierkarte",
@@ -243,9 +243,20 @@
       "extractedPrice": null,
       "snippets": []
     },
+    "lu-shamrock-luzern": {
+      "website": "http://www.shamrock-luzern.ch/",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
+      "reachable": true,
+      "httpStatus": 200,
+      "checkedUrl": "http://www.shamrock-luzern.ch/",
+      "foundOnMenu": false,
+      "typesFound": [],
+      "extractedPrice": null,
+      "snippets": []
+    },
     "zh-baur-au-lac": {
       "website": "https://bauraulac.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://bauraulac.ch/de/eat-drink/le-hall.html",
@@ -256,7 +267,7 @@
     },
     "zh-james-joyce": {
       "website": "https://jamesjoyce.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://jamesjoyce.ch",
@@ -267,18 +278,24 @@
     },
     "zh-kennedys": {
       "website": "https://www.kennedys.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://www.kennedys.ch/wp-content/uploads/2025/11/W25Kennedys_Menus_FD.pdf",
-      "foundOnMenu": false,
-      "typesFound": [],
+      "foundOnMenu": true,
+      "typesFound": [
+        "Guinness 0.0 (Non-Alcoholic)",
+        "Guinness Draught (On Tap)"
+      ],
       "extractedPrice": null,
-      "snippets": []
+      "snippets": [
+        "us! #kennedyszrh f @) www.kennedys.ch DRAUGHT BEERS �CIDERS 2.5dl 3dl 5dl GUINNESS - IRL-4.2% 5.50 9.80 An Irish stout. Creamy & smooth, hints of coffee, dark malts, dark chocol",
+        ".4% Fresh, full-bodied and well-balanced wheat beer - fruity/slightly sour GUINNESS HOPHOUSE 13 -IRL-5% 5.50 Flavourful lager, happy and citrusy on the nose GUINNESS IPA-IRL-5% 5"
+      ]
     },
     "zh-oliver-twist": {
       "website": "https://pickwick.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://pickwick.ch",
@@ -289,7 +306,7 @@
     },
     "zh-zeughauskeller": {
       "website": "https://zeughauskeller.ch",
-      "checkedAt": "2026-11-12T09:02:00.554730+00:00",
+      "checkedAt": "2026-11-12T13:03:42.469554+00:00",
       "reachable": true,
       "httpStatus": 200,
       "checkedUrl": "https://zeughauskeller.ch",
@@ -344,6 +361,49 @@
       }
     },
     {
+      "id": "ch-node-246253655",
+      "city": "zurich",
+      "name": "Albani",
+      "category": "pub",
+      "address": "Steinberggasse 16, 8400 Winterthur",
+      "lat": 47.4984256,
+      "lng": 8.7292032,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.albani.ch",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.albani.ch/-downloads-/document/2744/Getrankekarte_2024.pdf",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "hell Deutschland, 5.2% 6.00 8.00 Grimbergen Blonde Belgien, 6.7% 5.50 8.00 Guinness Irland, 4.2% 6.50 9.00 Guinness IPA Irland, 5.0% 6.50 9.00 Super Bock Portugal, 4.5% 6.00 8.00"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
       "id": "ch-node-247766860",
       "city": "zurich",
       "name": "Paddy O'Briens Old Irish Pub",
@@ -362,7 +422,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -401,18 +461,20 @@
       "priceLevel": null,
       "website": "https://www.theporterhouse.ch/about.html",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://www.theporterhouse.ch/food-drinks",
+      "menuUrl": "https://www.theporterhouse.ch/files/food/speisekarten/202608_TPH_Speisekarte_08.pdf",
       "phone": null,
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
         "extractedPrice": null,
         "snippets": [
-          "The website was read: no Guinness text found."
+          "0 150gr feinstes Rindfleisch, im frischen Black Sesam Bun Tomaten, Rucola, Guinness-Honig-Zwiebelkonfit, Guacamolesauce und einem Schuss Jameson Whiskey Swiss Burger serviert mit"
         ]
       },
       "reviewCheck": {
@@ -427,10 +489,6 @@
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "irish_name",
-        "text": "The name suggests an Irish pub. Nothing was checked, so this is a guess."
       }
     },
     {
@@ -495,7 +553,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -541,7 +599,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -586,7 +644,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -613,6 +671,98 @@
       }
     },
     {
+      "id": "ch-node-420850830",
+      "city": "zurich",
+      "name": "Pot Belly's",
+      "category": "bar",
+      "address": "Soodring 21, 8134 Adliswil",
+      "lat": 47.3200287,
+      "lng": 8.5211205,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.potbellys.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.potbellys.ch/wp-content/uploads/2025/01/Pot-Belly-Getraenkekarte-Januar-2025.pdf",
+      "phone": "+41 44 709 08 48",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "aisanne Pale Ale 5.20% 5.90 7.80 9.60 Smithwicks Irish Ale 3,80% 6.90 9.70 Guinness 4.90% 7.00 9.90 Schneider Weisse Original 5.40% 6.10 9.40 Magners Cider 5.00% 7.00 9.90 Alcoho",
+          "aisanne Pale Ale 5.20% 5.90 7.80 9.60 Smithwicks Irish Ale 3,80% 6.90 9.70 Guinness 4.90% 7.00 9.90 Schneider Weisse Original 5.40% 6.10 9.40 Magners Cider 5.00% 7.00 9.90 Alcoho",
+          "aisanne Pale Ale 5.20% 5.90 7.80 9.60 Smithwicks Irish Ale 3,80% 6.90 9.70 Guinness 4.90% 7.00 9.90 Schneider Weisse Original 5.40% 6.10 9.40 Magners Cider 5.00% 7.00 9.90 Alcoho"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      },
+      "tagCheck": {
+        "kind": "web_mention",
+        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
+      }
+    },
+    {
+      "id": "ch-node-534915700",
+      "city": "zurich",
+      "name": "Albani",
+      "category": "hotel",
+      "address": "Switzerland",
+      "lat": 47.4984836,
+      "lng": 8.7292032,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.albani.ch/de/hotel.html",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.albani.ch/-downloads-/document/2744/Getrankekarte_2024.pdf",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "hell Deutschland, 5.2% 6.00 8.00 Grimbergen Blonde Belgien, 6.7% 5.50 8.00 Guinness Irland, 4.2% 6.50 9.00 Guinness IPA Irland, 5.0% 6.50 9.00 Super Bock Portugal, 4.5% 6.00 8.00"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      },
+      "tagCheck": {
+        "kind": "web_mention",
+        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
+      }
+    },
+    {
       "id": "ch-node-639029571",
       "city": "zurich",
       "name": "Oliver Twist Pub",
@@ -631,7 +781,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -642,6 +792,49 @@
           "hur Guinness (1725-1803) at St. Jame’s Gate, Dublin. Guinness stout is made from water, barely, roast malt extract, hops, and brewer’s yeast. A portion of t",
           "he barley is roasted to give Guinness its dark colour and characteristic taste. Fuller's London Pride Fuller’s London Pride is one o",
           "w. Hop House 13 Lager Hop House 13 is a golden amber craft lager brewed by Guinness at the St. Jame`s Gate brewery. This double hopped lager is full flavoured, hoppy, citrusy on"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-768907979",
+      "city": "zurich",
+      "name": "Engel Lounge",
+      "category": "pub",
+      "address": "8820 Wädenswil",
+      "lat": 47.2300518,
+      "lng": 8.6754669,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://engel-waedenswil.ch/bereiche/seeplatz/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://engel-waedenswil.ch/wp-content/uploads/2022/06/Barkarte-12.pdf",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "ich 12.5 72 Bier offen Feldschlösschen Hopfenperle | 0.30 l | 0.50 l 6 | 9 Guinness | 0.25 l | 0.50 l 6 | 9.5 Bier Pale Ale | 0.30 l | 0.50 l 6 | 9 Grimbergen | 0.25 l | 0.50 l 6"
         ]
       },
       "reviewCheck": {
@@ -677,14 +870,13 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "om 12:00. +41 43 388 55 08 Directions Instagram Facebook Probably the best Guinness in Zurich Not just in the village. Ask anyone, we will wait. Live sport Football, Rugby, F1 Fo",
           ", so you have no excuse. Bar and snacks Bar snacks for the soul On the bar Guinness, poured properly, so please be patient Swiss craft beers Wine by the glass Single malts Soft d"
         ]
       },
@@ -721,7 +913,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -729,6 +921,49 @@
         "extractedPrice": null,
         "snippets": [
           "mütliche Stunden im Piccadilly Pub bei einem Apéro einem wohl schmeckenden Guinness feinem Whiskie oder Single Malt Wir bieten eine grosse Bier- und Whiskie-Auswahl an. Dazu serv"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-1680729726",
+      "city": "zurich",
+      "name": "Hans Heiri's Restaurant & Bar",
+      "category": "bar",
+      "address": "Bahnhofstrasse 1, 8714 Feldbach",
+      "lat": 47.2394738,
+      "lng": 8.7863084,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.hansheiri.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.hansheiri.ch/files/food/2026/Hans_Heiri_Getraenkekarte.pdf",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "e Aventinus Weizenstarkbier 50 cl 8,2 % 9.50 Corona Extra 33 cl 4,5 % 7.50 Guinness Irish Stout 33 cl 4,2 % 7.00 ALKOHOLFREI Schneider Weisse Alkoholfreier Weissbiergenuss 50 cl"
         ]
       },
       "reviewCheck": {
@@ -764,12 +999,15 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness Draught (On Tap)"
+        ],
         "extractedPrice": null,
         "snippets": [
-          "The website was read: no Guinness text found."
+          "us! #kennedyszrh f @) www.kennedys.ch DRAUGHT BEERS �CIDERS 2.5dl 3dl 5dl GUINNESS - IRL-4.2% 5.50 9.80 An Irish stout. Creamy & smooth, hints of coffee, dark malts, dark chocol",
+          ".4% Fresh, full-bodied and well-balanced wheat beer - fruity/slightly sour GUINNESS HOPHOUSE 13 -IRL-5% 5.50 Flavourful lager, happy and citrusy on the nose GUINNESS IPA-IRL-5% 5"
         ]
       },
       "reviewCheck": {
@@ -784,10 +1022,6 @@
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "irish_name",
-        "text": "The name suggests an Irish pub. Nothing was checked, so this is a guess."
       }
     },
     {
@@ -895,7 +1129,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (Cans / Bottles)"
@@ -938,7 +1172,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -983,7 +1217,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -1026,7 +1260,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -1069,7 +1303,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -1114,7 +1348,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -1159,17 +1393,16 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "all, rugby, NFL, F1 - if it kicks off, we show it. Pull up a stool, grab a Guinness, sing every chant. 34 screens · 2 floors 8 sports broadcast ‹ › match Foot match Guiness Lover",
+          "all, rugby, NFL, F1 - if it kicks off, we show it. Pull up a stool, grab a Guinness, sing every chant. 34 screens · 2 floors 8 sports broadcast ‹ › Foot match match Crowd Celebra",
           "7.- 5.6% Nebuleuse 5.90 / 9.90 / 28.- 8.0% Prices per 2.5dl / 5.0dl / 1.5L Guinness 5.90 / 9.90 / 28.- Stout · 4.2% Magners 5.70 / 9.70 / 27.- Cider · 4.5% London Pride 5.70 / 9.",
-          "off the shelf. Corona 8.- 4.5% Desperados 8.- 5.9% Bavaria Lager 5.- 0.0% Guinness 9.50 0.0% Brooklyn IPA 8.- 0.4% Nebuleuse Diversion IPA 8.- 0.5% Nebuleuse Embuscade IPA 8.- 6",
-          "Jack Daniel's, cola, tranche de citron Shots Quick and decisive. B52, Baby Guinness, Jägermeister and the rest - one glass, no fuss. B52 7.- Kahlua, Bailey's, Cointreau Baby Guin"
+          "off the shelf. Corona 8.- 4.5% Desperados 8.- 5.9% Bavaria Lager 5.- 0.0% Guinness 9.50 0.0% Brooklyn IPA 8.- 0.4% Nebuleuse Diversion IPA 8.- 0.5% Nebuleuse Embuscade IPA 8.- 6"
         ]
       },
       "reviewCheck": {
@@ -1248,7 +1481,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)",
@@ -1292,11 +1525,9 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness (mentioned on website)"
-        ],
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "à 4.5%, carbonaté à l'azote pour une mousse crémeuse, pour les amateurs de Guinness. La Pointe L'Apaisée WIPA ǀ 6,5% 5 5 La Pointe Brasserie: L'Apaisée Type: WIPA Alcool: 6,5 % D"
@@ -1314,6 +1545,10 @@
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
+      },
+      "tagCheck": {
+        "kind": "web_mention",
+        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
       }
     },
     {
@@ -1421,7 +1656,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -1464,7 +1699,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -1507,7 +1742,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (Cans / Bottles)"
@@ -1550,7 +1785,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -1589,13 +1824,13 @@
       "priceLevel": null,
       "website": "https://www.spotcafe.ch",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://www.spotcafe.ch",
+      "menuUrl": "https://spotcafe.ch",
       "phone": "+41 21 623 31 17",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (Cans / Bottles)"
@@ -1638,7 +1873,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -1683,7 +1918,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -1728,7 +1963,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -1739,6 +1974,49 @@
           "hur Guinness (1725-1803) at St. Jame’s Gate, Dublin. Guinness stout is made from water, barely, roast malt extract, hops, and brewer’s yeast. A portion of t",
           "he barley is roasted to give Guinness its dark colour and characteristic taste. Fuller's London Pride Fuller’s London Pride is one o",
           "w. Hop House 13 Lager Hop House 13 is a golden amber craft lager brewed by Guinness at the St. Jame`s Gate brewery. This double hopped lager is full flavoured, hoppy, citrusy on"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-2037406165",
+      "city": "basel",
+      "name": "Highspeed Music Bar",
+      "category": "bar",
+      "address": "Oberwilerstrasse 22, 4102 Binningen",
+      "lat": 47.5367883,
+      "lng": 7.5717556,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.highspeed-bar.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.highspeed-bar.ch/wp-content/uploads/2025/07/Speisekarte.pdf",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "Feldschlösschen Dunkel 3.3 dl 6.50 FeldschlösschenAlkoholfrei 3.3 dl 6.50 Guinness 5 dl 7.00 Weine / Prosecco Bitte beachten Sie unsere separate Wein- und Spirituosenkarte"
         ]
       },
       "reviewCheck": {
@@ -1774,7 +2052,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -1862,7 +2140,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -1948,7 +2226,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -1956,6 +2234,49 @@
         "extractedPrice": null,
         "snippets": [
           "Irish Pub in Basel | Bar | Events | Sport Live Streams | Guinness Beer Skip Navigation View Sitemap Basel Zug --> Authentic Irish Pub Welcome to Flanagan‘s In B"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-13535126290",
+      "city": "basel",
+      "name": "Gibabo Restaurant & Bar",
+      "category": "bar",
+      "address": "Küchengasse 7, Switzerland",
+      "lat": 47.5487999,
+      "lng": 7.5894128,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.gibabo-restaurant.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.gibabo-restaurant.ch/assets/uploads/Menuekarte_gibabo.pdf",
+      "phone": "+41 61 281 74 34",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness Draught (On Tap)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "0cl 6.- Heineken Fl. 25cl 5.- Heineken Fl. 33cl 6.- Weissbier Fl. 50cl 6.- Guinness Fl. 25cl 6.- Feldschlösschen Alkoholfrei Fl. 33cl 4.50 Feldschlösschen vom Fass Fl. 33cl 5.- F"
         ]
       },
       "reviewCheck": {
@@ -2034,7 +2355,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -2077,7 +2398,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -2148,6 +2469,50 @@
       }
     },
     {
+      "id": "ch-node-1066324532",
+      "city": "bern",
+      "name": "The BEEF",
+      "category": "restaurant",
+      "address": "Switzerland",
+      "lat": 46.9481471,
+      "lng": 7.4487055,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.beef-steakhouse.ch",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.beef-steakhouse.ch/wp-content/uploads/2016/01/Barkarte-Juni-26.pdf",
+      "phone": "+41 31 3116400",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness Draught (On Tap)",
+          "Guinness (Cans / Bottles)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "30cl 5.1 Schweiz 50cl 7.1 Gurten Zähringer Amber 30cl 5.5 Schweiz 50cl 7.5 Guinness Draught Irland 50cl 9 Kilkenny Red Ale 25cl 5.5 Irland 50cl 9 Flasche Moosehead Lager 33cl 6.5"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
       "id": "ch-node-1643620009",
       "city": "bern",
       "name": "McArthurs Pub",
@@ -2209,7 +2574,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -2340,7 +2705,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (Cans / Bottles)"
@@ -2348,7 +2713,6 @@
         "extractedPrice": null,
         "snippets": [
           "RGDORFER 3.3DL 6.00 BIA Saigon 3.55DL 6.00 ESTRELLA GLUTEN FREE 3.3DL 6.00 GUINNESS DOSE 5DL 8.00 ALKOHOHLFREI AAREBIER 0.0% FLASCHE 3.3DL 6.00 GUINNESS 0.05% DOSE 4.4DL 8.00 BIL",
-          "ED SHOT 4CL 5.00 INGWERER 24% | 4CL 7.00 BERLINER LUFT 18% | 4CL 5.00 BABY GUINNESS 4CL 6.00 BABY BEER 4CL 6.00 LIMONCELLO 25% | 4CL 6.00 DEVIA SHOT 32% | 4CL 8.50 SHAKE THE LOUN",
           "LONDOHNI MULE 12.00 MOJITOHNI 12.00 BIER AAREBIER 0.0% FLASCHE 3.3DL 6.00 GUINNESS 0.05% DOSE 4.4DL 8.00 BILZ PANACHÉ FLASCHE 3.3DL 5.00 Ässe us der Chuchi Menü Mittwuch Q Menü"
         ]
       },
@@ -2385,7 +2749,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -2396,6 +2760,49 @@
           "at, vel illum dolore eu feugiat nulla\" photoshop:LayerText=\"guinness &amp; magners original\"/> <rdf:li photoshop:LayerName=\"esse",
           "re eu feugiat nulla\" photoshop:LayerText=\"Smithwick’s &amp; guinness\"/> <rdf:li photoshop:LayerName=\"esse molestie consequat, ve",
           "pa 5.2% zähringer amber 5.4% smithwick’s 3.8% kilkenny 4.3% guinness draught 4.2% hophouse 13 5.0% panache / shandy half &amp"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-7893100199",
+      "city": "bern",
+      "name": "Turbo Lama",
+      "category": "restaurant",
+      "address": "Hilfikerstrasse 4, 3014 Bern",
+      "lat": 46.9682653,
+      "lng": 7.4640267,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.turbolama.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.turbolama.ch/_files/ugd/721ef7_c455115a73c041fc8680ae6c1401e059.pdf",
+      "phone": "+41 31 331 00 91",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "anne Zwickel 2.5dl | 5dl 5.4% 6|9 Valaisanne Pale Ale 2.5dl | 5dl 5.2% 6|9 Guinness IPA 2.5dl | 5dl 5.0% 6|9 1664 Blanche 2.5dl | 5dl 5.0% 6|9 Schneider Weisse 5dl 5.4% 9 ALKOHOL"
         ]
       },
       "reviewCheck": {
@@ -2431,7 +2838,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -2474,7 +2881,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (Cans / Bottles)"
@@ -2517,7 +2924,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -2528,6 +2935,49 @@
           "hur Guinness (1725-1803) at St. Jame’s Gate, Dublin. Guinness stout is made from water, barely, roast malt extract, hops, and brewer’s yeast. A portion of t",
           "he barley is roasted to give Guinness its dark colour and characteristic taste. Fuller's London Pride Fuller’s London Pride is one o",
           "w. Hop House 13 Lager Hop House 13 is a golden amber craft lager brewed by Guinness at the St. Jame`s Gate brewery. This double hopped lager is full flavoured, hoppy, citrusy on"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-1069132163",
+      "city": "lucerne",
+      "name": "Madeleine",
+      "category": "bar",
+      "address": "Switzerland",
+      "lat": 47.0517989,
+      "lng": 8.2983325,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://www.lamadeleine.ch",
+      "websiteSource": "overture",
+      "menuUrl": "https://www.lamadeleine.ch/wp-content/uploads/2026/04/Getraenkekarte.Ueberarbeitet.ohne-logo-1.pdf",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "frei 0.33l 7.- Feldschlösschen Bügel 0,5l 8.50 Schneider's Weisse 0,5l 9.- Guinness 0.5l 9.-"
         ]
       },
       "reviewCheck": {
@@ -2563,7 +3013,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -2591,33 +3041,32 @@
       }
     },
     {
-      "id": "ch-node-1511988724",
+      "id": "ch-node-1423740032",
       "city": "lucerne",
-      "name": "una más",
+      "name": "Hanky Panky",
       "category": "bar",
-      "address": "Oberstadt 6, 6210 Sursee",
-      "lat": 47.1722527,
-      "lng": 8.1101579,
+      "address": "Sempacherstrasse 16, 6003 Luzern",
+      "lat": 47.0478726,
+      "lng": 8.3079876,
       "googleRating": null,
       "googleReviewCount": 0,
       "priceLevel": null,
-      "website": "https://www.unamas.ch/",
+      "website": "https://hanky-panky.ch/",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://unamas.ch/unsere-karte/",
+      "menuUrl": "https://hanky-panky.ch/wp-content/uploads/2026/10/26BarkarteHankyPanky_a4oktober26.pdf",
       "phone": null,
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
-          "Guinness Draught (On Tap)"
+          "Guinness (Cans / Bottles)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "en Helvetic 4.70% 3dl 6 5dl 8 Feldschlösschen Braufrisch 5.00% 3dl 6 5dl 8 Guinness Stout 4.20% Half 6.5 Pint 9.5 Guinness IPA 5.00% 3dl 7.5 Pint 9.5 Valaisanne Pale Ale 5.20% 3d",
-          "r Alkoholfrei 0.00% 33cl 6 Feldschlösschen Weizen Alkoholfrei 0.00% 33cl 6 GUINNESS 0.0 0.00% 44cl 7.50 CORONA 0.0 0.00% 33cl 6 Alcopops, Most & Cider Smirnoff Ice 4.00% 27.5cl 6"
+          "Bier & Seltzer Offen 3dl 5dl Valaisanne Lager 6.0 8.5 1664 Blanche 6.5 9.0 Guinness – 10.0 Flaschenbier Feldschlösschen Alkoholfrei 33cl 6 San Miguel Fresca 33cl 7 Valaisanne Jui"
         ]
       },
       "reviewCheck": {
@@ -2653,7 +3102,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -2698,7 +3147,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -2742,7 +3191,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -2785,15 +3234,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
-          "<meta name=\"keywords\" content=\"Goldau,Goldauerhof,Guinness,Kilkenny,Magners,Gurten Lager,San Miguel,\" />",
-          "f\",\"seo_title\":\"Goldauerhof\",\"keywords\":\"Goldau,Goldauerhof,Guinness,Kilkenny,Magners,Gurten Lager,San Miguel,\",\"description\":\"E",
-          "ssige Events.\",\"type\":\"home\",\"keywords\":\"Goldau,Goldauerhof,Guinness,Kilkenny,Magners,Gurten Lager,San Miguel,\",\"seoLang\":\"gsw\",",
-          "f\",\"seo_title\":\"Goldauerhof\",\"keywords\":\"Goldau,Goldauerhof,Guinness,Kilkenny,Magners,Gurten Lager,San Miguel,\",\"description\":\"E"
+          "<meta name=\"keywords\" content=\"Goldau,Goldauerhof,Guinness,Kilkenny,Magners,Gurten Lager,San Miguel,\" />"
         ]
       },
       "reviewCheck": {
@@ -2815,32 +3261,75 @@
       }
     },
     {
-      "id": "ch-node-445376761",
+      "id": "ch-node-1539782196",
       "city": "east",
-      "name": "Al Capone",
-      "category": "restaurant",
-      "address": "Bohl 1, 9000 St.Gallen",
-      "lat": 47.4265343,
-      "lng": 9.3764816,
+      "name": "August Bar",
+      "category": "bar",
+      "address": "Augustinergasse 31, 9000 St. Gallen",
+      "lat": 47.4272899,
+      "lng": 9.3745692,
       "googleRating": null,
       "googleReviewCount": 0,
       "priceLevel": null,
-      "website": "https://www.steakhouse-alcapone.ch/",
+      "website": "https://augustbar.ch/",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://www.steakhouse-alcapone.ch/de/p/als-bar-1083.html",
-      "phone": "+41 71 223 45 03",
+      "menuUrl": "https://augustbar.ch/wp-content/uploads/2026/09/August_Karte_Sept.pdf",
+      "phone": null,
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "Schottland, Delirium aus Belgien, Brooklyn East IPA aus New York oder das Guinness Draught aus Irland erhältlich. Über weitere dreissig verschiedene internationale Craftbiere in"
+          "2 3.3 7.5 San Miguel Fresca ESP 4.4 3.3 7.5 Augustiner Hell DE 5.2 5.0 8.5 Guinness Draught Stout IRL 4.2 5.0 8.5 Schützengarten Weisser Engel CH 5 5 8.5 MÖHL CIDER Herkunft % dl"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-1625431882",
+      "city": "east",
+      "name": "Soho",
+      "category": "bar",
+      "address": "Löwengasse 1, 9000 St. Gallen",
+      "lat": 47.4253805,
+      "lng": 9.3776215,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.soho-switzerland.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://soho-switzerland.ch/wp-content/uploads/2026/07/SOHO_Karte_Alles_11_2023.pdf",
+      "phone": "+41 71 223 42 42",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "oder sauer) 2.5dl 5.00 5.0dl 7.50 Grimbergen Blanche 2.5dl 6.00 5.0dl 9.00 Guinness Hop House 13 2.5dl 6.00 5.0dl 9.00 Valaisanne Zwickelbier 2.5dl 6.00 5.0dl 9.00 4 SOHO SPECIAL"
         ]
       },
       "reviewCheck": {
@@ -2956,13 +3445,13 @@
       "priceLevel": null,
       "website": "https://www.circle-pub.ch/",
       "websiteSource": "overture",
-      "menuUrl": "https://www.circle-pub.ch/",
+      "menuUrl": "https://circle-pub.ch/",
       "phone": null,
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -3007,7 +3496,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -3051,7 +3540,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -3059,6 +3548,49 @@
         "extractedPrice": null,
         "snippets": [
           "n neues Thema und ein neuer Sieger der Herzen. Getränke: Geniesst frisches Guinness, Smithwick’s, Gallus Old Style Ale, leckere Cocktails und ausgewählte Whiskys aus Schottland u"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-13462340705",
+      "city": "east",
+      "name": "August Erststock-Bezili",
+      "category": "restaurant",
+      "address": "Augustinergasse 31, 9000 St.Gallen",
+      "lat": 47.4272842,
+      "lng": 9.3745633,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://augustbar.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://augustbar.ch/wp-content/uploads/2026/09/August_Karte_Sept.pdf",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness Draught (On Tap)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "2 3.3 7.5 San Miguel Fresca ESP 4.4 3.3 7.5 Augustiner Hell DE 5.2 5.0 8.5 Guinness Draught Stout IRL 4.2 5.0 8.5 Schützengarten Weisser Engel CH 5 5 8.5 MÖHL CIDER Herkunft % dl"
         ]
       },
       "reviewCheck": {
@@ -3094,7 +3626,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -3225,7 +3757,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -3442,10 +3974,10 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
-          "Guinness (mentioned on website)"
+          "Guinness Draught (On Tap)"
         ],
         "extractedPrice": null,
         "snippets": [
@@ -3554,6 +4086,49 @@
       }
     },
     {
+      "id": "ch-node-250154832",
+      "city": "alps",
+      "name": "Black Tap",
+      "category": "restaurant",
+      "address": "Switzerland",
+      "lat": 46.0845328,
+      "lng": 7.3016988,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.blacktap.ch",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "http://blacktap.ch/wp-content/uploads/2026/10/GVA-EnglishFoodMenuOctober2026.pdf",
+      "phone": "+41 27 775 26 56",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "OTTLES - 330ML HEINEKEN ZERO (NL) 0.0% 8|NO ALC CORONA (MX) 5.0% 8|SPECIAL GUINNESS (IRL) 4.2% 8|STOUT CIDER BY RAMSEIER (CH) 4.0% | 8CIDER OTHER HOT DRINKS 5.5| CLASSIC SHAKES |"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
       "id": "ch-node-429340378",
       "city": "alps",
       "name": "Old Dublin",
@@ -3658,7 +4233,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -3787,7 +4362,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -3832,7 +4407,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)",
@@ -3921,7 +4496,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -3932,6 +4507,49 @@
           "t. Wir sind ein echter Pub – mit allem, was dazugehört. Ihr findet bei uns Guinness und Kilkenny frisch vom Fass, eine ständig wechselnde Auswahl an erstklassigen Spirituosen aus",
           "und mehr – live auf mehreren Screens. Was andere nicht zeigen, zeigen wir. Guinness & Kilkenny vom Fass Frisch gezapft, perfekt temperiert, mit der richtigen Schaumkrone. So wie",
           "ständig wechselnde Raritäten mit Fokus auf Rum und Tequila – ergänzt durch Guinness und Kilkenny frisch vom Fass. Wer aktiv werden möchte, fordert am Dartboard oder Billiardtisch"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-node-9456349570",
+      "city": "alps",
+      "name": "Gianottis Wilderei",
+      "category": "restaurant",
+      "address": "Switzerland",
+      "lat": 46.4924993,
+      "lng": 9.9029054,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.gianottis.ch",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.gianottis.ch/wp-content/uploads/2025/07/Tageskarte_Sommer_2025.pdf",
+      "phone": "+41 81 842 70 90",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "l, naturtrüb) 0.3l / 0.5l 6.50 / 9.00 Palü (amber) 0.3l / 0.5l 7.00 / 9.50 Guinness 0.3l / 0.5l 7.00 / 9.50 1664 Lager 0.3l / 0.5l 4.50 / 7.00 Schneiders Weisse 0.3l / 0.5l 5.00"
         ]
       },
       "reviewCheck": {
@@ -3967,7 +4585,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -4006,19 +4624,17 @@
       "priceLevel": null,
       "website": "http://www.beau-rivage-hotel.ch",
       "websiteSource": "overture",
-      "menuUrl": "https://www.beau-rivage-hotel.ch/wp-content/uploads/elementor/css/custom-pro-widget-nav-menu.min.css?ver=1793923647",
+      "menuUrl": "http://www.beau-rivage-hotel.ch",
       "phone": "+41327231523",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "checked": false,
+        "lastChecked": null,
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
-        "snippets": [
-          "The website was read: no Guinness text found."
-        ]
+        "snippets": []
       },
       "reviewCheck": {
         "mentionCount": 0,
@@ -4057,7 +4673,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -4084,6 +4700,51 @@
       }
     },
     {
+      "id": "ch-ov-1904d2df-9fd8-4819-b7b6-142d5db5c4fb",
+      "city": "zurich",
+      "name": "Chevys Road Stop",
+      "category": "restaurant",
+      "address": "Villigerstrasse 31, 5236 Remigen",
+      "lat": 47.51377,
+      "lng": 8.20875,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://www.chevys-road-stop.ch/",
+      "websiteSource": "overture",
+      "menuUrl": "http://www.chevys-road-stop.ch/s/ChevyDrinks2026-75gt.pdf",
+      "phone": "+41562902060",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "20.00 Usa - Brooklyn pilsner 4.6% 3 dl / 5 dl 6.50 / 8.00 1.5l 23.50 Irl - Guinness stout 4.2% 2.5 dl / 5 dl 6.50 / 9.00 Season beer div. Frage unsere Service Crew was aktuell is",
+          "Miguel Fresca 4.4% 33 cl 7.00 De - Schneider Weisse 5.4% 50 cl 8.00 IRL - Guinness hop house 13 5.0% 33 cl 7.50 Irl - Magners cider 4.5% 33 cl 7.50 Ch - Suure Most trüb ramseier",
+          "lkoholfrei 33 cl 6.50 USA - Brooklyn sfx Lager / IPA 0.4% 33 cl 6.50 irl - Guinness alkoholfrei 44 cl 7.00 De - Schneider Weisse alkoholfrei 50 cl 8.00 Duke Straight Bourbon 44%"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
       "id": "ch-ov-19e29b61-5919-4c4f-a91b-45616281ea1d",
       "city": "alps",
       "name": "Steakhouse Zur Alten Mühle",
@@ -4102,7 +4763,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)",
@@ -4111,49 +4772,6 @@
         "extractedPrice": null,
         "snippets": [
           "Verschiedene Biere im Offenausschank (diverse Sorten vom Lager bis hin zu Guinness) und das grösste Sortiment an einheimischen und internationalen Flaschenbieren in Zermatt, lad"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-ov-1a71d307-a62c-40a4-a44e-40732ba7857a",
-      "city": "basel",
-      "name": "Fever-Tree Switzerland",
-      "category": "bar",
-      "address": "Aliothstrasse 40, 4142 Münchenstein",
-      "lat": 47.50972,
-      "lng": 7.61485,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://ullrich.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "https://ullrich.ch/de/bier/",
-      "phone": "+41613389090",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness (mentioned on website)"
-        ],
-        "extractedPrice": null,
-        "snippets": [
-          "la Galicia Feldschlösschen Flensburger Forst Franziskaner Fuller`s Glytter Guinness Gösser Hacker-Pschorr Bräu Haldengut Harviestoun Heineken Hoegaarden Holsten Hürlimann Innis &"
         ]
       },
       "reviewCheck": {
@@ -4214,51 +4832,6 @@
       }
     },
     {
-      "id": "ch-ov-1bd04b31-f2b8-4412-b45f-064d8900294f",
-      "city": "alps",
-      "name": "Hotel la Réserve",
-      "category": "hotel",
-      "address": "Stock, 3924 Sankt Niklaus",
-      "lat": 46.17157,
-      "lng": 7.80058,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://la-reserve.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "https://la-reserve.ch/",
-      "phone": "+41279552255",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "eingeschnitten zwischen mächtigen Viertausendern liegt das Mattertal, laut Guinness Buch der Rekorde das tiefste Tal der Alpen. Dabei hat jedes Dorf seinen eigenen Charme: Stalde"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "web_mention",
-        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
-      }
-    },
-    {
       "id": "ch-ov-1db310ad-a34b-46dc-904b-8e7b110c3210",
       "city": "lucerne",
       "name": "The Core Irish Pub",
@@ -4271,19 +4844,17 @@
       "priceLevel": null,
       "website": "http://www.thecorepub.ch/",
       "websiteSource": "overture",
-      "menuUrl": "https://thecorepub.ch/wp-content/plugins/elementor/assets/css/widget-menu-anchor.min.css?ver=3.27.0",
+      "menuUrl": "http://www.thecorepub.ch/",
       "phone": "+41416371916",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "checked": false,
+        "lastChecked": null,
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
-        "snippets": [
-          "The website was read: no Guinness text found."
-        ]
+        "snippets": []
       },
       "reviewCheck": {
         "mentionCount": 0,
@@ -4301,6 +4872,50 @@
       "tagCheck": {
         "kind": "irish_name",
         "text": "The name suggests an Irish pub. Nothing was checked, so this is a guess."
+      }
+    },
+    {
+      "id": "ch-ov-222cd0e5-ceed-4220-aa31-8a58f090edbb",
+      "city": "bern",
+      "name": "Platzhirsch Langenthal",
+      "category": "bar",
+      "address": "Wuhrgasse 10, 4900 Langenthal",
+      "lat": 47.21338,
+      "lng": 7.79127,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://www.platzhirschlangenthal.ch/",
+      "websiteSource": "overture",
+      "menuUrl": "http://www.platzhirschlangenthal.ch/s/A5_PHL_Angebot_20Seiten_2025-57ls.pdf",
+      "phone": "+41625300707",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness Draught (On Tap)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "4 cl 7 (Medizin) Tiramisu 4 cl 9 Kahlua, Baileys, Rahm, Schoggipulver Mini Guinness 4 cl 7 Kahlua, Baileys Flying Hirsch 4 cl 10 4cl Jägermeister mit Red Bull Pornstar 4 cl 7 Pas",
+          "er Feldschlösschen Original Bärengold Braufrisch 30 cl 5 50 cl 7 150 cl 22 Guinness 25 cl 7 Draught 50 cl 9 Saisonbier 25 cl 7 50 cl 9 Hopfen abgefüllt.. Gurten Zähringer Amber 3"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
       }
     },
     {
@@ -4322,7 +4937,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -4346,6 +4961,49 @@
       "tagCheck": {
         "kind": "irish_name",
         "text": "The name suggests an Irish pub. Nothing was checked, so this is a guess."
+      }
+    },
+    {
+      "id": "ch-ov-2dd6b7e1-965f-4c2a-b367-550d9e4edfd0",
+      "city": "zurich",
+      "name": "Hotel Restaurant Bar Schiff",
+      "category": "hotel",
+      "address": "Unterdorfstrasse 21, 8808 Freienbach",
+      "lat": 47.20556,
+      "lng": 8.77369,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://www.schiff-pfaeffikon.ch/",
+      "websiteSource": "overture",
+      "menuUrl": "https://www.schiff-pfaeffikon.ch/sites/default/files/2026-11/BARKARTE%20SEEROESENBAR_NOV26.pdf",
+      "phone": "+41554161718",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "en 33cl 7.00 Corona Extra 33cl 8.00 Schneider Weisse Weizen hell 50cl 8.60 Guinness 50cl 9.00 „Alkoholfreie Bier“ Appenzeller Leermond 33cl 6.50 Schneider Weisse Weizen 50cl 8.10"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
       }
     },
     {
@@ -4367,7 +5025,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -4394,118 +5052,32 @@
       }
     },
     {
-      "id": "ch-ov-35ebe999-4835-49bf-a70f-a4b6984445b7",
-      "city": "lucerne",
-      "name": "una más Sursee",
-      "category": "bar",
-      "address": "Oberstadt 6, 6210 Sursee",
-      "lat": 47.17227,
-      "lng": 8.11016,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://unamas.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "https://unamas.ch/unsere-karte/",
-      "phone": "+41419216210",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness Draught (On Tap)"
-        ],
-        "extractedPrice": null,
-        "snippets": [
-          "en Helvetic 4.70% 3dl 6 5dl 8 Feldschlösschen Braufrisch 5.00% 3dl 6 5dl 8 Guinness Stout 4.20% Half 6.5 Pint 9.5 Guinness IPA 5.00% 3dl 7.5 Pint 9.5 Valaisanne Pale Ale 5.20% 3d",
-          "r Alkoholfrei 0.00% 33cl 6 Feldschlösschen Weizen Alkoholfrei 0.00% 33cl 6 GUINNESS 0.0 0.00% 44cl 7.50 CORONA 0.0 0.00% 33cl 6 Alcopops, Most & Cider Smirnoff Ice 4.00% 27.5cl 6"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-ov-3bd9bb65-3fe1-4f67-8110-401b2747073f",
-      "city": "zurich",
-      "name": "The Kings Pub",
-      "category": "pub",
-      "address": "Schulgutstrasse 3, 8953 Dietikon",
-      "lat": 47.41078,
-      "lng": 8.40433,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://thekingspub.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "https://thekingspub.ch/menu/",
-      "phone": "41447410550",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness Draught (On Tap)"
-        ],
-        "extractedPrice": null,
-        "snippets": [
-          ".50 JUICE Orange, Ananas, Cranberry 33 cl CHF 5.00 BEER MENU (Beer on Tap) GUINNESS (IRL, 4.2%) GUINNESS HOPHOUSE 13 (IRL, 5.0%) Grimbergen Rouge (BE, 6.0%) Murphy’s Irish Red (5",
-          "l CHF 5.80 50 cl CHF 9.80 Pitcher 150 cl CHF 24.00 BIER MENU (Beer on Tap) GUINNESS (IRL, 4.2%) 25 cl / 50 cl 5.50 / 9.80 GUINNESS HOPHOUSE 13 (IRL, 5.0%) 25 cl / 50 cl 5.50 / 9."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-ov-3e9f0cb4-1884-40c2-9ac5-f1567c1f3528",
-      "city": "alps",
-      "name": "Magasin Aigle AMSTEIN SA",
+      "id": "ch-ov-3596437f-a3c7-42ae-9893-0e13b2b05071",
+      "city": "east",
+      "name": "Roots Restaurant",
       "category": "restaurant",
-      "address": "Route Industrielle 8, 1860 Aigle",
-      "lat": 46.31524,
-      "lng": 6.93953,
+      "address": "Wiesenbachstrasse 5, 9030 St. Gallen",
+      "lat": 47.4175,
+      "lng": 9.31429,
       "googleRating": null,
       "googleReviewCount": 0,
       "priceLevel": null,
-      "website": "https://www.amstein.ch/fr/Bieres.html",
+      "website": "https://saentispark.revierhotels.com/de/gastronomie",
       "websiteSource": "overture",
-      "menuUrl": "https://www.amstein.ch/fr/Bieres.html",
-      "phone": "0244661848",
+      "menuUrl": "https://saentispark.revierhotels.com/files/content/Bilder/revier_saentispark/261030_rsp_revier_barkarte_foxhouse.pdf",
+      "phone": "0713131111",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
         "extractedPrice": null,
         "snippets": [
-          "dschlösschen (2) Forged Irish Stout (1) Friesische Brauhaus (1) Granda (6) Guinness (2) Gusswerk (1) Hall & Woodhouse Ltd (2) Heather Ale Ltd (10) Heineken France (1) Heineken It"
+          "Ale 4,5% 0.5l 9 Amber Shepherd Neame 1698 6,5% 0.5l 9 Dunkles Amber Irland Guinness West Indies Porter 6% 0.5l 9,8 Guinness Hop House 13 5% 0.33l 7,5 Lager Schottland BrewDog IPA"
         ]
       },
       "reviewCheck": {
@@ -4520,37 +5092,35 @@
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "web_mention",
-        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
       }
     },
     {
-      "id": "ch-ov-4015e691-0e10-4491-9048-3db7079d805d",
-      "city": "alps",
-      "name": "Hotel Heimatlodge",
-      "category": "hotel",
-      "address": "Dorfstrasse 24, 3924 Sankt Niklaus",
-      "lat": 46.17639,
-      "lng": 7.80216,
+      "id": "ch-ov-37d75bbd-5d30-4c81-ab01-c7048ac4c04a",
+      "city": "lausanne",
+      "name": "Le Fief",
+      "category": "bar",
+      "address": "Grand-Rue 50, 1680 Romont",
+      "lat": 46.69731,
+      "lng": 6.91881,
       "googleRating": null,
       "googleReviewCount": 0,
       "priceLevel": null,
-      "website": "http://heimatlodge.ch/",
+      "website": "http://www.lefief.ch/",
       "websiteSource": "overture",
-      "menuUrl": "http://heimatlodge.ch/",
-      "phone": "+41279662696",
+      "menuUrl": "http://www.lefief.ch/wp-content/uploads/2026/06/Boissons-et-snacks.pdf",
+      "phone": "+41794121420",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (mentioned on website)"
+        ],
         "extractedPrice": null,
         "snippets": [
-          "eingeschnitten zwischen mächtigen Viertausendern liegt das Mattertal, laut Guinness Buch der Rekorde das tiefste Tal der Alpen. Dabei hat jedes Dorf seinen eigenen Charme: Stalde"
+          "n Star 33cl 6.1% 8.00 Bière valaisanne appréciée de toutes et tous ! (IPA) Guinness 50cl 4.2% 8.00 Le classique irlandais (Stout) La Bière de saison 8.00 Découverte éphémère – ch"
         ]
       },
       "reviewCheck": {
@@ -4565,10 +5135,6 @@
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "web_mention",
-        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
       }
     },
     {
@@ -4590,7 +5156,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -4678,7 +5244,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -4746,33 +5312,32 @@
       }
     },
     {
-      "id": "ch-ov-4ea24640-cbeb-4a4a-8484-49f5416f6915",
-      "city": "alps",
-      "name": "Le Grand Restaurant",
-      "category": "restaurant",
-      "address": "Kulm Hotel, 7500 St. Moritz",
-      "lat": 46.49921,
-      "lng": 9.84178,
+      "id": "ch-ov-5b601393-ca20-4dd1-8aa3-627c8adcfcc5",
+      "city": "bern",
+      "name": "Revier Mountain Lodge Adelboden",
+      "category": "hotel",
+      "address": "Dorfstrasse 37, 3715 Adelboden",
+      "lat": 46.49178,
+      "lng": 7.55803,
       "googleRating": null,
       "googleReviewCount": 0,
       "priceLevel": null,
-      "website": "http://www.waldhaus-am-see.ch",
+      "website": "https://adelboden.revierhotels.com/",
       "websiteSource": "overture",
-      "menuUrl": "http://www.waldhaus-am-see.ch",
-      "phone": "081 836 82 16",
+      "menuUrl": "https://adelboden.revierhotels.com/files/content/Dokumente/rad_bierkarte_web.pdf",
+      "phone": "+41583306666",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
-          "Guinness (Cans / Bottles)"
+          "Guinness (mentioned on website)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "Größte Whisky-Bar Die größte Whisky-Bar der Welt - über 2.500 Flaschen und Guinness-Weltrekord seit 1999 Ansicht Detail Entdecken Sie unseren Weinkeller Über 1.300 erlesene Weine",
-          "Größte Whisky-Bar Die größte Whisky-Bar der Welt - über 2.500 Flaschen und Guinness-Weltrekord seit 1999 Ansicht Detail Sport Entdecken Sie unseren Weinkeller Über 1.300 erlesene"
+          "5% 9 Shepherd Neame 1698 Dunkles Amber, üppig und mundfüllend 0.5 l 6,5% 9 Guinness West Indies Porter Aromareiches, fruchtiges Porter mit Noten von braunem Zucker 0.5 l 6% 9,8 H"
         ]
       },
       "reviewCheck": {
@@ -4790,32 +5355,32 @@
       }
     },
     {
-      "id": "ch-ov-59723210-d32a-47c4-805a-7063c0595882",
-      "city": "lausanne",
-      "name": "Mosca Vins Montreux",
+      "id": "ch-ov-5eab5be7-d2e5-47fd-be13-10d6d906c339",
+      "city": "bern",
+      "name": "Roots Bar l Cafe l Lounge",
       "category": "bar",
-      "address": "Avenue du Casino 29, 1820 Montreux",
-      "lat": 46.4301,
-      "lng": 6.913,
+      "address": "Bernstrasse 10, 3550 Langnau im Emmental",
+      "lat": 46.94101,
+      "lng": 7.78332,
       "googleRating": null,
       "googleReviewCount": 0,
       "priceLevel": null,
-      "website": "http://www.moscavins.ch/",
+      "website": "http://www.roots-langnau.ch/",
       "websiteSource": "overture",
-      "menuUrl": "http://www.moscavins.ch/fr/Produits/Bieres.html",
-      "phone": "0219636368",
+      "menuUrl": "http://www.roots-langnau.ch/gk.pdf",
+      "phone": "+41344022437",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
-          "Guinness (mentioned on website)"
+          "Guinness Draught (On Tap)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "dschlösschen (1) Forged Irish Stout (1) Friesische Brauhaus (1) Granda (6) Guinness (1) Gusswerk (1) Hall & Woodhouse Ltd (2) Heather Ale Ltd (10) Heineken France (1) Heineken It"
+          "l Lounge - www.roots-langnau.ch - Alle Preise inkl. 7.7% MWST. Importbiere Guinness Draught 5dl - 4.2% - Klassisches Irisches Stout Corona Extra 3.55dl - 4.5% - Mexikanisches Bie"
         ]
       },
       "reviewCheck": {
@@ -4851,7 +5416,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -4888,106 +5453,18 @@
       "priceLevel": null,
       "website": "http://www.hotel-freihof.ch/",
       "websiteSource": "overture",
-      "menuUrl": "http://www.hotel-freihof.ch/",
+      "menuUrl": "http://hotel-freihof.ch/",
       "phone": "+41774869051",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness (mentioned on website)"
-        ],
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "inzigartige Hotel in Glarus mit der unvergesslichen UFO Bar Guinness Kilkenny Hotel Fr\\u00fchst\\u00fcck Pub Karaoke Musik Spiele"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-ov-65c513c2-8242-460e-aa79-a74ff7a36a08",
-      "city": "geneva",
-      "name": "Restaurant Half Time",
-      "category": "restaurant",
-      "address": "Chemin du Bac 13, 1213 Lancy",
-      "lat": 46.19363,
-      "lng": 6.11384,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.lehalftime.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "https://lehalftime.ch/carte-des-boissons/",
-      "phone": "+41228700529",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "7.- Moretti 4,6% 33cl 6.- Corona 4,5% 35,5cl 7.50 Desperado 5,9% 33cl 7.50 Guinness 5,0% 33cl 7.- Super Bock 5,2% 25cl 4.- Estrella galicia 5,5% 25cl 4.- Heineken 5,0% 25cl 4.- L"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "web_mention",
-        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
-      }
-    },
-    {
-      "id": "ch-ov-693825d0-1fa8-4587-8a68-7a377626f7b5",
-      "city": "geneva",
-      "name": "Ristorante Pizzeria Lucania",
-      "category": "restaurant",
-      "address": "Rte d'Hermance 521, 1248 Hermance",
-      "lat": 46.30254,
-      "lng": 6.24515,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.ristorante-lucania.ch",
-      "websiteSource": "overture",
-      "menuUrl": "http://www.ristorante-lucania.ch",
-      "phone": "+41227513490",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "et 149 autres maîtres d'hôtel établissent un record inscrit dans le Livre Guinness 2010. « Sur le port de Trieste, devant une foule de 5000 personnes, nous avons réalisé une syn"
         ]
       },
       "reviewCheck": {
@@ -5027,7 +5504,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -5158,7 +5635,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -5247,7 +5724,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -5286,17 +5763,15 @@
       "priceLevel": null,
       "website": "http://www.hotel-freihof.ch",
       "websiteSource": "overture",
-      "menuUrl": "http://www.hotel-freihof.ch/",
+      "menuUrl": "http://hotel-freihof.ch/",
       "phone": "055 640 34 23",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness (mentioned on website)"
-        ],
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "inzigartige Hotel in Glarus mit der unvergesslichen UFO Bar Guinness Kilkenny Hotel Fr\\u00fchst\\u00fcck Pub Karaoke Musik Spiele"
@@ -5314,6 +5789,10 @@
         "reportedPrice": null,
         "hasZero": false,
         "recentReports": []
+      },
+      "tagCheck": {
+        "kind": "web_mention",
+        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
       }
     },
     {
@@ -5329,13 +5808,13 @@
       "priceLevel": null,
       "website": "http://www.hotel-freihof.ch/",
       "websiteSource": "overture",
-      "menuUrl": "http://www.hotel-freihof.ch/",
+      "menuUrl": "http://hotel-freihof.ch/",
       "phone": "+41556406806",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -5380,7 +5859,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -5407,78 +5886,32 @@
       }
     },
     {
-      "id": "ch-ov-8ed17a16-0ed4-4eb8-8862-e17aebcc1cc6",
-      "city": "alps",
-      "name": "Ice Cube Verbier",
+      "id": "ch-ov-9160bc93-3d93-4bc1-9fa6-dde1a4d2f1cf",
+      "city": "geneva",
+      "name": "Black Tap",
       "category": "restaurant",
-      "address": "Ruinettes, 1936 Val de Bagnes",
-      "lat": 46.09095,
-      "lng": 7.25244,
+      "address": "Cr de Rive 6, 1204 Genève",
+      "lat": 46.20146,
+      "lng": 6.15293,
       "googleRating": null,
       "googleReviewCount": 0,
       "priceLevel": null,
-      "website": "https://www.kvhotels.com/fr/restaurant-montagne-ice-cube/",
+      "website": "http://blacktap.ch/fr/",
       "websiteSource": "overture",
-      "menuUrl": "https://www.kvhotels.com/fr/restaurant-montagne-ice-cube/",
-      "phone": "+41277714244",
+      "menuUrl": "http://blacktap.ch/wp-content/uploads/2026/10/GVA-FrenchFoodMenuOctober2026.pdf",
+      "phone": "+41228108330",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "auts en big-air, offrant un spectacle dont vous pourrez profiter depuis le Guinness Village, parfaitement placé pour les meilleures vues. Attendez-vous à de délicieux plats et bo",
-          "auts en big-air, offrant un spectacle dont vous pourrez profiter depuis le Guinness Village, parfaitement placé pour les meilleures vues. Attendez-vous à de délicieux plats et bo"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "web_mention",
-        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
-      }
-    },
-    {
-      "id": "ch-ov-90903904-3832-42ff-9283-a46c9cd424f1",
-      "city": "east",
-      "name": "Weinbar I Vinothek I Zigarren-Lounge",
-      "category": "bar",
-      "address": "Reitbahnstrasse 21, 9400 Rorschach",
-      "lat": 47.47707,
-      "lng": 9.48783,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.misani.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "http://www.misani.ch/",
-      "phone": "+41527612623",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "emerkt - Single Malt Whisky Destille! Im Juli 2015 wurde die Destille beim Guinness Buch angemeldet. Einmalige Befeuerung der Destille mit Vakuum-Röhren-Verdampfer-Solaranlage! D"
+          "S CHAUDES 5.5| HEINEKEN ZERO (NL) 0.0% 8|NO ALC CORONA (MX) 5.0% 8|SPECIAL GUINNESS (IRL) 4.2% 8|STOUT CIDER BY RAMSEIER (CH) 4.0% | 8CIDER CLASSIC SHAKES | 9 CRA ZY SHA KES | 19"
         ]
       },
       "reviewCheck": {
@@ -5514,7 +5947,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (Cans / Bottles)"
@@ -5643,7 +6076,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -5688,7 +6121,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -5733,7 +6166,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -5760,49 +6193,6 @@
       }
     },
     {
-      "id": "ch-ov-a8af2350-1c04-414b-95e3-968d1ba0aff4",
-      "city": "lausanne",
-      "name": "Bar AMSTEIN",
-      "category": "bar",
-      "address": "Vevey",
-      "lat": 46.46063,
-      "lng": 6.84282,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.amstein.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "http://www.amstein.ch/fr/Bieres.html",
-      "phone": "+41219435181",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness (mentioned on website)"
-        ],
-        "extractedPrice": null,
-        "snippets": [
-          "dschlösschen (2) Forged Irish Stout (1) Friesische Brauhaus (1) Granda (6) Guinness (2) Gusswerk (1) Hall & Woodhouse Ltd (2) Heather Ale Ltd (10) Heineken France (1) Heineken It"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
       "id": "ch-ov-a8df6e96-4759-4676-9c5a-7c54da44beac",
       "city": "lucerne",
       "name": "Flanagan's Irish Pub Zug",
@@ -5815,13 +6205,13 @@
       "priceLevel": null,
       "website": "http://www.flanagans.ch/",
       "websiteSource": "overture",
-      "menuUrl": "http://www.flanagans.ch/",
+      "menuUrl": "http://flanagans.ch/",
       "phone": "+41417102618",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -5864,7 +6254,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -5907,7 +6297,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -5950,7 +6340,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -5995,7 +6385,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -6022,52 +6412,6 @@
       }
     },
     {
-      "id": "ch-ov-b8270c69-4cc2-481a-87d6-6644ed7a79fb",
-      "city": "bern",
-      "name": "Kreuz Herzogenbuchsee",
-      "category": "restaurant",
-      "address": "Kirchgasse 1, 3360 Herzogenbuchsee",
-      "lat": 47.18789,
-      "lng": 7.7068,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.kreuz-herzogenbuchsee.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "http://www.kreuz-herzogenbuchsee.ch/",
-      "phone": "+41625315230",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "ltur-Menü Verein Event-Galerie Kontakt Gutscheine Kreuzkeller Guinnessclub Guinness Club Brunch Barquiz Knorrli Oldies Disco Ramsen Gutscheine Willkommen Verwöhnen Essen & Trinke",
-          "ltur-Menü Verein Event-Galerie Kontakt Gutscheine Kreuzkeller Guinnessclub Guinness Club Brunch Barquiz Knorrli Oldies Disco Ramsen Gutscheine Close Menu → --> Öffnungszeiten Res"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "web_mention",
-        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
-      }
-    },
-    {
       "id": "ch-ov-b8a7c795-710d-43dd-ae03-eb1ad737a876",
       "city": "alps",
       "name": "The Dude - Alpine Pub Zermatt",
@@ -6086,7 +6430,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -6172,14 +6516,13 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
-          "Guinness Draught (On Tap)"
+          "Guinness (mentioned on website)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "0 Tonic Water 3.3dl 4.20 Ginger Beer 3.3dl 4.20 San Bitter 70ml 4.20 Malta Guinness (Non Alcoholic) 33cl 5.00 Bier im Offenausschank Vol. 3dl 5dl MURPHY'S IRISH RED 5.0% 4.90 6.5",
           "EMIUM 5.0% 4.40 ERDINGER WEISSBIER 5.3% 6.50 EICHHOF BÜGEL 4.9% 40 cl 4.90 GUINNESS STOUT 7.5% 33cl - 6.00 60cl - 12.00 10 B - 58.00 HEINEKEN 0.0% 4.40 ERDINGER GRAPEFRUIT 0.3% 4"
         ]
       },
@@ -6216,7 +6559,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (Cans / Bottles)"
@@ -6224,96 +6567,6 @@
         "extractedPrice": null,
         "snippets": [
           "lle DESPERADOS /.- ｜7.- Bouteille LEFFE BRUNE OU BLONDE /.- ｜8.- Bouteille GUINNESS / CIDRE /.- ｜7.- Bouteille CORONA 0.0 /.- ｜6.- Biere sans alcool FELDSCHLÖSSCHEN /.- ｜6.- Bier"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-ov-bdee2ff0-5930-416c-a73e-a1d1e7930304",
-      "city": "geneva",
-      "name": "Le Poids Public",
-      "category": "pub",
-      "address": "Rue de la Filature 23, 1227 Carouge",
-      "lat": 46.18581,
-      "lng": 6.14114,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.lepoidspublic.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "http://www.lepoidspublic.ch/",
-      "phone": "+41223435798",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness (mentioned on website)"
-        ],
-        "extractedPrice": null,
-        "snippets": [
-          "ic.ch\",\"mainPageId\":\"c1dmp\",\"pagesMap\":{\"ihyhd\":{\"pageId\":\"ihyhd\",\"title\":\"guinness de retour\",\"pageUriSEO\":\"popup-ihyhd\",\"pageJsonFileName\":\"6cbe00_fae3c40b29d2b6338db8ab111849b",
-          ",\"routerPrefixes\":{},\"timezone\":\"Europe\\/Zurich\",\"pageIdToTitle\":{\"ihyhd\":\"guinness de retour\",\"c1dmp\":\"Accueil\",\"e54xe\":\"Infos de l'événement\",\"pklsh\":\"Histoire\",\"xvprp\":\"Politi"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-ov-c06118a0-b474-4dcb-801f-14431dc6ec9e",
-      "city": "alps",
-      "name": "Pinte Pub & Club",
-      "category": "pub",
-      "address": "Gotthardstrasse 60, 6490 Andermatt",
-      "lat": 46.63357,
-      "lng": 8.59702,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.pinte-andermatt.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "http://www.pinte-andermatt.ch/",
-      "phone": "+41418870151",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": true,
-        "typesFound": [
-          "Guinness (mentioned on website)"
-        ],
-        "extractedPrice": null,
-        "snippets": [
-          "y\":[0,\"Shots\"],\"zone\":[0,\"CLUB\"],\"price\":[0,\"CHF 6.00\"],\"item_de\":[0,\"Baby Guinness (2cl)\"],\"item_en\":[0,\"Baby Guinness (2cl)\"],\"item_fr\":[0,\"Baby Guinness (2cl)\"],\"item_it\":[0,\"",
-          "Baby Guinness (2cl)\"],\"description_de\":[0,\"Kahlua, Baileys\"],\"description_en\":[0,\"Kahlua, Baileys\"],\"descrip",
-          "fr\":[0,\"Irish Carbomb\"],\"item_it\":[0,\"Irish Carbomb\"],\"description_de\":[0,\"Guinness, Baileys & Jameson Shot Drop\"],\"description_en\":[0,\"Guinness with drop shot of Baileys & James",
-          "on\"],\"description_fr\":[0,\"Guinness avec shot de Baileys et Jameson\"],\"description_it\":[0,\"Guinness con shot di Baileys e Jameson\""
         ]
       },
       "reviewCheck": {
@@ -6374,6 +6627,50 @@
       }
     },
     {
+      "id": "ch-ov-d7873b3f-46a3-4197-86e3-aafe8da7c697",
+      "city": "lucerne",
+      "name": "Zum Ochsen",
+      "category": "restaurant",
+      "address": "Vordere Hauptgasse 8, 4800 Zofingen",
+      "lat": 47.29036,
+      "lng": 7.94396,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://ochsenbeiz.ch/",
+      "websiteSource": "overture",
+      "menuUrl": "http://ochsenbeiz.ch/data/files/ochsen_angebot.pdf",
+      "phone": "+41627514437",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (Cans / Bottles)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "Lager 4.503.0 dl, 4.8% 6.--5.0 dl, 4.8% 17.--1.5 lt, 4.8% 6.503.0 dl, 4.2%Guinness 9.--5.0 dl, 4.2% Flaschen und Dosen 7.505.0 dl, 5.5%Andechser Hefe-Weissbier 6.--5.0 dl, 4.8%A",
+          "13.--Negroni Sbagliato Prosecco, Campari, Vermouth Bier 13.--Ace Of Spades Guinness Stout, Campari, Cointreau, Kaffeelikör 13.--Highway Star Lagerbier, Tequila, Zitronensaft, Gre"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
       "id": "ch-ov-d7ac1ad4-8326-4cda-96e4-214e6847c662",
       "city": "geneva",
       "name": "Geneva Irish Pubs",
@@ -6392,7 +6689,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -6417,78 +6714,32 @@
       }
     },
     {
-      "id": "ch-ov-e06a99d8-6311-46eb-b799-99c80b12dfd0",
-      "city": "lucerne",
-      "name": "Confiserie Speck",
-      "category": "restaurant",
-      "address": "Kirchenstrasse 1, 6300 Zug",
-      "lat": 47.1657,
-      "lng": 8.51562,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.speck.ch/",
-      "websiteSource": "overture",
-      "menuUrl": "http://speck.ch/",
-      "phone": "+41417280712",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Jahre wir feierten 130 Jahre Confiserie Speck eine Zeitreise Seit 5 Jahren Guinness World Rekord Halter der grössten Zuger Kirschtorte! Speck-Shop & Sandwichkurier Der Online-Sho"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "web_mention",
-        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
-      }
-    },
-    {
-      "id": "ch-ov-e2501d17-24e8-454c-98e5-06ab6fd34fbf",
-      "city": "alps",
-      "name": "Hotel Restaurant Waldhaus am See",
+      "id": "ch-ov-d896e901-41fe-4f07-b10d-ba0b735c43c5",
+      "city": "lausanne",
+      "name": "Aquatis Hotel",
       "category": "hotel",
-      "address": "Via Dimlej 6, 7500 Sankt Moritz",
-      "lat": 46.49714,
-      "lng": 9.84893,
+      "address": "Route de Berne 150, 1010 Lausanne",
+      "lat": 46.54068,
+      "lng": 6.65819,
       "googleRating": null,
       "googleReviewCount": 0,
       "priceLevel": null,
-      "website": "http://www.waldhaus-am-see.ch/",
+      "website": "http://www.aquatis-hotel.ch",
       "websiteSource": "overture",
-      "menuUrl": "http://www.waldhaus-am-see.ch",
-      "phone": "+41818366000",
+      "menuUrl": "http://www.aquatis-hotel.ch/fileadmin/aqh/Documents/Menus/AQH-Carte-The-Ambiance-boissons-A5.pdf",
+      "phone": "+41216542424",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (Cans / Bottles)"
         ],
         "extractedPrice": null,
         "snippets": [
-          "Größte Whisky-Bar Die größte Whisky-Bar der Welt - über 2.500 Flaschen und Guinness-Weltrekord seit 1999 Ansicht Detail Entdecken Sie unseren Weinkeller Über 1.300 erlesene Weine",
-          "Größte Whisky-Bar Die größte Whisky-Bar der Welt - über 2.500 Flaschen und Guinness-Weltrekord seit 1999 Ansicht Detail Sport Entdecken Sie unseren Weinkeller Über 1.300 erlesene"
+          "– 50 CL 8 GRIMBERGEN – BLANCHE – 25 CL 5.5 GRIMBERGEN – BLANCHE – 50 CL 8 GUINNESS IPA – 25 CL 5.5 GUINNESS IPA – 50 CL 8 BIÈRES BOUTEILLES FELDSCHLÖSSCHEN – BLONDE – 33 CL 5.5"
         ]
       },
       "reviewCheck": {
@@ -6524,7 +6775,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -6569,7 +6820,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -6614,7 +6865,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)",
@@ -6623,6 +6874,49 @@
         "extractedPrice": null,
         "snippets": [
           "Verschiedene Biere im Offenausschank (diverse Sorten vom Lager bis hin zu Guinness) und das grösste Sortiment an einheimischen und internationalen Flaschenbieren in Zermatt, lad"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-ov-f0890794-2216-462e-948e-082ef8b76c19",
+      "city": "alps",
+      "name": "Alp and Horn",
+      "category": "pub",
+      "address": "Immeuble Eden, Pl. Centrale, 1936 Val de Bagnes",
+      "lat": 46.09613,
+      "lng": 7.2283,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://alpandhorn.com/",
+      "websiteSource": "overture",
+      "menuUrl": "http://alpandhorn.com/s/ALP_HORN_Drinks_Winter25.pdf",
+      "phone": "+41275652030",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness Draught (On Tap)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "ALY VERBIER, SWITZERLAND PINT 74 74.5 85 96 8.55.5 85 9.5 Valaisanne Lager Guinness KinBra Light SERVICE AU BAR | PLEASE ORDER & PAY AT THE BAR Moretti 33cl) ITALY 8 DRAUGHTS 6"
         ]
       },
       "reviewCheck": {
@@ -6701,7 +6995,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness (mentioned on website)"
@@ -6744,7 +7038,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -6789,7 +7083,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -6834,7 +7128,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -6861,51 +7155,6 @@
       }
     },
     {
-      "id": "ch-ov-f7b569e0-7512-4d43-b772-a737818fea26",
-      "city": "alps",
-      "name": "Canvetto Ponte di Valle",
-      "category": "restaurant",
-      "address": "Via Sonvico 23, 6952 Canobbio",
-      "lat": 46.0312,
-      "lng": 8.97212,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "http://www.grottoalmulino.com/",
-      "websiteSource": "overture",
-      "menuUrl": "http://www.grottoalmulino.com/",
-      "phone": "+41919308716",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "con gli ossobuchi, con le guancette di maiale a lunga cottura nella birra Guinness, gli affettati vallesani e ticinesi, la charbonnade, lo Château Valais e i formaggi e formaggi"
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      },
-      "tagCheck": {
-        "kind": "web_mention",
-        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
-      }
-    },
-    {
       "id": "ch-ov-fbc6123d-1297-4aac-8d04-8658b31cf9d9",
       "city": "lausanne",
       "name": "Pub L'Irlandais",
@@ -6924,7 +7173,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": true,
         "typesFound": [
           "Guinness Draught (On Tap)"
@@ -6932,6 +7181,94 @@
         "extractedPrice": null,
         "snippets": [
           "r les déguster Bienvenue chez l'irlandais Un pub au Val de travers , de la Guinness, Guinness IPA et La Valaisanne non filtrée en pression en plus des traditionnelles bières blon"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-ov-fe62b219-ff54-446b-8d85-e9210d884ae7",
+      "city": "lucerne",
+      "name": "Kapello",
+      "category": "bar",
+      "address": "Hackenrüti 7, 6110 Wolhusen",
+      "lat": 47.05539,
+      "lng": 8.08562,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://www.kapello.ch/",
+      "websiteSource": "overture",
+      "menuUrl": "https://kapello.ch/wp-content/uploads/2024/10/Getraenkekarte-Online.pdf",
+      "phone": "+41414901818",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness (Cans / Bottles)"
+        ],
+        "extractedPrice": "CHF 4.50",
+        "snippets": [
+          "„DIVERSE“ 3,3dl WEIZENBIER Appenzeller Weizen Bügelflasche 5dl DUNKELBIER Guinness 5dl CHF 4.50/ 6 CHF 5 / 7 CHF 7 CHF 5.50 CHF 6 CHF 4.50 CHF 6 CHF 5 CHF 7 CHF 6 CHF 7 HEISSE G"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-ov-feb9afc8-21ce-4f49-90fb-0d9bd1fa4ddc",
+      "city": "lucerne",
+      "name": "Upwood | Pub. Lounge. Event.",
+      "category": "pub",
+      "address": "Pfisternstrasse 2, 6055 Alpnach",
+      "lat": 46.94175,
+      "lng": 8.27068,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://www.upwoodgastro.ch/",
+      "websiteSource": "overture",
+      "menuUrl": "http://www.upwoodgastro.ch/s/148x210mm_KartePub-web.pdf",
+      "phone": "+41416727030",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": true,
+        "typesFound": [
+          "Guinness Draught (On Tap)",
+          "Guinness (Cans / Bottles)"
+        ],
+        "extractedPrice": null,
+        "snippets": [
+          "oster‘s 5.0% 5.50 8.00 22.00 Lagunitas IPA 6.2% 6.50 9.50 27 .00 2.5dl 5dl Guinness 4.2% 5.50 9.50 BIER FLASCHEN 3.3dl Corona 4.5% 7.0 0 ALKOHOLFREIE BIERE 3.3dl 4.4dl Birra More",
+          "tti Zero 0.0% 5.00 Misty Cave hell alkoholfrei 5.00 Guinness Draught alkoholfrei 0.0% 7. 5 0 Calanda Radler Grapefruit / Mango Spritz 0.0% 5.00 Pitcher All"
         ]
       },
       "reviewCheck": {
@@ -7012,7 +7349,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7053,7 +7390,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7094,7 +7431,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7135,7 +7472,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7176,7 +7513,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7217,7 +7554,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7258,7 +7595,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7299,7 +7636,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7340,7 +7677,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7381,7 +7718,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7422,7 +7759,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7463,53 +7800,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://www.zeughauskeller.ch/dynasite.cfm?cmd=cpdf_pdf_angebot_download&filename=F1064984-D3C8-2771-7367D38B9E4846ED.pdf&skipfurl=1 (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-105506327",
-      "city": "zurich",
-      "name": "Zum Alten Löwen",
-      "category": "restaurant",
-      "address": "Universitätstrasse 111, 8006 Zürich",
-      "lat": 47.3849796,
-      "lng": 8.5482469,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://www.altenloewen.ch/",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://altenloewen.ch/wp-content/uploads/2026/10/Weinkarte-Loewen-29.10.26-1.pdf",
-      "phone": "+41 43 343 11 69",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://altenloewen.ch/wp-content/uploads/2026/10/Weinkarte-Loewen-29.10.26-1.pdf (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -7545,7 +7841,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7580,18 +7876,18 @@
       "priceLevel": null,
       "website": "https://www.leonardo-hotels.com/zurich/leonardo-boutique-hotel-rigihof-zurich",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://www.leonardo-hotels.com/barcelona",
+      "menuUrl": "https://leonardo-hotels.com/barcelona",
       "phone": "+41 44 360 12 00",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
-          "Scanned https://www.leonardo-hotels.com/barcelona (HTTP 200) — 0 mentions of Guinness."
+          "Scanned https://leonardo-hotels.com/barcelona (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -7627,7 +7923,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7668,7 +7964,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7709,53 +8005,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://kronewinterthur.ch/wp-content/uploads/2026/10/Krone_Herbstkarte_DE-1.pdf (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-246253655",
-      "city": "zurich",
-      "name": "Albani",
-      "category": "pub",
-      "address": "Steinberggasse 16, 8400 Winterthur",
-      "lat": 47.4984256,
-      "lng": 8.7292032,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://www.albani.ch",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://www.albani.ch/de/info/barrieren.html",
-      "phone": null,
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://www.albani.ch/de/info/barrieren.html (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -7791,7 +8046,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7832,7 +8087,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7873,7 +8128,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7914,7 +8169,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7955,7 +8210,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -7996,7 +8251,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8037,7 +8292,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8078,7 +8333,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8119,7 +8374,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8160,7 +8415,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8201,7 +8456,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8242,53 +8497,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://www.thai-orchid.ch/ (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-264073054",
-      "city": "zurich",
-      "name": "Telpizza Baden",
-      "category": "restaurant",
-      "address": "Mellingerstrasse 52, 5400 Baden",
-      "lat": 47.4704305,
-      "lng": 8.302531,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://baden.telpizza.ch/kontakt/",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://baden.telpizza.ch/kontakt/",
-      "phone": null,
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://baden.telpizza.ch/kontakt/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -8324,7 +8538,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8365,7 +8579,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8406,7 +8620,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8447,7 +8661,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8488,7 +8702,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8529,7 +8743,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8570,7 +8784,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8611,7 +8825,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8652,7 +8866,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8693,7 +8907,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8734,7 +8948,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8775,7 +8989,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8816,7 +9030,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8857,7 +9071,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8898,7 +9112,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8939,7 +9153,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -8980,7 +9194,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9021,7 +9235,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9062,7 +9276,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9097,18 +9311,18 @@
       "priceLevel": null,
       "website": "http://www.swaad.ch/",
       "websiteSource": "openstreetmap",
-      "menuUrl": "http://www.swaad.ch/",
+      "menuUrl": "http://swaad.ch/",
       "phone": "+41 43 333 13 15",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
-          "Scanned http://www.swaad.ch/ (HTTP 200) — 0 mentions of Guinness."
+          "Scanned http://swaad.ch/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -9138,18 +9352,18 @@
       "priceLevel": null,
       "website": "https://sorellhotels.com/seefeld/",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://sorellhotels.com/seefeld/",
+      "menuUrl": "https://www.sorellhotels.com/seefeld/",
       "phone": null,
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
-          "Scanned https://sorellhotels.com/seefeld/ (HTTP 200) — 0 mentions of Guinness."
+          "Scanned https://www.sorellhotels.com/seefeld/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -9185,7 +9399,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9226,7 +9440,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9267,7 +9481,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9308,7 +9522,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9349,7 +9563,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9390,7 +9604,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9431,7 +9645,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9472,7 +9686,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9513,7 +9727,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9554,7 +9768,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9595,7 +9809,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9636,53 +9850,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://www.ambassadorhotel.ch/ (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-268474472",
-      "city": "zurich",
-      "name": "Drinx Bar db",
-      "category": "pub",
-      "address": "Dufourstrasse 24, 8008 Zürich",
-      "lat": 47.3637126,
-      "lng": 8.547619,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://www.drinxbar.ch/",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://drinxbar.ch/feed/",
-      "phone": null,
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://drinxbar.ch/feed/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -9718,7 +9891,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9759,7 +9932,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9800,7 +9973,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9835,18 +10008,18 @@
       "priceLevel": null,
       "website": "https://www.gruenwald.ch/",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://www.gruenwald.ch/",
+      "menuUrl": "https://gruenwald.ch/menu-category/vorspeise/salate-co/",
       "phone": "+41 44 341 71 07",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
-          "Scanned https://www.gruenwald.ch/ (HTTP 200) — 0 mentions of Guinness."
+          "Scanned https://gruenwald.ch/menu-category/vorspeise/salate-co/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -9882,7 +10055,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9923,7 +10096,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -9964,7 +10137,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10005,7 +10178,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10046,7 +10219,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10087,7 +10260,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10128,7 +10301,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10169,7 +10342,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10210,53 +10383,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://www.mininesushi.com/복제-menu (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-270692604",
-      "city": "zurich",
-      "name": "CHAAT",
-      "category": "restaurant",
-      "address": "Seefeldstrasse 96, 8008 Zürich",
-      "lat": 47.3597536,
-      "lng": 8.5524861,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://chaat.ch/",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://chaat.ch/wp-content/uploads/2026/09/MENU-FINAL-DRINKS_compressed.pdf",
-      "phone": "+41 76 837 06 63",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://chaat.ch/wp-content/uploads/2026/09/MENU-FINAL-DRINKS_compressed.pdf (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -10286,18 +10418,59 @@
       "priceLevel": null,
       "website": "https://sonnenberg-zurich.ch/",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://sonnenberg-zurich.ch/",
+      "menuUrl": "https://www.sonnenberg-zurich.ch/wp-content/plugins/mobile-menu/includes/css/mobmenu-icons.css",
       "phone": "+41 44 266 97 97",
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
-          "Scanned https://sonnenberg-zurich.ch/ (HTTP 200) — 0 mentions of Guinness."
+          "Scanned https://www.sonnenberg-zurich.ch/wp-content/plugins/mobile-menu/includes/css/mobmenu-icons.css (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-270794503",
+      "city": "zurich",
+      "name": "Aroma",
+      "category": "restaurant",
+      "address": "Asylstrasse 110, Switzerland",
+      "lat": 47.3654698,
+      "lng": 8.5636573,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.ristorante-aroma.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.ristorante-aroma.ch/",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://www.ristorante-aroma.ch/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -10333,7 +10506,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10374,7 +10547,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10415,7 +10588,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10456,7 +10629,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10497,7 +10670,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10538,7 +10711,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10579,94 +10752,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://restaurant-blockhus.ch/wp-content/plugins/elementor-pro/assets/css/widget-nav-menu.min.css (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-270800540",
-      "city": "zurich",
-      "name": "Weisser Wind",
-      "category": "restaurant",
-      "address": "Switzerland",
-      "lat": 47.3688249,
-      "lng": 8.5455086,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://weisserwind.ch/",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://weisserwind.ch/",
-      "phone": null,
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://weisserwind.ch/ (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-270800785",
-      "city": "zurich",
-      "name": "Molino",
-      "category": "restaurant",
-      "address": "Limmatquai 16, 8001 Zürich",
-      "lat": 47.3690472,
-      "lng": 8.5439586,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://molino.ch/de/pizzeria-ristorante-molino-select",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://molino.ch/de/pizzeria-ristorante-molino-select",
-      "phone": null,
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://molino.ch/de/pizzeria-ristorante-molino-select (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -10702,7 +10793,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10743,7 +10834,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10784,7 +10875,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10825,7 +10916,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10866,7 +10957,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -10901,18 +10992,18 @@
       "priceLevel": null,
       "website": "https://www.restaurantheuguemper.ch/",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://restaurantheuguemper.ch/",
+      "menuUrl": "https://www.restaurantheuguemper.ch/",
       "phone": null,
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
-          "Scanned https://restaurantheuguemper.ch/ (HTTP 200) — 0 mentions of Guinness."
+          "Scanned https://www.restaurantheuguemper.ch/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -10942,18 +11033,18 @@
       "priceLevel": null,
       "website": "https://zunfthaus-zur-waag.ch/",
       "websiteSource": "openstreetmap",
-      "menuUrl": "https://zunfthaus-zur-waag.ch/",
+      "menuUrl": "https://www.zunfthaus-zur-waag.ch/",
       "phone": null,
       "openNow": true,
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
-          "Scanned https://zunfthaus-zur-waag.ch/ (HTTP 200) — 0 mentions of Guinness."
+          "Scanned https://www.zunfthaus-zur-waag.ch/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -10989,7 +11080,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11030,7 +11121,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11071,7 +11162,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11112,53 +11203,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://old-fashion-bar.ch/assets/css/oldfashionbar.css?v=1.6.6 (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-271148493",
-      "city": "zurich",
-      "name": "Outback Lodge",
-      "category": "restaurant",
-      "address": "Stadelhoferstrasse 18, 8001 Zürich",
-      "lat": 47.3670788,
-      "lng": 8.5477023,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://www.outback-lodge.ch/stadelhofen",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://www.outback-lodge.ch/de/food-drinks",
-      "phone": "+41 44 252 15 75",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://www.outback-lodge.ch/de/food-drinks (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -11194,53 +11244,12 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://restaurant-weisseskreuz.ch/wp-content/plugins/elementor-pro/assets/css/widget-nav-menu.min.css (HTTP 200) — 0 mentions of Guinness."
-        ]
-      },
-      "reviewCheck": {
-        "mentionCount": 0,
-        "sentiment": "none",
-        "excerpts": []
-      },
-      "crowdCheck": {
-        "confirmedCount": 0,
-        "deniedCount": 0,
-        "servingFormat": "unknown",
-        "reportedPrice": null,
-        "hasZero": false,
-        "recentReports": []
-      }
-    },
-    {
-      "id": "ch-no-node-271149013",
-      "city": "zurich",
-      "name": "Migros Restaurant",
-      "category": "restaurant",
-      "address": "Falkenstrasse 19-21, 8008 Zürich",
-      "lat": 47.3654324,
-      "lng": 8.5478765,
-      "googleRating": null,
-      "googleReviewCount": 0,
-      "priceLevel": null,
-      "website": "https://filialen.migros.ch/de/migros-restaurant-zuerich-stadelhofen",
-      "websiteSource": "openstreetmap",
-      "menuUrl": "https://filialen.migros.ch/de/migros-restaurant-zuerich-stadelhofen",
-      "phone": "+41 44 261 46 64",
-      "openNow": true,
-      "editorialSummary": null,
-      "menuCheck": {
-        "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
-        "foundOnMenu": false,
-        "typesFound": [],
-        "extractedPrice": null,
-        "snippets": [
-          "Scanned https://filialen.migros.ch/de/migros-restaurant-zuerich-stadelhofen (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -11276,7 +11285,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11317,7 +11326,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11358,12 +11367,53 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://marcellino.ch/wp-content/uploads/2026/11/Lunchkarte-Marcellino-101126.pdf (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-271226695",
+      "city": "zurich",
+      "name": "Royal Panda",
+      "category": "restaurant",
+      "address": "Forchstrasse 2, 8008 Zürich",
+      "lat": 47.3643316,
+      "lng": 8.5545739,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.royal-panda.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.royal-panda.ch/",
+      "phone": "+41 76 520 66 66",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://www.royal-panda.ch/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -11399,7 +11449,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11440,7 +11490,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11481,7 +11531,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11522,7 +11572,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11563,7 +11613,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11604,7 +11654,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11645,12 +11695,94 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://hotel-kronenhof.ch/ (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-276406403",
+      "city": "zurich",
+      "name": "Ibis Zürich City West",
+      "category": "hotel",
+      "address": "Schiffbaustrasse 11, 8005 Zürich",
+      "lat": 47.3890206,
+      "lng": 8.5170578,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.accorhotels.com/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.accorhotels.com/",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://www.accorhotels.com/ (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-276406491",
+      "city": "zurich",
+      "name": "Ibis Budget Zürich City West",
+      "category": "hotel",
+      "address": "Technoparkstrasse 2, 8005 Zürich",
+      "lat": 47.3889729,
+      "lng": 8.516186,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.accorhotels.com/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.accorhotels.com/",
+      "phone": "+41 44 276 21 00",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://www.accorhotels.com/ (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
@@ -11686,7 +11818,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11727,7 +11859,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11768,7 +11900,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11809,7 +11941,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11850,7 +11982,7 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
@@ -11891,12 +12023,217 @@
       "editorialSummary": null,
       "menuCheck": {
         "checked": true,
-        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
         "foundOnMenu": false,
         "typesFound": [],
         "extractedPrice": null,
         "snippets": [
           "Scanned https://www.fahrenheit-bar.ch/ (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-282655581",
+      "city": "zurich",
+      "name": "Pulcinella",
+      "category": "restaurant",
+      "address": "Metzggasse 11, 8400 Winterthur",
+      "lat": 47.498689,
+      "lng": 8.727701,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://pulcinella-winterthur.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://pulcinella-winterthur.ch/",
+      "phone": "+41 52 212 98 62",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://pulcinella-winterthur.ch/ (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-283458324",
+      "city": "zurich",
+      "name": "Schweizerhof",
+      "category": "hotel",
+      "address": "Bahnhofplatz 7, 8001 Zürich",
+      "lat": 47.3769479,
+      "lng": 8.5394468,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.hotelschweizerhof.com",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.hotelschweizerhof.com/concierge-services/bars",
+      "phone": "+41 44 218 88 88",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://www.hotelschweizerhof.com/concierge-services/bars (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-283458326",
+      "city": "zurich",
+      "name": "Walliser Kanne",
+      "category": "restaurant",
+      "address": "Lintheschergasse 21, 8001 Zürich",
+      "lat": 47.3766974,
+      "lng": 8.5388369,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.walliserkanne-zuerich.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.walliserkanne-zuerich.ch/wp-content/themes/enfold/config-templatebuilder/avia-shortcodes/menu/menu.css?ver=8.3",
+      "phone": "+41 44 211 31 33",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://www.walliserkanne-zuerich.ch/wp-content/themes/enfold/config-templatebuilder/avia-shortcodes/menu/menu.css?ver=8.3 (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-283458327",
+      "city": "zurich",
+      "name": "St. Gotthard",
+      "category": "hotel",
+      "address": "Bahnhofstrasse 87, 8001 Zürich",
+      "lat": 47.3764123,
+      "lng": 8.5392291,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.hotelstgotthard.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://www.hotelstgotthard.ch/de/restaurant-zuerich/hummerbar-zuerich/",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://www.hotelstgotthard.ch/de/restaurant-zuerich/hummerbar-zuerich/ (HTTP 200) — 0 mentions of Guinness."
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      }
+    },
+    {
+      "id": "ch-no-node-283458331",
+      "city": "zurich",
+      "name": "SAM'S Pizza Land",
+      "category": "restaurant",
+      "address": "Schweizergasse 6, 8001 Zürich",
+      "lat": 47.3760268,
+      "lng": 8.5384828,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "https://www.samspizza.ch/",
+      "websiteSource": "openstreetmap",
+      "menuUrl": "https://samspizza.ch/wp-content/uploads/elementor/css/custom-pro-widget-nav-menu.min.css?ver=1794354970",
+      "phone": null,
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T13:03:42.469554+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "Scanned https://samspizza.ch/wp-content/uploads/elementor/css/custom-pro-widget-nav-menu.min.css?ver=1794354970 (HTTP 200) — 0 mentions of Guinness."
         ]
       },
       "reviewCheck": {
