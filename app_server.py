@@ -1824,12 +1824,39 @@ def fill_from_overture(name, lat, lng, website, menu_url, phone):
     return hit["website"], menu_url or hit["website"], phone or hit.get("phone"), "overture"
 
 
-def scrape_menu_url(url, existing_check=None):
-    """Fetch a venue's website/menu page and look for Guinness.
+MAX_SCAN_PDF_BYTES = 3_000_000
 
-    All fetching goes through ``guard.fetch_page``: only public http(s) hosts are contacted
-    (also on redirects), downloads are size- and time-limited. Unsafe URLs are reported as
-    "not scanned" rather than as a negative result.
+
+def _fetch_scan_target(url, as_bytes):
+    """The page (text) or file (bytes) at ``url`` and the address that finally answered. Never calls a site unreachable before trying its
+    other form (with / without "www."); a private or malformed address is never retried."""
+    def get(u):
+        if as_bytes:
+            return guard.fetch_bytes(u, timeout=8, deadline=14, max_bytes=MAX_SCAN_PDF_BYTES, allow_private=FETCH_ALLOW_PRIVATE)
+        return guard.fetch_page(u, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
+
+    try:
+        return get(url), url
+    except guard.UnsafeURL as exc:
+        if not isinstance(exc, guard.CouldNotResolve):
+            raise
+        alt = guard.other_host_form(url)
+        if not alt:
+            raise
+        return get(alt), alt
+    except Exception:
+        alt = guard.other_host_form(url)
+        if not alt:
+            raise
+        return get(alt), alt
+
+
+def scrape_menu_url(url, existing_check=None):
+    """Fetch a venue's website/menu page (or a PDF menu) and look for Guinness.
+
+    All fetching goes through ``guard``: only public http(s) hosts are contacted (also on redirects), downloads are size- and time-limited.
+    Unsafe URLs are reported as "not scanned" rather than as a negative result, and so is a PDF whose text cannot be read (drawn as shapes,
+    or a picture): that is unknown, never "no Guinness".
     """
     now_iso = datetime.now(timezone.utc).isoformat()
     if not url:
@@ -1846,23 +1873,20 @@ def scrape_menu_url(url, existing_check=None):
     except guard.UnsafeURL as exc:
         return _not_scanned(now_iso, str(exc))
     try:
-        try:
-            html = guard.fetch_page(url, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
-        except guard.UnsafeURL as exc:
-            if not isinstance(exc, guard.CouldNotResolve):
-                raise  # a private or malformed address is never retried
-            alt = guard.other_host_form(url)
-            if not alt:
-                raise
-            html = guard.fetch_page(alt, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
-            url = alt
-        except Exception:
-            # Never call a site unreachable before trying its other form (with / without "www.").
-            alt = guard.other_host_form(url)
-            if not alt:
-                raise
-            html = guard.fetch_page(alt, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
-            url = alt
+        as_pdf = urllib.parse.urlsplit(url).path.lower().endswith(".pdf")
+        content, url = _fetch_scan_target(url, as_pdf)
+        if not as_pdf and content.startswith("%PDF-"):  # a PDF behind a download address such as /menu?id=7
+            content, url = _fetch_scan_target(url, True)
+            as_pdf = True
+        if as_pdf:
+            if not evidence.pdf_support():
+                return _not_scanned(now_iso, "this server cannot read PDF files yet")
+            text = evidence.pdf_text(content)
+            if not text.strip():
+                return _not_scanned(now_iso, "this PDF has no text a program can read (its text is drawn as shapes, or it is a picture of a menu), so it could not be checked")
+            html = text
+        else:
+            html = content
         text_lines = [
             re.sub(r"\s+", " ", line).strip()
             for line in re.sub(r"<[^>]+>", "\n", html).splitlines()
@@ -1878,7 +1902,7 @@ def scrape_menu_url(url, existing_check=None):
             "extractedPrice": evidence.price_near_guinness(snippets) if found else None,
             "snippets": snippets
             if found
-            else [f"Scanned {url} — no explicit 'Guinness' text found on public HTML page."],
+            else [f"Scanned {url} — no explicit 'Guinness' text found on public {'PDF' if as_pdf else 'HTML page'}."],
         }
     except guard.UnsafeURL as exc:
         return _not_scanned(now_iso, str(exc))

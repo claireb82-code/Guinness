@@ -126,6 +126,34 @@ def website_mention_kind(category, snippets):
     return "mention"
 
 
+MAX_PDF_PAGES = 8
+
+
+def pdf_support():
+    """True when the optional pypdf library is installed (the crawler workflow and the deployed server install it)."""
+    try:
+        import pypdf  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def pdf_text(data):
+    """The text of a PDF (first pages only), or "" when pypdf is missing, the file is encrypted or damaged, or its text is drawn as shapes
+    or is a picture (such menus cannot be read by a program)."""
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return ""
+    try:
+        import io
+
+        reader = PdfReader(io.BytesIO(data))
+        return " ".join((page.extract_text() or "") for page in reader.pages[:MAX_PDF_PAGES])
+    except Exception:  # noqa: BLE001 - any broken or hostile PDF is simply unreadable
+        return ""
+
+
 def is_irish_name(name):
     return bool(IRISH_NAME_RE.search(name or ""))
 
