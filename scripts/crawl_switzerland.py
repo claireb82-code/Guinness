@@ -412,7 +412,6 @@ PDF_LINK_RE = re.compile(r'<a\b[^>]*?href=["\']([^"\'#]+?\.pdf(?:\?[^"\'#]*)?)["
 PDF_MENU_WORDS_RE = re.compile(r"drink|getr[aä]nk|menu|men[uü]|karte|bier|beer|bi[eè]re|boisson|carte|cocktail|wein|wine|speise|food|tap", re.I)
 MAX_PDFS_PER_SITE = 2
 MAX_PDF_BYTES = 3_000_000
-MAX_PDF_PAGES = 8
 
 
 def _host_without_www(url):
@@ -433,17 +432,8 @@ def find_pdf_menu_links(body, base_url):
 
 
 def pdf_text(data):
-    """The text of a PDF (first pages only), or "" when pypdf is not installed, the file is encrypted or damaged, or its text is drawn as
-    shapes (such menus cannot be read automatically)."""
-    try:
-        from pypdf import PdfReader
-    except ImportError:
-        return ""
-    try:
-        reader = PdfReader(io.BytesIO(data))
-        return " ".join((page.extract_text() or "") for page in reader.pages[:MAX_PDF_PAGES])
-    except Exception:  # noqa: BLE001 - any broken or hostile PDF is simply unreadable
-        return ""
+    """See ``evidence.pdf_text``."""
+    return evidence.pdf_text(data)
 
 
 def fetch_pdf_text(url, max_time=6):
@@ -490,6 +480,8 @@ def scan_venue_website(venue):
         for href in candidate_links[:2]:
             if href.lower().startswith(("mailto:", "tel:", "javascript:")):
                 continue
+            if urllib.parse.urlparse(href).path.lower().endswith(".pdf"):
+                continue  # read below as a PDF (its text); fetched like a web page it would be raw bytes and hidden metadata
             sub_url = urllib.parse.urljoin(url, href)
             if urllib.parse.urlparse(sub_url).netloc == urllib.parse.urlparse(url).netloc and sub_url != url:
                 checked_subpage = sub_url
