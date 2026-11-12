@@ -68,13 +68,15 @@ def price_near_guinness(snippets):
 
 
 # "Beef & Guinness pie", "Guinness cake", "Guinness World Record": the word is there, the beer is not (necessarily).
-FOOD_WORDS = r"pies?|stews?|beef|cakes?|brownies?|bread|sauce|gravy|chocolate|burgers?|braised|glazed|marinated|ice\s*cream|mousse|cheddar|chilli|records?"
+FOOD_WORDS = r"pies?|stews?|beef|cakes?|brownies?|bread|sauce|gravy|chocolate|burgers?|braised|glazed|marinated|ice\s*cream|mousse|cheddar|chilli|records?|honig|honey|zwiebel\w*|onions?|konfit|confit|senf|mustard|brot|torte|kuchen|ragout|eintopf"
 _FOOD_BEFORE = re.compile(rf"\b(?:{FOOD_WORDS})\W+(?:\w+\W+){{0,3}}guinness\b", re.I)
 _FOOD_AFTER = re.compile(rf"\bguinness\W+(?:\w+\W+){{0,2}}(?:{FOOD_WORDS})\b", re.I)
 _COOKED = re.compile(r"\b(?:cottura|cuit\w*|cooked|simmered|geschmort|gekocht|gebraten|mariné\w*)\W+(?:\w+\W+){0,4}guinness", re.I)
 # A record, a book, an event or a shot is not the beer: "Guinness-Weltrekord", "Livre Guinness", "Guinness Village", "Baby Guinness"
 _RECORD = re.compile(r"guinness[\s-]*(?:world|welt|buch|book|livre|village|record|rekord)|(?:buch|book|livre|record|rekord)\w*\W+(?:\w+\W+){0,3}guinness|baby\s*guinness|malta\s*guinness|guinness\s*(?:carbomb|bomb)", re.I)
 _FACET = re.compile(r"guinness\s*\(\d+\)", re.I)  # a shop's filter list: "Guinness (2) Gusswerk (1)"
+# Hidden file metadata (XMP in a PDF or image), not text a visitor reads: photoshop:LayerText="guinness &amp; ...", <rdf:li ...>
+_FILE_METADATA = re.compile(r"photoshop:|rdf:li|rdf:rdf|xmlns:|<x:xmpmeta|xmp:|LayerText", re.I)
 _MACHINE_DATA = re.compile(r'"\w+"\s*:\s*[\[{"0-9]', re.I)  # a JSON fragment, not text a visitor reads
 VOLUME_RE = re.compile(r"\b\d+(?:[.,]\d+)?\s?(?:cl|dl|ml|l)\b", re.I)
 # Addresses and file names are not text a visitor reads: guinness-pour.jpg, /images/guinness/, "fileName":"guinness.png"
@@ -90,7 +92,7 @@ def is_food_mention(snippet):
     text = strip_urls_and_files(snippet)
     if not re.search(r"guinness", text, re.I):
         return False
-    if _RECORD.search(text) or _FACET.search(text):
+    if _RECORD.search(text) or _FACET.search(text) or _FILE_METADATA.search(text):
         return True
     if DRAUGHT_RE.search(text):  # "on tap", "vom Fass", "pint", "gezapft"...: it is poured (a price alone could be a dish's)
         return False

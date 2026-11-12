@@ -480,6 +480,8 @@ def scan_venue_website(venue):
         for href in candidate_links[:2]:
             if href.lower().startswith(("mailto:", "tel:", "javascript:")):
                 continue
+            if urllib.parse.urlparse(href).path.lower().endswith(".pdf"):
+                continue  # read below as a PDF (its text); fetched like a web page it would be raw bytes and hidden metadata
             sub_url = urllib.parse.urljoin(url, href)
             if urllib.parse.urlparse(sub_url).netloc == urllib.parse.urlparse(url).netloc and sub_url != url:
                 checked_subpage = sub_url
