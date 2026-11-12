@@ -134,3 +134,20 @@ class FakeRedis:
             self.data[key] = str(int(self.data.get(key, 0)) + 1)
             return int(self.data[key])
         raise ValueError(f"unknown command {name}")
+
+
+def make_pdf(text):
+    """A one-page PDF built by hand. With ``text`` its text is real (extractable); with ``None`` the page only draws a shape, like a menu whose
+    letters were converted to outlines."""
+    draw = f"BT /F1 12 Tf 50 700 Td ({text}) Tj ET" if text is not None else "0.2 0.2 0.2 rg 50 600 300 100 re f"
+    stream = draw.encode()
+    objs = [b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream", b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]
+    out, offsets = b"%PDF-1.4\n", []
+    for i, body in enumerate(objs, 1):
+        offsets.append(len(out))
+        out += f"{i} 0 obj\n".encode() + body + b"\nendobj\n"
+    xref = len(out)
+    out += f"xref\n0 {len(objs) + 1}\n0000000000 65535 f \n".encode() + b"".join(f"{o:010d} 00000 n \n".encode() for o in offsets)
+    return out + f"trailer\n<< /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
