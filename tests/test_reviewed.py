@@ -175,7 +175,7 @@ class MenuReadingTests(unittest.TestCase):
 
     def test_the_readings_file_is_deployed(self):
         with open(os.path.join(ROOT, "vercel.json"), encoding="utf-8") as f:
-            self.assertIn("menu_readings.json", f.read())
+            self.assertIn("server/data/*.json", f.read(), "menu_readings.json is bundled by the data glob")
 
 
 class OwnerReviewDataTests(unittest.TestCase):
@@ -224,7 +224,7 @@ class OwnerReviewDataTests(unittest.TestCase):
 
     def test_the_exclusion_file_is_deployed(self):
         with open(os.path.join(ROOT, "vercel.json"), encoding="utf-8") as f:
-            self.assertIn("excluded_venues.json", f.read())
+            self.assertIn("server/data/*.json", f.read(), "excluded_venues.json is bundled by the data glob")
 
 
 if __name__ == "__main__":

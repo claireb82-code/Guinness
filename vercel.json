@@ -3,7 +3,7 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
-      "includeFiles": "{app_server.py,guard.py,storage.py,evidence.py,geocode.py,overture.py,overpass.py,public/**,src/styles.css,server/data/swiss_crawl_results.json,server/data/overture_ch.json,server/data/google_place_ids.json,server/data/excluded_venues.json,server/data/menu_readings.json}"
+      "includeFiles": "{app_server.py,guard.py,storage.py,evidence.py,geocode.py,overture.py,overpass.py,public/**,src/styles.css,server/data/*.json}"
     }
   },
   "rewrites": [

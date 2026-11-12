@@ -140,7 +140,7 @@ class AppTests(unittest.TestCase):
 
     def test_the_place_id_file_is_deployed_and_the_workflow_cannot_open_a_pr_or_push_to_main(self):
         with open(os.path.join(ROOT, "vercel.json"), encoding="utf-8") as f:
-            self.assertIn("google_place_ids.json", f.read())
+            self.assertIn("server/data/*.json", f.read(), "google_place_ids.json is bundled by the data glob")
         with open(os.path.join(ROOT, ".github", "workflows", "google-discovery.yml"), encoding="utf-8") as f:
             text = f.read()
         self.assertIn("workflow_dispatch", text)
