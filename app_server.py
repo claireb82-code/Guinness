@@ -1753,8 +1753,13 @@ def compute_guinness_status(venue):
 def enrich_venue(venue, store):
     v = json.loads(json.dumps(venue))
     vid = v["id"]
-    if vid in store.get("menuScans", {}):
-        v["menuCheck"] = {**v.get("menuCheck", {}), **store["menuScans"][vid]}
+    scan = (store.get("menuScans") or {}).get(vid)
+    if scan:
+        have = v.get("menuCheck") or {}
+        # A saved scan reads one page. When it found nothing it must not erase evidence we already hold that does say Guinness is
+        # served (a crawl that read the menu, or a menu read by hand): a PDF or a second page may be where the Guinness is.
+        if not (have.get("foundOnMenu") and not scan.get("foundOnMenu")):
+            v["menuCheck"] = {**have, **scan}
 
     saved_reports = store.get("crowdReports", {}).get(vid, [])
     if saved_reports:
