@@ -1898,8 +1898,14 @@ def scrape_menu_url(url, existing_check=None):
     try:
         try:
             html = guard.fetch_page(url, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
-        except guard.UnsafeURL:
-            raise
+        except guard.UnsafeURL as exc:
+            if not isinstance(exc, guard.CouldNotResolve):
+                raise  # a private or malformed address is never retried
+            alt = guard.other_host_form(url)
+            if not alt:
+                raise
+            html = guard.fetch_page(alt, timeout=5, allow_private=FETCH_ALLOW_PRIVATE)
+            url = alt
         except Exception:
             # Never call a site unreachable before trying its other form (with / without "www.").
             alt = guard.other_host_form(url)

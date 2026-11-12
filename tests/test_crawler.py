@@ -141,6 +141,62 @@ class OvertureFillTests(unittest.TestCase):
         self.assertEqual(vs[3]["website"], "https://x.example")
 
 
+class NotTheBeerTests(unittest.TestCase):
+    """Regression (crawl of 2026-11-12): an image file named guinness-pour.jpg made Caesar's Bar "Confirmed", and Kennedy's a
+    "Beef & Guinness pie". Neither is evidence that the beer is poured."""
+
+    def found(self, html):
+        return crawler.parse_guinness_from_html(html)[0]
+
+    def test_a_dish_or_a_record_is_not_a_serving(self):
+        for text in ("Hungry enough to take our Beef & Guinness pie? Come & try", "Guinness Beef Stew CHF 22", "Guinness Chocolate Cake CHF 9", "we attempted the Guinness World Record"):
+            self.assertFalse(self.found(f"<p>{text}</p>"), text)
+            self.assertTrue(evidence.is_food_mention(text), text)
+
+    def test_a_file_name_or_address_is_not_text_a_visitor_reads(self):
+        page = '{"fileName":"guinness-pour.jpg","url":"http:\\/\\/files.x.ch\\/image\\/guinness-pour.jpg"}'
+        self.assertFalse(self.found(page))
+        self.assertFalse(self.found('<img src="/images/guinness/logo.png"><a href="https://x.ch/guinness-menu.pdf">menu</a>'))
+
+    def test_a_drink_is_still_found_even_next_to_food(self):
+        for text in ("Guinness Draught 5dl CHF 9.80", "Guinness vom Fass", "Guinness 5dl 10.-", "Beef stew; Guinness on tap", "Frisch gezapftes Guinness, Pie of the day"):
+            self.assertTrue(self.found(f"<p>{text}</p>"), text)
+            self.assertFalse(evidence.is_food_mention(text), text)
+
+    def test_a_pub_whose_only_mention_is_food_is_a_hint_not_a_confirmation(self):
+        self.assertEqual(evidence.website_mention_kind("pub", ["Hungry enough to take our Beef & Guinness pie?"]), "mention")
+        self.assertEqual(evidence.website_mention_kind("pub", ["Guinness vom Fass"]), "menu")
+        self.assertEqual(evidence.website_mention_kind("pub", []), "mention")
+
+
+class HostNotFoundTests(unittest.TestCase):
+    """A domain that does not resolve is "could not resolve", not "unsafe", and is retried on the other www form."""
+
+    def test_a_dns_failure_is_its_own_error_but_still_an_unsafe_url(self):
+        with mock.patch.object(guard.socket, "getaddrinfo", side_effect=guard.socket.gaierror(-2, "Name or service not known")):
+            with self.assertRaises(guard.CouldNotResolve) as ctx:
+                guard.resolve_public("nope.example", 443)
+        self.assertIsInstance(ctx.exception, guard.UnsafeURL)
+
+    def test_the_crawler_says_could_not_resolve(self):
+        with mock.patch.object(guard, "fetch_page", side_effect=guard.CouldNotResolve("Could not resolve host (x)")), mock.patch.object(crawler, "robots_allows", return_value=True):
+            self.assertTrue(crawler.fetch_html("https://nope.example")[1].startswith("could not resolve host"))
+
+    def test_the_live_scan_tries_the_other_form_when_the_name_does_not_resolve(self):
+        calls = []
+
+        def fake(url, **kw):
+            calls.append(url)
+            if url.startswith("https://www."):
+                return "<li>Guinness Draught 5dl CHF 9.80</li>"
+            raise guard.CouldNotResolve("Could not resolve host (x)")
+
+        with mock.patch.object(guard, "fetch_page", fake):
+            check = app.scrape_menu_url("https://pub.example")
+        self.assertTrue(check["foundOnMenu"])
+        self.assertEqual(calls, ["https://pub.example", "https://www.pub.example"])
+
+
 class WwwFallbackTests(unittest.TestCase):
     """Regression: a site that only answers on www (kennedys.ch vs www.kennedys.ch) must not be reported as unreachable."""
 
