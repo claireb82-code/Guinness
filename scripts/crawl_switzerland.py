@@ -362,7 +362,7 @@ def fetch_html(url, max_time=3.5):
 def parse_guinness_from_html(raw_html):
     found, types_found, price, snippets = _parse_guinness(raw_html)
     # Only snippets a visitor could read as "we serve it": not an image file name, not "Beef & Guinness pie" or a world record.
-    snippets = [x for x in snippets if re.search(r"guinness", evidence.strip_urls_and_files(x), re.I) and not evidence.is_food_mention(x)]
+    snippets = evidence.serving_snippets(snippets)
     if not snippets:
         return False, [], None, []
     return found, types_found, price, snippets
