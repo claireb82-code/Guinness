@@ -60,11 +60,16 @@ test('a venue that is only a guess says so, and explains why', { skip: skip() },
   await context.close();
 });
 
-test('regression: Kennedy\'s price is back, shown as unchecked (card and panel)', { skip: skip() }, async () => {
+test('regression: a starter-list price is shown as unchecked (card and panel); Kennedy\'s has a real, read price instead', { skip: skip() }, async () => {
   const { page, context } = await open();
-  const card = page.locator('.venue-card:has-text("Kennedy")').first();
+  const card = page.locator('.venue-card:has-text("The Lion Pub")').first();
   await card.waitFor({ state: 'attached' });
   assert.match(await card.textContent(), /CHF 9\.80 \(unchecked\)/);
+  // Kennedy's drinks menu was read, so its price is a real one: no "(unchecked)"
+  const kennedys = page.locator('.venue-card:has-text("Kennedy")').first();
+  await kennedys.waitFor({ state: 'attached' });
+  assert.match(await kennedys.textContent(), /CHF 10\.00/);
+  assert.doesNotMatch(await kennedys.textContent(), /unchecked/);
   await card.click();
   await page.waitForSelector('.detail-drawer');
   const panel = await page.textContent('.detail-drawer');

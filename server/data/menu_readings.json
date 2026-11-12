@@ -1,0 +1,15 @@
+{
+  "note": "Menus the site owner's assistant read by eye because the text cannot be extracted (a PDF whose text is drawn as shapes, or an image). Each is evidence from the venue's own published menu, applied like a crawl result. Nothing here comes from Google.",
+  "readings": {
+    "zh-kennedys": {
+      "reachable": true,
+      "foundOnMenu": true,
+      "checkedAt": "2026-11-12T10:50:00+00:00",
+      "checkedUrl": "https://www.kennedys.ch/wp-content/uploads/2026/01/26_Drinks_Menu.pdf",
+      "snippets": [
+        "DRAUGHT BEERS & CIDERS: GUINNESS - IRL - 4.2% - An Irish stout. Creamy & smooth. 5dl CHF 10.00 (2.5dl CHF 5.50). Also on draught: GUINNESS HOPHOUSE 13 - IRL - 5%, 5dl CHF 10.00. Bottles: Guinness 0.0, 44cl CHF 9.50."
+      ],
+      "readBy": "Read by eye from the venue's drinks menu PDF (published Jan 2026, last modified 15 Jan 2026); its text is drawn as shapes, so no program can extract it. Prices are CHF including 8.1% VAT, as the menu states."
+    }
+  }
+}

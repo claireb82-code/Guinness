@@ -130,6 +130,54 @@ class ExclusionInLiveScansTests(unittest.TestCase):
         self.assertEqual(len(app.drop_excluded([starter])), 1)
 
 
+class MenuReadingTests(unittest.TestCase):
+    """Kennedy's drinks menu is a PDF whose text is drawn as shapes, so it was read by eye and recorded as evidence."""
+
+    def kennedys(self):
+        return next(v for v in app.get_all_combined_venues({}) if v["id"] == "zh-kennedys")
+
+    def test_kennedys_is_confirmed_on_tap_from_its_own_menu(self):
+        v = self.kennedys()
+        s = app.compute_guinness_status(v)
+        self.assertEqual((s["statusLabel"], s["servingFormat"]), ("Confirmed", "draught"))
+        self.assertEqual(s["reason"], "Its website lists Guinness on tap")
+        self.assertEqual(v["menuCheck"]["extractedPrice"], "CHF 10.00", "the 5 dl price printed first after Guinness")
+        self.assertTrue(v["menuUrl"].endswith("26_Drinks_Menu.pdf"))
+        self.assertNotIn("tagCheck", v)
+        self.assertNotIn("priceHint", v, "the unchecked starter price is replaced by what the menu says")
+
+    def test_the_reading_says_how_it_was_made_and_nothing_comes_from_google(self):
+        with open(os.path.join(ROOT, "server", "data", "menu_readings.json"), encoding="utf-8") as f:
+            doc = json.load(f)
+        r = doc["readings"]["zh-kennedys"]
+        self.assertIn("by eye", r["readBy"])
+        self.assertIn("kennedys.ch", r["checkedUrl"])
+        self.assertNotIn("googleapis", json.dumps(doc).lower())
+        self.assertNotIn("placeId", json.dumps(doc))
+
+    def test_a_reading_applies_to_any_venue_and_a_bad_file_applies_to_none(self):
+        path = write({"readings": {"zh-kennedys": {"reachable": True, "foundOnMenu": False, "checkedAt": "2026-11-12", "snippets": []}}})
+        try:
+            with mock.patch.object(app, "MENU_READINGS_PATH", path):
+                v = self.kennedys()
+        finally:
+            os.unlink(path)
+        self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"]), (True, False), "a reading that finds nothing says so")
+        for content in ("not json", '{"readings": ["x"]}', '{"readings": {"a": 1}}'):
+            f = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False)
+            f.write(content)
+            f.close()
+            try:
+                with mock.patch.object(app, "MENU_READINGS_PATH", f.name):
+                    self.assertEqual(app.load_menu_readings(), {}, content)
+            finally:
+                os.unlink(f.name)
+
+    def test_the_readings_file_is_deployed(self):
+        with open(os.path.join(ROOT, "vercel.json"), encoding="utf-8") as f:
+            self.assertIn("menu_readings.json", f.read())
+
+
 class OwnerReviewDataTests(unittest.TestCase):
     """The 2026-11-12 review of 46 Overture venues and 19 starter venues, pinned."""
 

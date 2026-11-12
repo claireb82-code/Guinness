@@ -28,6 +28,7 @@ crawler = load_script("crawl_switzerland")
 checker = load_script("check_crawl_result")
 
 REAL_FETCH = guard.fetch_page
+REAL_FETCH_BYTES = guard.fetch_bytes
 
 
 def local_fetch(url, **kw):
@@ -423,6 +424,93 @@ class WwwFallbackTests(unittest.TestCase):
         self.assertEqual(next(v for v in app.DEMO_VENUES if v["id"] == "zh-kennedys")["website"], "https://www.kennedys.ch")
 
 
+def make_pdf(text):
+    """A one-page PDF whose text is real text (so it can be extracted), built by hand."""
+    stream = f"BT /F1 12 Tf 50 700 Td ({text}) Tj ET".encode()
+    objs = [b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream", b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]
+    out, offsets = b"%PDF-1.4\n", []
+    for i, body in enumerate(objs, 1):
+        offsets.append(len(out))
+        out += f"{i} 0 obj\n".encode() + body + b"\nendobj\n"
+    xref = len(out)
+    out += f"xref\n0 {len(objs) + 1}\n0000000000 65535 f \n".encode() + b"".join(f"{o:010d} 00000 n \n".encode() for o in offsets)
+    return out + f"trailer\n<< /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+
+
+try:
+    import pypdf  # noqa: F401
+    HAVE_PYPDF = True
+except ImportError:
+    HAVE_PYPDF = False
+
+
+class PdfMenuTests(unittest.TestCase):
+    """Regression: Kennedy's drinks list is a PDF, so its website looked silent about Guinness."""
+
+    def setUp(self):
+        crawler._robots_cache.clear()
+
+    def site(self, routes):
+        server, base = page_server(routes)
+        self.addCleanup(stop, server)
+        for name, fn in (("fetch_page", local_fetch), ("fetch_bytes", lambda url, **kw: REAL_FETCH_BYTES(url, **{**kw, "allow_private": True}))):
+            patch = mock.patch.object(crawler.guard, name, side_effect=fn)
+            patch.start()
+            self.addCleanup(patch.stop)
+        return base
+
+    HOME = b"<html><body><p>Welcome to our pub. " + b"w" * 40 + b'</p><a href="/files/Drinks_Menu.pdf">Drinks</a> <a href="/files/impressum.pdf">Legal</a></body></html>'
+
+    def test_the_links_worth_reading_are_the_menu_pdfs_on_the_same_site(self):
+        body = ('<a href="/a/26_Drinks_Menu.pdf">x</a> <a href="https://other.example/m_menu.pdf">other site</a> <a href="/impressum.pdf">Legal</a> '
+                '<a href="/b/file.pdf">Speisekarte</a> <a href="/c/Karte.pdf?v=2">y</a> <a href="/a/26_Drinks_Menu.pdf">again</a>')
+        self.assertEqual(crawler.find_pdf_menu_links(body, "https://www.pub.example/"),
+                         ["https://www.pub.example/a/26_Drinks_Menu.pdf", "https://www.pub.example/b/file.pdf"], "two at most, same site, no duplicates")
+
+    @unittest.skipUnless(HAVE_PYPDF, "needs pypdf")
+    def test_guinness_on_a_pdf_drinks_menu_is_found_with_the_pdf_as_the_evidence(self):
+        pdf = make_pdf("DRAUGHT BEERS - GUINNESS - IRL - 4.2% - 5dl CHF 10.00 - Kilkenny 5dl CHF 10.00")
+        base = self.site({"/": (200, {}, self.HOME), "/files/Drinks_Menu.pdf": (200, {"Content-Type": "application/pdf"}, pdf)})
+        res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertTrue(res["foundOnMenu"])
+        self.assertTrue(res["checkedUrl"].endswith("/files/Drinks_Menu.pdf"))
+        self.assertEqual(res["extractedPrice"], "CHF 10.00")
+        self.assertIn("GUINNESS", " ".join(res["snippets"]).upper())
+
+    @unittest.skipUnless(HAVE_PYPDF, "needs pypdf")
+    def test_a_pdf_without_guinness_leaves_the_site_read_and_silent_and_only_menu_pdfs_are_fetched(self):
+        hits = []
+        server, base = page_server({"/": (200, {}, self.HOME), "/files/Drinks_Menu.pdf": (200, {}, make_pdf("Pilsner CHF 5.00")),
+                                    "/files/impressum.pdf": (200, {}, make_pdf("Guinness"))}, hits)
+        self.addCleanup(stop, server)
+        for name, fn in (("fetch_page", local_fetch), ("fetch_bytes", lambda url, **kw: REAL_FETCH_BYTES(url, **{**kw, "allow_private": True}))):
+            patch = mock.patch.object(crawler.guard, name, side_effect=fn)
+            patch.start()
+            self.addCleanup(patch.stop)
+        res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertEqual((res["reachable"], res["foundOnMenu"]), (True, False))
+        self.assertIn("/files/Drinks_Menu.pdf", hits)
+        self.assertNotIn("/files/impressum.pdf", hits, "a legal-notice PDF is not a menu")
+
+    def test_a_pdf_that_is_not_a_pdf_or_cannot_be_read_gives_nothing_and_never_raises(self):
+        base = self.site({"/": (200, {}, self.HOME), "/files/Drinks_Menu.pdf": (200, {}, b"<html>Guinness 5dl CHF 9</html>")})
+        self.assertIsNone(crawler.fetch_pdf_text(base + "/files/Drinks_Menu.pdf"), "no %PDF header")
+        self.assertEqual(crawler.pdf_text(b"%PDF-1.4 truncated garbage"), "")
+        self.assertEqual(crawler.pdf_text(b""), "")
+
+    def test_a_pdf_on_an_unsafe_address_is_never_fetched(self):
+        self.assertIsNone(crawler.fetch_pdf_text("http://127.0.0.1:9/menu.pdf"))
+        self.assertIsNone(crawler.fetch_pdf_text("http://169.254.169.254/menu.pdf"))
+
+    @unittest.skipUnless(HAVE_PYPDF, "needs pypdf")
+    def test_a_robots_txt_ban_covers_pdfs_too(self):
+        base = self.site({"/robots.txt": (200, {}, b"User-agent: *\nDisallow: /files/\n"), "/": (200, {}, self.HOME),
+                          "/files/Drinks_Menu.pdf": (200, {}, make_pdf("GUINNESS 5dl CHF 10.00"))})
+        self.assertFalse(crawler.scan_venue_website({"website": base + "/"})["foundOnMenu"])
+
+
 class DirectorySiteTests(unittest.TestCase):
     """Regression: a Ticino tourism listing became The Trinity Irish Pub's "website" and was reported as "read: no Guinness text found"."""
 
@@ -572,7 +660,7 @@ class StarterListCrawlTests(unittest.TestCase):
         target = app.DEMO_VENUES[0]["id"]
         check = {"reachable": True, "checkedAt": "2026-11-11T00:00:00+00:00", "checkedUrl": "https://pub.example/birre",
                  "foundOnMenu": True, "snippets": ["Guinness Draught — Pint CHF 9.20"]}
-        with mock.patch.object(app, "load_starter_checks", return_value={target: check}):
+        with mock.patch.object(app, "load_starter_checks", return_value={target: check}), mock.patch.object(app, "load_menu_readings", return_value={}):
             venues = {v["id"]: v for v in app.get_all_combined_venues({})}
         v = venues[target]
         self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"]), (True, True))

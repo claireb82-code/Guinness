@@ -325,16 +325,16 @@ body {
   letter-spacing: 0.02em;
 }
 
-.status-confirmed_draught {
-  background: rgba(52, 211, 153, 0.14);
-  color: #6ee7b7;
-  border: 1px solid rgba(52, 211, 153, 0.35);
+.status-confirmed_draught { /* Confirmed, on tap: dark green, solid */
+  background: #14532d;
+  color: #dcfce7;
+  border: 1px solid #15803d;
 }
 
-.status-cans_or_bottles {
-  background: rgba(200, 164, 93, 0.18);
-  color: #e2be75;
-  border: 1px solid rgba(200, 164, 93, 0.4);
+.status-cans_or_bottles { /* Confirmed, cans / bottles: lighter green, a tint */
+  background: rgba(74, 222, 128, 0.16);
+  color: #86efac;
+  border: 1px solid rgba(74, 222, 128, 0.45);
 }
 
 .status-likely_serves {

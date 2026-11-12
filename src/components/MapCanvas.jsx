@@ -381,7 +381,7 @@ export function MapCanvas({
               width: 10,
               height: 10,
               borderRadius: '50%',
-              background: '#34d399',
+              background: '#15803d',
               display: 'inline-block',
             }}
           />
@@ -393,7 +393,7 @@ export function MapCanvas({
               width: 10,
               height: 10,
               borderRadius: '50%',
-              background: '#c8a45d',
+              background: '#4ade80',
               display: 'inline-block',
             }}
           />

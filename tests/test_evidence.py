@@ -196,7 +196,7 @@ class PriceTests(unittest.TestCase):
     def test_regression_starter_list_prices_are_kept_but_marked_as_hints(self):
         """They vanished when the invented evidence was removed; the venue panel and cards show them as 'unchecked'."""
         # independent of crawl data: once a crawl has really read a starter venue's website, its record replaces the hint (see StarterSiteCheckTests)
-        with mock.patch.object(app, "load_starter_checks", return_value={}):
+        with mock.patch.object(app, "load_starter_checks", return_value={}), mock.patch.object(app, "load_menu_readings", return_value={}):
             by = {v["name"]: v for v in app.get_all_combined_venues({})}
         kennedys = by["Kennedy's Irish Pub"]
         self.assertEqual(kennedys["priceHint"]["price"], "CHF 9.80")
