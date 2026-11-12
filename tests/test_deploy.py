@@ -71,11 +71,12 @@ class VercelBundleTests(unittest.TestCase):
         sys.path.insert(0, ROOT)
         try:
             import app_server
-            import overture
         finally:
             sys.path.remove(ROOT)
         patterns = bundled_files()
-        read = [app_server.CRAWL_RESULTS_PATH, app_server.GOOGLE_PLACE_IDS_PATH, app_server.EXCLUDED_VENUES_PATH, app_server.MENU_READINGS_PATH, overture.DATA_PATH]
+        # overture.DATA_PATH is not used: other tests point it at a dummy file through OVERTURE_DATA_PATH
+        read = [app_server.CRAWL_RESULTS_PATH, app_server.GOOGLE_PLACE_IDS_PATH, app_server.EXCLUDED_VENUES_PATH, app_server.MENU_READINGS_PATH,
+                os.path.join(ROOT, "server", "data", "overture_ch.json")]
         for path in read:
             rel = os.path.relpath(path, ROOT).replace(os.sep, "/")
             self.assertTrue(any(fnmatch.fnmatch(rel, pat) for pat in patterns), f"{rel} is read by the app but not bundled: {sorted(patterns)}")
