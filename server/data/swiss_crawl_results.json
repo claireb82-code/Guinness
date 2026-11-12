@@ -7327,6 +7327,52 @@
         "kind": "irish_name",
         "text": "The name suggests an Irish pub. Nothing was checked, so this is a guess."
       }
+    },
+    {
+      "id": "ch-ov-b8270c69-4cc2-481a-87d6-6644ed7a79fb",
+      "city": "bern",
+      "name": "Kreuz Herzogenbuchsee",
+      "category": "restaurant",
+      "address": "Kirchgasse 1, 3360 Herzogenbuchsee",
+      "lat": 47.18789,
+      "lng": 7.7068,
+      "googleRating": null,
+      "googleReviewCount": 0,
+      "priceLevel": null,
+      "website": "http://www.kreuz-herzogenbuchsee.ch/",
+      "websiteSource": "overture",
+      "menuUrl": "http://www.kreuz-herzogenbuchsee.ch/",
+      "phone": "+41625315230",
+      "openNow": true,
+      "editorialSummary": null,
+      "menuCheck": {
+        "checked": true,
+        "lastChecked": "2026-11-12T09:02:00.554730+00:00",
+        "foundOnMenu": false,
+        "typesFound": [],
+        "extractedPrice": null,
+        "snippets": [
+          "ltur-Menü Verein Event-Galerie Kontakt Gutscheine Kreuzkeller Guinnessclub Guinness Club Brunch Barquiz Knorrli Oldies Disco Ramsen Gutscheine Willkommen Verwöhnen Essen & Trinke",
+          "ltur-Menü Verein Event-Galerie Kontakt Gutscheine Kreuzkeller Guinnessclub Guinness Club Brunch Barquiz Knorrli Oldies Disco Ramsen Gutscheine Close Menu → --> Öffnungszeiten Res"
+        ]
+      },
+      "reviewCheck": {
+        "mentionCount": 0,
+        "sentiment": "none",
+        "excerpts": []
+      },
+      "crowdCheck": {
+        "confirmedCount": 0,
+        "deniedCount": 0,
+        "servingFormat": "unknown",
+        "reportedPrice": null,
+        "hasZero": false,
+        "recentReports": []
+      },
+      "tagCheck": {
+        "kind": "web_mention",
+        "text": "Its website mentions Guinness, but not clearly as something they serve (it could be a recipe or an event)."
+      }
     }
   ],
   "verifiedNoGuinnessSample": [
