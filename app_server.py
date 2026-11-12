@@ -91,7 +91,7 @@ DEMO_VENUES = [
         "googleRating": 4.5,
         "googleReviewCount": 2410,
         "priceLevel": "CHF ··",
-        "website": "https://kennedys.ch",
+        "website": "https://www.kennedys.ch",
         "menuUrl": "https://kennedys.ch/drinks",
         "phone": "+41 44 242 11 00",
         "openNow": True,
