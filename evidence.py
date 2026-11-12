@@ -182,6 +182,36 @@ def _kind_of_crawl_menu(menu):
     return None
 
 
+def _recheck_name_guess(v):
+    """An "Irish-sounding name" guess about a restaurant or hotel whose own website was read and does not name Guinness is dropped:
+    the name is a coincidence ("2 Potes O'Feu"), and the site was read. Pubs and bars keep the guess; so do sites that could not be read."""
+    menu = v.get("menuCheck") or {}
+    if v.get("category") in ("restaurant", "hotel") and menu.get("checked") and not menu.get("foundOnMenu"):
+        v.pop("tagCheck", None)
+        return sanitise_static_venue(v)
+    return v
+
+
+def _recheck_web_mention(v):
+    """A stored "its website mentions Guinness, not clearly on a menu" hint, judged again by today's rules.
+
+    The crawl wrote that hint with the rules of the day. If its text turns out to be a record, a dish, a shot or a shop list it goes (the
+    site was read and says nothing about serving it); if it does say how it is served it becomes a real menu check.
+    """
+    menu = v.get("menuCheck") or {}
+    snippets = menu.get("snippets") or []
+    usable = serving_snippets(snippets)
+    if not usable:
+        v.pop("tagCheck", None)
+        v["menuCheck"] = {**not_checked("The website was read: no Guinness text found."), "checked": True, "lastChecked": menu.get("lastChecked")}
+        return sanitise_static_venue(v)  # without its hint it takes the ordinary path, so loading it again changes nothing
+    if website_mention_kind(v.get("category"), snippets) == "menu":
+        v.pop("tagCheck", None)
+        v["menuCheck"] = {**menu, "checked": True, "foundOnMenu": True, "typesFound": serving_types(usable), "extractedPrice": price_near_guinness(usable), "snippets": usable}
+        return sanitise_static_venue(v)
+    return v
+
+
 def sanitise_static_venue(venue):
     """A copy of a venue from the bundled data files with every invented number removed.
 
@@ -192,7 +222,12 @@ def sanitise_static_venue(venue):
     if not isinstance(venue, dict):
         return venue
     v = copy.deepcopy(venue)
-    if "tagCheck" in v:  # already clean (e.g. written by the fixed crawler): leave it alone
+    if "tagCheck" in v:  # already clean (e.g. written by the fixed crawler): leave it alone, except a stored website hint
+        kind = (v["tagCheck"] or {}).get("kind")
+        if kind == TAG_WEB:
+            return _recheck_web_mention(v)
+        if kind == TAG_NAME:
+            return _recheck_name_guess(v)
         return v
     is_crawl = str(v.get("id", "")).startswith("ch-")
     menu = v.get("menuCheck") or {}

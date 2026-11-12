@@ -77,13 +77,31 @@ class OwnerReviewDataTests(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)), "a venue is reviewed once")
         self.assertFalse(set(ids) & app._ids_in(app.EXCLUDED_VENUES_PATH, "excluded"))
         self.assertEqual({r["decision"] for r in rows}, {"keep", "investigate"})
-        self.assertEqual(sum(1 for r in rows if r["decision"] == "investigate"), 11)
+        self.assertEqual(sum(1 for r in rows if r["decision"] == "investigate"), 8, "11 minus the 3 merged duplicates")
+        self.assertFalse(set(ids) & app._ids_in(app.EXCLUDED_VENUES_PATH, "duplicates"))
 
     def test_reviewed_venues_stay_on_the_map_except_the_removed(self):
         with open(os.path.join(ROOT, "server", "data", "reviewed_venues.json"), encoding="utf-8") as f:
             rows = json.load(f)["reviewed"]
         served = {v["id"] for v in app.get_all_combined_venues({})}
         self.assertEqual([r["name"] for r in rows if r["id"] not in served], [], "keep and investigate stay listed")
+
+    def test_the_three_duplicates_are_listed_once_under_the_venue_they_duplicate(self):
+        with open(os.path.join(ROOT, "server", "data", "excluded_venues.json"), encoding="utf-8") as f:
+            dups = json.load(f)["duplicates"]
+        self.assertEqual(sorted(d["name"] for d in dups), ["Brian's Irish Bar", "MFG", "Shamrock Irish Pub"])
+        served = {v["id"] for v in app.get_all_combined_venues({})}
+        for d in dups:
+            self.assertNotIn(d["id"], served, d["name"])
+            self.assertIn(d["duplicateOf"], served, f"{d['name']} must point at a venue that is still shown")
+
+    def test_a_duplicate_id_is_excluded_like_a_removed_one(self):
+        path = write({"excluded": [{"id": "a"}], "duplicates": [{"id": "b", "duplicateOf": "a"}]})
+        try:
+            with mock.patch.object(app, "EXCLUDED_VENUES_PATH", path):
+                self.assertEqual(app.load_excluded_ids(), {"a", "b"})
+        finally:
+            os.unlink(path)
 
     def test_the_exclusion_file_is_deployed(self):
         with open(os.path.join(ROOT, "vercel.json"), encoding="utf-8") as f:

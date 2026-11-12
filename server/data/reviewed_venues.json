@@ -147,18 +147,6 @@
       "list": "overture-possible"
     },
     {
-      "id": "ch-ov-a4904b49-521b-4efb-b348-4f10da9c9442",
-      "name": "Brian's Irish Bar",
-      "decision": "investigate",
-      "list": "overture-possible"
-    },
-    {
-      "id": "ch-ov-8840ee7e-8463-4b70-a285-1d3aa88d982c",
-      "name": "MFG",
-      "decision": "investigate",
-      "list": "overture-possible"
-    },
-    {
       "id": "ch-ov-b73a9300-f309-4550-91c4-2746346f5c24",
       "name": "2 Potes O'Feu",
       "decision": "investigate",
@@ -173,12 +161,6 @@
     {
       "id": "ch-ov-86a7aaf7-5452-444a-918a-a447aa2794d2",
       "name": "Inferno",
-      "decision": "investigate",
-      "list": "overture-possible"
-    },
-    {
-      "id": "ch-node-1553431869",
-      "name": "Shamrock Irish Pub",
       "decision": "investigate",
       "list": "overture-possible"
     },

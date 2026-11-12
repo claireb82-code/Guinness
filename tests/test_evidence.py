@@ -103,7 +103,7 @@ class StarterSiteCheckTests(unittest.TestCase):
         self.assertEqual(v["website"], "https://examplepub-lugano.example")
 
     DROPPED_DEAD_WEBSITE = ("zh-paddy-reillys", "ge-mulligans", "bs-flanagans", "ls-great-escape", "zh-lion-pub", "ge-flannagans", "ge-charly-oneills",
-                            "ls-mccarthys-vevey", "ls-barrel-oak-montreux", "bs-penny-farthing-aarau", "be-mccarthys-bern", "lu-shamrock-luzern",
+                            "ls-mccarthys-vevey", "ls-barrel-oak-montreux", "bs-penny-farthing-aarau", "be-mccarthys-bern",
                             "al-ex-bar-davos", "al-bobbys-stmoritz")
     REMOVED_NOT_ON_GOOGLE_MAPS = ("zh-winterthur-mulligans", "be-paddys-fribourg", "ea-oslatterys-stgallen", "ea-domino-schaffhausen", "al-barrel-interlaken")
 
@@ -124,6 +124,11 @@ class StarterSiteCheckTests(unittest.TestCase):
             shown = evidence.sanitise_static_venue(by_id[vid])
             self.assertEqual(shown["tagCheck"]["kind"], "starter_list")
             self.assertEqual(app.compute_guinness_status(shown)["statusLabel"], "Possible", "kept, but still not checked")
+
+    def test_the_starter_shamrock_luzern_has_the_website_found_on_its_duplicate(self):
+        """The invented shamrockluzern.ch was replaced by shamrock-luzern.ch, found on the OpenStreetMap entry for the same pub (111 m away)."""
+        by_id = {v["id"]: v for v in app.DEMO_VENUES}
+        self.assertEqual(by_id["lu-shamrock-luzern"]["website"], "http://www.shamrock-luzern.ch/")
 
     def test_a_crawled_venues_checked_page_is_kept(self):
         self.assertEqual(evidence.sanitise_static_venue(crawl_record(menuUrl="http://paddys.example/drinks"))["menuUrl"], "http://paddys.example/drinks")

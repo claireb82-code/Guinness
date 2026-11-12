@@ -264,6 +264,60 @@ class OvertureCrawlEvidenceTests(unittest.TestCase):
         self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", "served, but how is not said: not guessed")
 
 
+class StoredHintRecheckTests(unittest.TestCase):
+    """Regression: the first Overture crawl stored "website mentions Guinness" hints judged by the old rules, and the loader trusted them."""
+
+    def stored(self, category, snippets):
+        return {"id": "ch-ov-9", "name": "X", "category": category, "address": "x", "lat": 47.0, "lng": 8.0, "website": "http://x.example",
+                "tagCheck": {"kind": evidence.TAG_WEB, "text": evidence.TAG_TEXT[evidence.TAG_WEB]},
+                "menuCheck": {"checked": True, "lastChecked": "2026-11-12", "foundOnMenu": False, "typesFound": [], "extractedPrice": None, "snippets": snippets}}
+
+    def test_a_stored_hint_whose_text_is_a_record_or_a_shop_list_is_dropped(self):
+        for text in ("das tiefste Tal der Alpen laut Guinness Buch der Rekorde", "dschlösschen (2) Forged Irish Stout (1) Granda (6) Guinness (2) Gusswerk (1)"):
+            v = evidence.sanitise_static_venue(self.stored("hotel", [text]))
+            self.assertNotIn("tagCheck", v, text)
+            self.assertEqual((v["menuCheck"]["checked"], v["menuCheck"]["foundOnMenu"]), (True, False))
+            self.assertEqual(app.compute_guinness_status(v)["status"], "no_guinness", text)
+            self.assertEqual(evidence.sanitise_static_venue(v), v, "and it stays that way")
+
+    def test_a_stored_hint_that_does_say_how_it_is_served_becomes_a_menu_check(self):
+        v = evidence.sanitise_static_venue(self.stored("restaurant", ["Moretti 4,6% 33cl 6.- Corona 4,5% 35,5cl 7.50 Guinness 5,0% 33cl 7.- Super Bock 5,2% 25cl 4.-"]))
+        self.assertNotIn("tagCheck", v)
+        self.assertTrue(v["menuCheck"]["foundOnMenu"])
+        self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed")
+        self.assertEqual(evidence.sanitise_static_venue(v), v)
+
+    def test_a_stored_hint_that_is_only_a_vague_mention_is_left_as_it_is(self):
+        stored = self.stored("restaurant", ["St Patrick's night: Guinness and live music"])
+        self.assertEqual(evidence.sanitise_static_venue(stored), stored)
+
+    def test_other_stored_hints_are_not_touched(self):
+        v = {**self.stored("pub", []), "tagCheck": {"kind": evidence.TAG_NAME, "text": evidence.TAG_TEXT[evidence.TAG_NAME]}}
+        self.assertEqual(evidence.sanitise_static_venue(v), v)
+
+
+class NameGuessRecheckTests(unittest.TestCase):
+    """Regression: a restaurant called "2 Potes O'Feu" was "Possible: Irish-sounding name" although its website was read and says nothing."""
+
+    def stored(self, category, checked=True, found=False):
+        return {"id": "ch-ov-5", "name": "2 Potes O'Feu", "category": category, "address": "x", "lat": 46.2, "lng": 6.2, "website": "http://x.example",
+                "tagCheck": {"kind": evidence.TAG_NAME, "text": evidence.TAG_TEXT[evidence.TAG_NAME]},
+                "menuCheck": {"checked": checked, "lastChecked": "2026-11-12" if checked else None, "foundOnMenu": found, "typesFound": [], "extractedPrice": None,
+                              "snippets": ["The website was read: no Guinness text found."] if checked else []}}
+
+    def test_a_restaurant_or_hotel_with_a_read_silent_website_loses_the_name_guess(self):
+        for category in ("restaurant", "hotel"):
+            v = evidence.sanitise_static_venue(self.stored(category))
+            self.assertNotIn("tagCheck", v)
+            self.assertEqual(app.compute_guinness_status(v)["status"], "no_guinness", category)
+            self.assertEqual(evidence.sanitise_static_venue(v), v, "stable on a second load")
+
+    def test_pubs_bars_and_unread_sites_keep_the_guess(self):
+        for stored in (self.stored("pub"), self.stored("bar"), self.stored("restaurant", checked=False)):
+            self.assertEqual(evidence.sanitise_static_venue(stored), stored)
+            self.assertEqual(app.compute_guinness_status(stored)["reason"], "Irish-sounding name (not checked)")
+
+
 class HostNotFoundTests(unittest.TestCase):
     """A domain that does not resolve is "could not resolve", not "unsafe", and is retried on the other www form."""
 

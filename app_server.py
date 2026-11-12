@@ -1109,7 +1109,7 @@ DEMO_VENUES = [
         "googleRating": 4.5,
         "googleReviewCount": 960,
         "priceLevel": "CHF ··",
-        "website": None,
+        "website": "http://www.shamrock-luzern.ch/",
         "phone": "+41 41 410 73 73",
         "openNow": True,
         "editorialSummary": "Authentic Irish pub on Weggisgasse in Lucerne Old Town with live music and creamy Guinness Draught.",
@@ -1452,8 +1452,8 @@ def _ids_in(path, key):
 
 
 def load_excluded_ids():
-    """Venue ids the site owner checked on Google Maps and found missing or permanently closed: never served, whatever a crawl finds."""
-    return _ids_in(EXCLUDED_VENUES_PATH, "excluded")
+    """Venue ids the owner found missing or permanently closed, or that are the same place listed twice: never served, whatever a crawl finds."""
+    return _ids_in(EXCLUDED_VENUES_PATH, "excluded") | _ids_in(EXCLUDED_VENUES_PATH, "duplicates")
 
 
 def load_reviewed_ids():
