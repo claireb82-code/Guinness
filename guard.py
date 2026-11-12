@@ -52,6 +52,10 @@ class UnsafeURL(ValueError):
     """The URL is malformed, not http(s), or points at a non-public address."""
 
 
+class CouldNotResolve(UnsafeURL):
+    """The host name does not resolve (an unknown or dead domain). Still an UnsafeURL for callers that only care about safety."""
+
+
 # --------------------------------------------------------------------------------------
 # URL validation
 # --------------------------------------------------------------------------------------
@@ -126,10 +130,10 @@ def resolve_public(host, port, allow_private=False):
     try:
         infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
     except socket.gaierror as exc:
-        raise UnsafeURL(f"Could not resolve host ({exc.strerror or exc})") from None
+        raise CouldNotResolve(f"Could not resolve host ({exc.strerror or exc})") from None
     addrs = [(fam, sa) for fam, _t, _p, _c, sa in infos]
     if not addrs:
-        raise UnsafeURL("Could not resolve host")
+        raise CouldNotResolve("Could not resolve host")
     if not allow_private:
         for _fam, sa in addrs:
             if not is_public_address(sa[0]):

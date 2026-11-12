@@ -38,7 +38,7 @@ IRISH_NAME_RE = re.compile(
 )
 
 # Website wording that says how Guinness is served (English, German, French, Italian).
-DRAUGHT_RE = re.compile(r"draught|draft|on tap|\btap\b|vom fass|\bfass\b|ausschank|pression|alla spina|\bpint\b|zapfen", re.I)
+DRAUGHT_RE = re.compile(r"draught|draft|on tap|\btap\b|vom fass|\bfass\b|ausschank|pression|alla spina|\bpint\b|zapf", re.I)
 CAN_RE = re.compile(r"\bcans?\b|bottles?|flasche|dose|bouteille|bottiglia", re.I)
 
 # A price as printed on Swiss menus: "CHF 9.50", "Fr. 9.-", "9,50 CHF", "SFr 9".
@@ -67,6 +67,28 @@ def price_near_guinness(snippets):
     return None
 
 
+# "Beef & Guinness pie", "Guinness cake", "Guinness World Record": the word is there, the beer is not (necessarily).
+FOOD_WORDS = r"pies?|stews?|beef|cakes?|brownies?|bread|sauce|gravy|chocolate|burgers?|braised|glazed|marinated|ice\s*cream|mousse|cheddar|chilli|records?"
+_FOOD_BEFORE = re.compile(rf"\b(?:{FOOD_WORDS})\W+(?:\w+\W+){{0,3}}guinness\b", re.I)
+_FOOD_AFTER = re.compile(rf"\bguinness\W+(?:\w+\W+){{0,2}}(?:{FOOD_WORDS})\b", re.I)
+# Addresses and file names are not text a visitor reads: guinness-pour.jpg, /images/guinness/, "fileName":"guinness.png"
+_URL_OR_FILE = re.compile(r"https?:\\?/\\?/\S+|\S*\.(?:jpe?g|png|gif|svg|webp|avif|pdf|mp4)\b\S*|[\w./\\-]*(?:/|\\)[\w.\\/-]*guinness[\w.\\/-]*", re.I)
+
+
+def strip_urls_and_files(text):
+    return _URL_OR_FILE.sub(" ", text or "")
+
+
+def is_food_mention(snippet):
+    """True when a snippet names Guinness only as an ingredient or a record, with nothing saying it is poured."""
+    text = snippet or ""
+    if not re.search(r"guinness", text, re.I):
+        return False
+    if DRAUGHT_RE.search(text):  # "on tap", "vom Fass", "pint"...: it is poured (a price alone could be a dish's)
+        return False
+    return bool(_FOOD_BEFORE.search(text) or _FOOD_AFTER.search(text))
+
+
 def website_mention_kind(category, snippets):
     """Does a venue's own website name Guinness as something it serves ("menu"), or only mention it ("mention")?
 
@@ -74,8 +96,9 @@ def website_mention_kind(category, snippets):
     recipe ("braised in Guinness"), an event or a blog post, so there the text has to say how it is served or what it
     costs. Text that only came from page metadata (keywords) never counts as a menu.
     """
-    text = " ".join(snippets or [])
-    if re.search(r"<meta|content=|name=\"keywords", text, re.I):
+    snippets = [x for x in (snippets or []) if not is_food_mention(x)] if snippets else []
+    text = " ".join(snippets)
+    if not text.strip() or re.search(r"<meta|content=|name=\"keywords", text, re.I):
         return "mention"
     if (category or "") in ("pub", "bar"):
         return "menu"

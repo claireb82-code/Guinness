@@ -357,6 +357,8 @@ def fetch_html(url, max_time=3.5):
         if len(body.strip()) > 30:
             return 200, body
         return None, "empty page"
+    except guard.CouldNotResolve as exc:
+        return None, f"could not resolve host: {exc}"
     except guard.UnsafeURL as exc:
         return None, f"unsafe address: {exc}"
     except Exception as exc:  # noqa: BLE001 - any network failure is simply "could not read"
@@ -364,6 +366,15 @@ def fetch_html(url, max_time=3.5):
 
 
 def parse_guinness_from_html(raw_html):
+    found, types_found, price, snippets = _parse_guinness(raw_html)
+    # Only snippets a visitor could read as "we serve it": not an image file name, not "Beef & Guinness pie" or a world record.
+    snippets = [x for x in snippets if re.search(r"guinness", evidence.strip_urls_and_files(x), re.I) and not evidence.is_food_mention(x)]
+    if not snippets:
+        return False, [], None, []
+    return found, types_found, price, snippets
+
+
+def _parse_guinness(raw_html):
     cleaned = re.sub(r"<script[\s\S]*?</script>", " ", raw_html, flags=re.I)
     cleaned = re.sub(r"<style[\s\S]*?</style>", " ", cleaned, flags=re.I)
     cleaned = re.sub(r"<[^>]+>", " ", cleaned)
