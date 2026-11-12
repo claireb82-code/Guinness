@@ -102,11 +102,28 @@ class StarterSiteCheckTests(unittest.TestCase):
         self.assertNotIn("menuUrl", v, "nothing in this app ever opened /birre")
         self.assertEqual(v["website"], "https://examplepub-lugano.example")
 
-    def test_every_starter_venue_has_a_website_and_no_guessed_deep_link(self):
+    DROPPED_DEAD_WEBSITE = ("zh-paddy-reillys", "ge-mulligans", "bs-flanagans", "ls-great-escape", "zh-lion-pub", "ge-flannagans", "ge-charly-oneills",
+                            "ls-mccarthys-vevey", "ls-barrel-oak-montreux", "bs-penny-farthing-aarau", "be-mccarthys-bern", "lu-shamrock-luzern",
+                            "al-ex-bar-davos", "al-bobbys-stmoritz")
+    REMOVED_NOT_ON_GOOGLE_MAPS = ("zh-winterthur-mulligans", "be-paddys-fribourg", "ea-oslatterys-stgallen", "ea-domino-schaffhausen", "al-barrel-interlaken")
+
+    def test_no_starter_venue_has_a_guessed_deep_link(self):
         self.assertGreaterEqual(len(app.DEMO_VENUES), 20)
         for raw in app.DEMO_VENUES:
-            self.assertTrue(raw.get("website"), f"{raw['id']} would lose its only link")
             self.assertNotIn("menuUrl", evidence.sanitise_static_venue(raw), raw["id"])
+
+    def test_regression_starter_venues_the_owner_reviewed_on_google_maps(self):
+        """The crawler could not open the websites of 19 starter venues. The owner checked each on Google Maps: 14 are real venues
+        (kept, with the invented website dropped), 5 were missing or permanently closed (removed)."""
+        by_id = {v["id"]: v for v in app.DEMO_VENUES}
+        for vid in self.REMOVED_NOT_ON_GOOGLE_MAPS:
+            self.assertNotIn(vid, by_id)
+        for vid in self.DROPPED_DEAD_WEBSITE:
+            self.assertIn(vid, by_id)
+            self.assertFalse(by_id[vid].get("website"), f"{vid}: its website does not exist")
+            shown = evidence.sanitise_static_venue(by_id[vid])
+            self.assertEqual(shown["tagCheck"]["kind"], "starter_list")
+            self.assertEqual(app.compute_guinness_status(shown)["statusLabel"], "Possible", "kept, but still not checked")
 
     def test_a_crawled_venues_checked_page_is_kept(self):
         self.assertEqual(evidence.sanitise_static_venue(crawl_record(menuUrl="http://paddys.example/drinks"))["menuUrl"], "http://paddys.example/drinks")
@@ -180,7 +197,7 @@ class PriceTests(unittest.TestCase):
         self.assertEqual(kennedys["priceHint"]["price"], "CHF 9.80")
         self.assertIsNone(kennedys["menuCheck"]["extractedPrice"], "it was not read from the venue, so it is not a scan result")
         self.assertIsNone(kennedys["crowdCheck"]["reportedPrice"])
-        self.assertGreater(sum(1 for v in by.values() if v.get("priceHint")), 30)
+        self.assertGreater(sum(1 for v in by.values() if v.get("priceHint")), 25)
 
 
 class BundledDataTests(unittest.TestCase):
