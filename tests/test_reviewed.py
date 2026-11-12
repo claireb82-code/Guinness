@@ -178,6 +178,45 @@ class MenuReadingTests(unittest.TestCase):
             self.assertIn("server/data/*.json", f.read(), "menu_readings.json is bundled by the data glob")
 
 
+class SavedScanTests(unittest.TestCase):
+    """Regression: a saved 'Scan menu' result that found nothing (it reads one page) replaced Kennedy's hand-read menu evidence on the live
+    site, so it showed 'Possible: reported by 1 visitor' with no price instead of Confirmed on tap."""
+
+    NOTHING = {"checked": True, "lastChecked": "2026-11-12T09:00:00+00:00", "foundOnMenu": False, "typesFound": [], "extractedPrice": None,
+               "snippets": ["Scanned https://www.kennedys.ch/ - no explicit 'Guinness' text found on public HTML page."]}
+
+    def enriched(self, scan, report=False):
+        store = {"menuScans": {"zh-kennedys": scan}} if scan else {}
+        if report:
+            store["crowdReports"] = {"zh-kennedys": [{"servingFormat": "draught", "price": "CHF 10.00"}]}
+        venue = next(v for v in app.get_all_combined_venues(store) if v["id"] == "zh-kennedys")
+        return app.enrich_venue(venue, store)
+
+    def test_a_scan_that_found_nothing_does_not_erase_a_menu_that_was_read(self):
+        v = self.enriched(self.NOTHING, report=True)
+        self.assertEqual(v["guinnessSummary"]["statusLabel"], "Confirmed")
+        self.assertEqual(v["guinnessSummary"]["servingFormat"], "draught")
+        self.assertEqual(v["menuCheck"]["extractedPrice"], "CHF 10.00")
+        self.assertTrue(v["menuUrl"].endswith("26_Drinks_Menu.pdf"))
+
+    def test_a_scan_that_finds_guinness_still_updates_the_check(self):
+        found = {"checked": True, "lastChecked": "2026-11-13T09:00:00+00:00", "foundOnMenu": True, "typesFound": ["Guinness Draught (On Tap)"],
+                 "extractedPrice": "CHF 10.50", "snippets": ["Guinness on tap 5dl CHF 10.50"]}
+        self.assertEqual(self.enriched(found)["menuCheck"]["extractedPrice"], "CHF 10.50")
+
+    def test_a_scan_still_applies_to_a_venue_with_no_menu_evidence(self):
+        store = {"menuScans": {"zh-lion-pub": self.NOTHING}}
+        venue = next(v for v in app.get_all_combined_venues(store) if v["id"] == "zh-lion-pub")
+        v = app.enrich_venue(venue, store)
+        self.assertTrue(v["menuCheck"]["checked"])
+        self.assertFalse(v["menuCheck"]["foundOnMenu"])
+
+    def test_a_visitor_report_adds_to_the_menu_evidence_not_replaces_it(self):
+        v = self.enriched(None, report=True)
+        self.assertEqual(v["guinnessSummary"]["statusLabel"], "Confirmed")
+        self.assertEqual(v["crowdCheck"]["confirmedCount"], 1)
+
+
 class OwnerReviewDataTests(unittest.TestCase):
     """The 2026-11-12 review of 46 Overture venues and 19 starter venues, pinned."""
 
