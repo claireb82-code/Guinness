@@ -59,6 +59,77 @@ class ExclusionTests(unittest.TestCase):
             os.unlink(exc)
 
 
+class ExclusionInLiveScansTests(unittest.TestCase):
+    """Regression: 'Sonas Irish Pub Davos' was removed by id, but 'Scan around me' asks OpenStreetMap again, which lists it under a new id."""
+
+    ENTRIES = {"excluded": [{"id": "ch-ov-sonas", "name": "Sonas Irish Pub Davos", "lat": 46.7969, "lng": 9.8216}],
+               "duplicates": [{"id": "ch-node-shamrock-osm", "name": "Shamrock Irish Pub", "lat": 47.0503, "lng": 8.3093, "duplicateOf": "lu-shamrock-luzern"}]}
+
+    def run_with(self, venues):
+        path = write(self.ENTRIES)
+        try:
+            with mock.patch.object(app, "EXCLUDED_VENUES_PATH", path):
+                return [v["name"] for v in app.drop_excluded(venues)]
+        finally:
+            os.unlink(path)
+
+    def v(self, name, lat, lng, vid="osm-1"):
+        return {"id": vid, "name": name, "lat": lat, "lng": lng}
+
+    def test_the_same_place_under_a_new_id_is_dropped(self):
+        for name in ("Sonas Irish Pub Davos", "Sonas Irish Pub"):
+            self.assertEqual(self.run_with([self.v(name, 46.79695, 9.82165)]), [], name)
+
+    def test_the_same_name_somewhere_else_is_kept(self):
+        self.assertEqual(self.run_with([self.v("Sonas Irish Pub", 47.37, 8.54)]), ["Sonas Irish Pub"])
+
+    def test_a_different_pub_next_door_is_kept(self):
+        self.assertEqual(self.run_with([self.v("The Dubliner", 46.79695, 9.82165)]), ["The Dubliner"])
+
+    def test_a_venue_that_adds_a_distinguishing_word_is_a_different_place(self):
+        self.assertEqual(self.run_with([self.v("Sonas Irish Pub Zermatt", 46.79695, 9.82165)]), ["Sonas Irish Pub Zermatt"])
+
+    def test_a_duplicate_is_matched_only_by_a_near_identical_name_so_the_pub_it_duplicates_stays(self):
+        kept = self.v("Shamrock Irish Pub Luzern", 47.0510, 8.3100, vid="lu-shamrock-luzern")
+        self.assertEqual(self.run_with([self.v("Shamrock Irish Pub", 47.0503, 8.3093), kept]), ["Shamrock Irish Pub Luzern"])
+
+    def test_scan_around_me_does_not_show_or_store_an_excluded_venue(self):
+        osm = [self.v("Sonas Irish Pub", 46.79695, 9.82165, vid="osm-77"), self.v("Good Pub", 46.80, 9.83, vid="osm-78")]
+        saved = []
+        path = write(self.ENTRIES)
+        try:
+            with mock.patch.object(app, "EXCLUDED_VENUES_PATH", path), mock.patch.object(app, "fetch_osm_overpass_live", return_value=osm), \
+                    mock.patch.object(app, "upsert_gmaps_venues_into_store", lambda store, vs: saved.extend(vs)):
+                shown = app.drop_excluded(app.fetch_osm_overpass_live(46.8, 9.83))
+                app.upsert_gmaps_venues_into_store({}, shown)
+        finally:
+            os.unlink(path)
+        self.assertEqual([v["name"] for v in shown], ["Good Pub"])
+        self.assertEqual([v["name"] for v in saved], ["Good Pub"])
+
+    def test_a_scan_already_saved_before_the_exclusion_is_filtered_when_listed(self):
+        store = {"googleMapsVenues": [self.v("Sonas Irish Pub", 46.79695, 9.82165, vid="osm-77")]}
+        path = write(self.ENTRIES)
+        try:
+            with mock.patch.object(app, "EXCLUDED_VENUES_PATH", path):
+                names = [v["name"] for v in app.get_all_combined_venues(store)]
+        finally:
+            os.unlink(path)
+        self.assertNotIn("Sonas Irish Pub", names)
+
+    def test_real_exclusion_file_carries_positions_for_every_entry(self):
+        with open(os.path.join(ROOT, "server", "data", "excluded_venues.json"), encoding="utf-8") as f:
+            doc = json.load(f)
+        for e in doc["excluded"] + doc["duplicates"]:
+            self.assertTrue(e["name"] and isinstance(e["lat"], float) and isinstance(e["lng"], float), e["id"])
+
+    def test_the_real_exclusions_catch_sonas_and_keep_the_kept_venues_next_to_duplicates(self):
+        sonas = next(e for e in json.load(open(os.path.join(ROOT, "server", "data", "excluded_venues.json"), encoding="utf-8"))["excluded"] if "Sonas" in e["name"])
+        self.assertEqual(app.drop_excluded([self.v("Sonas Irish Pub", sonas["lat"], sonas["lng"])]), [])
+        starter = next(v for v in app.DEMO_VENUES if v["id"] == "lu-shamrock-luzern")
+        self.assertEqual(len(app.drop_excluded([starter])), 1)
+
+
 class OwnerReviewDataTests(unittest.TestCase):
     """The 2026-11-12 review of 46 Overture venues and 19 starter venues, pinned."""
 
