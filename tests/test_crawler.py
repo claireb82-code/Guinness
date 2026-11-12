@@ -197,6 +197,19 @@ class NotTheBeerTests(unittest.TestCase):
             self.assertFalse(self.found(f"<p>{text}</p>"), text)
             self.assertTrue(evidence.is_food_mention(text), text)
 
+    def test_regression_a_dish_named_with_hyphens_is_not_a_serving(self):
+        """Porter House (crawl of 2026-11-12): a burger topped with "Guinness-Honig-Zwiebelkonfit" was read as Guinness on the menu."""
+        text = "Rindfleisch, Tomaten, Rucola, Guinness-Honig-Zwiebelkonfit, Guacamolesauce und einem Schuss Jameson Whiskey Swiss Burger"
+        self.assertTrue(evidence.is_food_mention(text))
+        self.assertEqual(evidence.website_mention_kind("pub", [text]), "mention")
+
+    def test_regression_file_metadata_is_not_text_a_visitor_reads(self):
+        """Old City (crawl of 2026-11-12): the hidden XMP metadata of a PDF menu, with design-layer names like
+        photoshop:LayerText="guinness & blackcurrant syrup", counted as the pub's menu."""
+        text = 'dolore eu feugiat" photoshop:LayerText="guinness &amp; blackcurrant syrup"/> <rdf:li photoshop:LayerName="esse molestie"'
+        self.assertTrue(evidence.is_food_mention(text))
+        self.assertFalse(self.found(f"<p>{text}</p>"))
+
     def test_a_file_name_or_address_is_not_text_a_visitor_reads(self):
         page = '{"fileName":"guinness-pour.jpg","url":"http:\\/\\/files.x.ch\\/image\\/guinness-pour.jpg"}'
         self.assertFalse(self.found(page))
@@ -463,6 +476,15 @@ class PdfMenuTests(unittest.TestCase):
         self.assertTrue(res["checkedUrl"].endswith("/files/Drinks_Menu.pdf"))
         self.assertEqual(res["extractedPrice"], "CHF 10.00")
         self.assertIn("GUINNESS", " ".join(res["snippets"]).upper())
+
+    @unittest.skipUnless(HAVE_PYPDF, "needs pypdf")
+    def test_regression_a_menu_pdf_is_read_as_text_not_as_raw_bytes(self):
+        """Old City (crawl of 2026-11-12): the home page's "menu" link was a PDF, fetched like a web page, so the file's hidden metadata
+        (design layers named "guinness & ...") was taken for the menu. Only the PDF's own text may count."""
+        pdf = make_pdf("Pilsner CHF 5.00") + b'\n% <rdf:li photoshop:LayerText="guinness and blackcurrant syrup"/> Guinness on tap CHF 9.00\n'
+        base = self.site({"/": (200, {}, self.HOME), "/files/Drinks_Menu.pdf": (200, {"Content-Type": "application/pdf"}, pdf)})
+        res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertFalse(res["foundOnMenu"], res)
 
     @unittest.skipUnless(HAVE_PYPDF, "needs pypdf")
     def test_a_pdf_without_guinness_leaves_the_site_read_and_silent_and_only_menu_pdfs_are_fetched(self):
