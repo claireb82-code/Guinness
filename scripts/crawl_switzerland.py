@@ -73,6 +73,12 @@ PUB_NAME_RE = re.compile(
     re.I,
 )
 
+IRISH_PUB_RE = re.compile(
+    r"\b(irish|shamrock|pickwick|paddy|mulligan|flanagan|mccarthy|kelly|celtic|dublin|"
+    r"shenanigan|auld|nelson|oliver\s*twist|murphy|o'[a-z]+|kilkenny|belfast|galway|"
+    r"cork|connemara|leprechaun|harp)\b"
+)
+
 MENU_LINK_RE = re.compile(
     r'href=["\']([^"\'#]+?(?:menu|drink|getraenk|getr%C3%A4nk|getrank|karte|bier|beer|boisson|carte|bar|speise|food|pint|tap)[^"\'#]*)["\']',
     re.I,
@@ -279,19 +285,7 @@ def classify_element(el):
     desc = " ".join(filter(None, [tags.get("description"), tags.get("note"), tags.get("operator")])).lower()
 
     osm_has_guinness = "guinness" in brewery or "guinness" in desc or "guinness" in name_lower
-    osm_is_irish = (
-        "irish" in cuisine
-        or "irish" in name_lower
-        or "irish" in desc
-        or bool(
-            re.search(
-                r"\b(irish|shamrock|pickwick|paddy|mulligan|flanagan|mccarthy|kelly|celtic|dublin|"
-                r"shenanigan|auld|nelson|oliver\s*twist|murphy|o'[a-z]+|kilkenny|belfast|galway|"
-                r"cork|connemara|leprechaun|harp)\b",
-                name_lower,
-            )
-        )
-    )
+    osm_is_irish = "irish" in cuisine or "irish" in name_lower or "irish" in desc or bool(IRISH_PUB_RE.search(name_lower))
     is_pub_or_candidate = (
         osm_has_guinness
         or osm_is_irish
@@ -493,6 +487,63 @@ def scan_starter_venues(venues, scan=None, now_iso=None):
     return dict(sorted(results.items()))
 
 
+OVERTURE_MIN_CONFIDENCE = 0.7
+
+
+def overture_only_venues(known_venues, places, all_categories=False):
+    """Venues Overture Maps lists that OpenStreetMap does not (no similar name within 75 m), as crawler venue records.
+
+    Overture lists far more Swiss venues with a website than OpenStreetMap does, so those sites are read too. Pubs and bars by
+    default; every category with ``all_categories``. Addresses that are not a venue's own website (directories, social pages) and
+    unsafe ones are skipped. The ids start with ``ov-`` so a record's source is plain, and every record says its website came from Overture.
+    """
+    known = overture.Index([{"name": v["name"], "lat": v["lat"], "lng": v["lng"]} for v in known_venues if v.get("has_name") and v.get("lat") is not None])
+    wanted = ("pub", "bar", "restaurant", "hotel") if all_categories else ("pub", "bar")
+    out, seen = [], set()
+    for p in places:
+        category = p.get("category")
+        if category not in wanted or (p.get("confidence") or 0) < OVERTURE_MIN_CONFIDENCE:
+            continue
+        name = (p.get("name") or "").strip()
+        website = safe_website(p.get("website"))
+        if not name or not website or p.get("lat") is None or p.get("lng") is None or not p.get("id"):
+            continue
+        lat, lng = float(p["lat"]), float(p["lng"])
+        if not is_inside_switzerland(lat, lng, {}) or known.find(name, lat, lng):
+            continue
+        key = (name.lower(), round(lat, 3), round(lng, 3))
+        if key in seen:
+            continue
+        seen.add(key)
+        name_lower = name.lower()
+        address = (p.get("address") or "").strip()
+        city_name = address.split(",")[-1].strip() if "," in address else (address or "Switzerland")
+        is_irish = bool(IRISH_PUB_RE.search(name_lower))
+        out.append(
+            {
+                "osm_id": f"ov-{p['id']}",
+                "name": name,
+                "has_name": True,
+                "category": category,
+                "region": assign_swiss_region(lat, lng),
+                "city_name": city_name,
+                "address": address or f"{city_name}, Switzerland",
+                "lat": lat,
+                "lng": lng,
+                "website": website,
+                "menuUrl": website,
+                "phone": p.get("phone"),
+                "osm_has_guinness": "guinness" in name_lower,
+                "osm_is_irish": is_irish or "irish" in name_lower,
+                "is_pub_or_candidate": is_irish or category in ("pub", "bar") or bool(PUB_NAME_RE.search(name)),
+                "brewery_tag": "",
+                "cuisine_tag": "",
+                "website_source": "overture",
+            }
+        )
+    return out
+
+
 def fill_websites_from_overture(venues, index=None, all_categories=False):
     """Give venues that OpenStreetMap lists without a website the one Overture Maps has for the same place (a similar name
     within 75 m). Pubs, bars and likely pubs by default; every category with ``all_categories``. Returns how many were filled."""
@@ -579,6 +630,15 @@ def main(argv=None):
             if v.get("website_source") == "overture":
                 with_website_totals[v["category"]] += 1
         total_with_websites = sum(with_website_totals.values())
+
+    overture_only = []
+    if not args.no_overture:
+        overture_only = overture_only_venues(all_venues, overture.load_index().places, all_categories=args.all)
+        all_venues.extend(overture_only)
+        for v in overture_only:
+            with_website_totals[v["category"]] += 1
+        total_with_websites = sum(with_website_totals.values())
+        print(f"  Venues Overture Maps lists that OpenStreetMap does not (with a website): {len(overture_only):,}", flush=True)
 
     tier1_osm_confirmed = [v for v in all_venues if v["osm_has_guinness"] or v["osm_is_irish"]]
     print(f"  OSM Tag/Name Confirmed Irish/Guinness Venues: {len(tier1_osm_confirmed):,}", flush=True)
@@ -733,6 +793,7 @@ def main(argv=None):
                     "googleReviewCount": 85 if web_found else 42,
                     "priceLevel": "CHF ··",
                     "website": v["website"],
+                    "websiteSource": v.get("website_source") or "openstreetmap",
                     "menuUrl": (scan_res.get("checkedUrl") if scan_res else None) or v["menuUrl"] or v["website"],
                     "phone": v["phone"],
                     "openNow": True,
@@ -785,6 +846,7 @@ def main(argv=None):
                         "googleReviewCount": 30,
                         "priceLevel": "CHF ··",
                         "website": v["website"],
+                        "websiteSource": v.get("website_source") or "openstreetmap",
                         "menuUrl": scan_res.get("checkedUrl") or v["website"],
                         "phone": v["phone"],
                         "openNow": True,
@@ -827,6 +889,7 @@ def main(argv=None):
         "websitesReachableHttp200": reachable_count,
         "venuesWithWebsiteReachable": venues_with_website_reachable,
         "websitesFromOverture": websites_from_overture,
+        "venuesOnlyInOverture": len(overture_only),
         "guinnessWebsiteHits": guinness_web_hits,
         "guinnessOsmTagHits": len(tier1_osm_confirmed),
         "totalGuinnessVenuesFound": len(confirmed_venues_output),

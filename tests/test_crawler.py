@@ -141,6 +141,49 @@ class OvertureFillTests(unittest.TestCase):
         self.assertEqual(vs[3]["website"], "https://x.example")
 
 
+class OvertureOnlyVenueTests(unittest.TestCase):
+    """Venues that Overture Maps lists and OpenStreetMap does not are crawled too."""
+
+    def place(self, **kw):
+        base = {"id": "p1", "name": "Dublin Cliff", "category": "bar", "lat": 46.95, "lng": 7.45, "website": "http://www.dublincliff.example/", "phone": "+41 31 000 00 00",
+                "address": "Gasse 1, 3011 Bern", "confidence": 0.95}
+        base.update(kw)
+        return base
+
+    def osm(self, name="Other Bar", lat=47.0, lng=8.0):
+        return {"name": name, "has_name": True, "lat": lat, "lng": lng}
+
+    def test_a_new_venue_becomes_a_crawl_record_that_says_it_came_from_overture(self):
+        [v] = crawler.overture_only_venues([self.osm()], [self.place()])
+        self.assertEqual((v["osm_id"], v["name"], v["category"], v["region"], v["website"], v["website_source"]),
+                         ("ov-p1", "Dublin Cliff", "bar", "bern", "http://www.dublincliff.example/", "overture"))
+        self.assertEqual(v["city_name"], "3011 Bern")
+        self.assertTrue(v["is_pub_or_candidate"])
+
+    def test_a_venue_openstreetmap_already_has_is_not_added_again(self):
+        near = self.osm("The Dublin Cliff Bar", 46.9503, 7.4501)  # same place, a few metres away
+        self.assertEqual(crawler.overture_only_venues([near], [self.place()]), [])
+        far = self.osm("Dublin Cliff", 46.99, 7.45)  # same name, a different place 4 km away
+        self.assertEqual(len(crawler.overture_only_venues([far], [self.place()])), 1)
+
+    def test_pubs_and_bars_only_unless_everything_is_read(self):
+        places = [self.place(id="a", category="restaurant", name="Rössli"), self.place(id="b", category="hotel", name="Hotel Sonne"), self.place(id="c", category="pub", name="Old Pub")]
+        self.assertEqual([v["osm_id"] for v in crawler.overture_only_venues([], places)], ["ov-c"])
+        self.assertEqual(sorted(v["osm_id"] for v in crawler.overture_only_venues([], places, all_categories=True)), ["ov-a", "ov-b", "ov-c"])
+
+    def test_weak_unsafe_directory_and_incomplete_entries_are_skipped(self):
+        bad = [self.place(id="1", confidence=0.4), self.place(id="2", website="http://127.0.0.1/x"), self.place(id="3", website="https://www.tripadvisor.ch/x"),
+               self.place(id="4", name=""), self.place(id="5", website=None), self.place(id="6", lat=None), self.place(id="7", lat=51.5, lng=-0.1)]
+        self.assertEqual(crawler.overture_only_venues([], bad), [])
+
+    def test_the_same_place_twice_in_overture_is_added_once(self):
+        self.assertEqual(len(crawler.overture_only_venues([], [self.place(id="a"), self.place(id="b")])), 1)
+
+    def test_an_irish_sounding_new_venue_is_flagged_like_one_from_openstreetmap(self):
+        [v] = crawler.overture_only_venues([], [self.place(name="Paddy's Irish Pub", category="pub")])
+        self.assertTrue(v["osm_is_irish"])
+
+
 class NotTheBeerTests(unittest.TestCase):
     """Regression (crawl of 2026-11-12): an image file named guinness-pour.jpg made Caesar's Bar "Confirmed", and Kennedy's a
     "Beef & Guinness pie". Neither is evidence that the beer is poured."""

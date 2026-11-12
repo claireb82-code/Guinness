@@ -1425,6 +1425,25 @@ def load_starter_checks():
     return {}
 
 
+GOOGLE_PLACE_IDS_PATH = os.path.join(ROOT_DIR, "server", "data", "google_place_ids.json")
+
+
+def load_google_place_ids():
+    """Our venue id -> Google place ID, from the one-off discovery run (scripts/discover_google_places.py). Only IDs are kept."""
+    try:
+        with open(GOOGLE_PLACE_IDS_PATH, "r", encoding="utf-8") as f:
+            ids = json.load(f).get("placeIds")
+    except (OSError, ValueError):
+        return {}
+    return {k: v for k, v in ids.items() if isinstance(k, str) and isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9_-]{10,200}", v)} if isinstance(ids, dict) else {}
+
+
+def google_maps_link(name, address, place_id=None):
+    """A Google Maps link that opens the exact place when its ID is known, and a search for it otherwise."""
+    url = "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote_plus(f"{name or ''} {address or 'Switzerland'}")
+    return url + "&query_place_id=" + urllib.parse.quote(place_id, safe="") if place_id else url
+
+
 def load_crawl_stats():
     if os.path.exists(CRAWL_RESULTS_PATH):
         try:
@@ -1491,6 +1510,7 @@ def get_all_combined_venues(store):
         + starter_venues
         + crawl_venues
     )
+    place_ids = load_google_place_ids()
     seen_ids = set()
     seen_names = set()
     deduped = []
@@ -1503,11 +1523,13 @@ def get_all_combined_venues(store):
             continue
         seen_ids.add(v["id"])
         seen_names.add(norm_key)
+        place_id = place_ids.get(v["id"])
+        if place_id:
+            v["googlePlaceId"] = place_id
+            if not v.get("googleMapsUri") or "query_place_id" not in v["googleMapsUri"]:
+                v["googleMapsUri"] = google_maps_link(v.get("name"), v.get("address"), place_id)
         if not v.get("googleMapsUri"):
-            v["googleMapsUri"] = (
-                "https://www.google.com/maps/search/?api=1&query="
-                + urllib.parse.quote_plus(f"{v.get('name', '')} {v.get('address', 'Switzerland')}")
-            )
+            v["googleMapsUri"] = google_maps_link(v.get("name"), v.get("address"))
         v["googleMapsChecked"] = True
         deduped.append(v)
     return deduped
