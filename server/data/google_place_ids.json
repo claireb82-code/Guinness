@@ -1,0 +1,9 @@
+{
+  "generatedAt": null,
+  "note": "Google place IDs only, plus text from venues' own websites. No other Google content is stored here.",
+  "requestsUsed": 0,
+  "placesSeen": 0,
+  "stopped": null,
+  "placeIds": {},
+  "findings": []
+}

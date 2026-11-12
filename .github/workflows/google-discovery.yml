@@ -1,0 +1,62 @@
+name: Discover Google place IDs
+
+# One-off, manual. Searches Google Places for Irish pubs, pubs and bars around 24 Swiss places and writes ONLY Google place IDs (matched to
+# venues we already have) plus text found on venues' own websites to server/data/google_place_ids.json, on a data/google-<date> branch.
+# It does NOT open the pull request itself: a pull request created by a workflow would not run the test checks that protect `main`.
+# Cost fence: --max-requests (default 240) here, plus the daily quota and budget alert you set in Google Cloud.
+#
+# Needs the repository secret GOOGLE_PLACES_API_KEY (a key restricted to "Places API (New)").
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_requests:
+        description: "Hard cap on Google requests (each is roughly 3-4 US cents)"
+        type: string
+        default: "240"
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    name: Discover and publish to a branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Discover
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          MAX_REQUESTS: ${{ inputs.max_requests }}
+        run: python3 scripts/discover_google_places.py --max-requests "$MAX_REQUESTS"
+      - name: Check the result before publishing it
+        run: |
+          python3 - <<'PY'
+          import json
+          d = json.load(open("server/data/google_place_ids.json"))
+          assert isinstance(d["placeIds"], dict), "placeIds must be an object"
+          bad = [k for k in d if k not in ("generatedAt", "note", "requestsUsed", "placesSeen", "stopped", "placeIds", "findings")]
+          assert not bad, f"unexpected keys (only place IDs and venue-website text may be stored): {bad}"
+          for f in d["findings"]:
+              assert set(f) <= {"placeId", "venueId", "typesFound", "extractedPrice", "snippets"}, f"unexpected finding fields: {sorted(f)}"
+          print(f"OK: {len(d['placeIds'])} place IDs, {len(d['findings'])} findings, {d['requestsUsed']} requests, stopped={d['stopped']}")
+          PY
+          python3 -m unittest tests.test_repo tests.test_google_discovery
+      - name: Push the result to a branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- server/data/google_place_ids.json; then
+            echo "Nothing new from Google; nothing to publish." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          BRANCH="data/google-$(date -u +%Y-%m-%d-%H%M)"
+          git checkout -b "$BRANCH"
+          git add server/data/google_place_ids.json
+          git commit -m "Add Google place IDs ($(date -u +%F))"
+          git push origin "$BRANCH"
+          echo "Pushed branch \`$BRANCH\`. Open a pull request from it into main." | tee -a "$GITHUB_STEP_SUMMARY"
