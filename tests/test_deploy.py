@@ -57,11 +57,33 @@ class VercelBundleTests(unittest.TestCase):
             sys.path.remove(ROOT)
         self.assertTrue(hasattr(entry, "handler"))
 
+    def test_regression_include_files_stays_within_vercels_256_character_limit(self):
+        """Vercel validates vercel.json before building and refuses an includeFiles string longer than 256 characters. Listing each data file by
+        name outgrew it (the deploy of PR #35 failed with 'should NOT be longer than 256 characters'); a glob does not."""
+        with open(os.path.join(ROOT, "vercel.json"), encoding="utf-8") as f:
+            pattern = json.load(f)["functions"]["api/index.py"]["includeFiles"]
+        self.assertLessEqual(len(pattern), 256, len(pattern))
+
     def test_data_files_the_app_reads_are_bundled(self):
-        bundled = bundled_files()
-        self.assertIn("server/data/swiss_crawl_results.json", bundled)
-        self.assertIn("server/data/overture_ch.json", bundled)  # the Overture extract used to fill in websites
-        self.assertTrue(any(p.startswith("public/") for p in bundled))
+        import fnmatch
+        import sys
+
+        sys.path.insert(0, ROOT)
+        try:
+            import app_server
+            import overture
+        finally:
+            sys.path.remove(ROOT)
+        patterns = bundled_files()
+        read = [app_server.CRAWL_RESULTS_PATH, app_server.GOOGLE_PLACE_IDS_PATH, app_server.EXCLUDED_VENUES_PATH, app_server.MENU_READINGS_PATH, overture.DATA_PATH]
+        for path in read:
+            rel = os.path.relpath(path, ROOT).replace(os.sep, "/")
+            self.assertTrue(any(fnmatch.fnmatch(rel, pat) for pat in patterns), f"{rel} is read by the app but not bundled: {sorted(patterns)}")
+        self.assertTrue(any(p.startswith("public/") for p in patterns))
+        # and no tracked data file is left out by a pattern that forgot it
+        for name in os.listdir(os.path.join(ROOT, "server", "data")):
+            if name.endswith(".json"):
+                self.assertTrue(any(fnmatch.fnmatch(f"server/data/{name}", pat) for pat in patterns), name)
 
     def test_no_secrets_are_committed(self):
         pattern = re.compile(r"AIza[0-9A-Za-z_\-]{30,}")
