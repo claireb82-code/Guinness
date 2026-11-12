@@ -5,77 +5,107 @@
     {
       "id": "ch-ov-704f4b50-1961-4c3e-80bd-98757b526d97",
       "name": "Nelson Pub, Verbier, Switzerland",
-      "city": "alps"
+      "city": "alps",
+      "lat": 46.09623,
+      "lng": 7.22806
     },
     {
       "id": "ch-ov-4875a3a4-f903-483a-88d0-a346eaa9aee7",
       "name": "Sonas Irish Pub Davos",
-      "city": "alps"
+      "city": "alps",
+      "lat": 46.79776,
+      "lng": 9.82223
     },
     {
       "id": "ch-ov-1a71d307-a62c-40a4-a44e-40732ba7857a",
       "name": "Fever-Tree Switzerland",
-      "city": "basel"
+      "city": "basel",
+      "lat": 47.50972,
+      "lng": 7.61485
     },
     {
       "id": "ch-ov-b9885fec-4c2f-424f-9192-7b20f1e3caa2",
       "name": "Galway Quays",
-      "city": "bern"
+      "city": "bern",
+      "lat": 46.68433,
+      "lng": 7.85064
     },
     {
       "id": "ch-ov-f5647b00-ce83-450a-ac02-52537f300f95",
       "name": "Irishof",
-      "city": "bern"
+      "city": "bern",
+      "lat": 46.925,
+      "lng": 7.24823
     },
     {
       "id": "ch-ov-2e7293f8-0d88-423d-b98b-03c50f1e5e69",
       "name": "O'Le Restaurant",
-      "city": "bern"
+      "city": "bern",
+      "lat": 47.06647,
+      "lng": 7.10753
     },
     {
       "id": "ch-ov-02e50a87-32fa-4d1d-b64f-a17052ec6062",
       "name": "O'terroirs",
-      "city": "bern"
+      "city": "bern",
+      "lat": 46.98914,
+      "lng": 6.92898
     },
     {
       "id": "ch-ov-2d7f0dd3-c88d-4262-bfe4-d6dca2632207",
       "name": "Paddy Reilly's Irish Pub & Restaurant",
-      "city": "bern"
+      "city": "bern",
+      "lat": 46.80259,
+      "lng": 7.15376
     },
     {
       "id": "ch-ov-fffcdcb2-fb09-4d37-a255-d9801658acc9",
       "name": "Paddy's FitMeal",
-      "city": "bern"
+      "city": "bern",
+      "lat": 46.98338,
+      "lng": 7.44037
     },
     {
       "id": "ch-ov-8b65e3e3-352f-494c-af47-5dfd2227db2c",
       "name": "Hotel Freihof",
-      "city": "east"
+      "city": "east",
+      "lat": 47.03877,
+      "lng": 9.07027
     },
     {
       "id": "ch-ov-d6870273-2181-496d-b4a4-e6401c95e0be",
       "name": "O'Bar",
-      "city": "geneva"
+      "city": "geneva",
+      "lat": 46.20273,
+      "lng": 6.14916
     },
     {
       "id": "ch-ov-8c06b0b0-e156-48ed-b856-8aba78f65a77",
       "name": "O'First",
-      "city": "geneva"
+      "city": "geneva",
+      "lat": 46.21033,
+      "lng": 6.14857
     },
     {
       "id": "ch-ov-f3d3c3d7-349c-41c2-bd6d-17b1f5e8dbd0",
       "name": "O'Viriato",
-      "city": "geneva"
+      "city": "geneva",
+      "lat": 46.21189,
+      "lng": 6.14644
     },
     {
       "id": "ch-ov-1acee20c-61b0-45dc-ad5a-ac7d9e788cf0",
       "name": "Irish Pub",
-      "city": "lausanne"
+      "city": "lausanne",
+      "lat": 46.52714,
+      "lng": 6.60305
     },
     {
       "id": "ch-ov-77e91f4e-4293-44d2-9b23-374ba2cc197b",
       "name": "O'SAFRAN",
-      "city": "lausanne"
+      "city": "lausanne",
+      "lat": 46.51628,
+      "lng": 6.61463
     }
   ],
   "duplicates": [
@@ -83,19 +113,25 @@
       "id": "ch-ov-a4904b49-521b-4efb-b348-4f10da9c9442",
       "name": "Brian's Irish Bar",
       "duplicateOf": "ch-node-3421432243",
-      "reason": "Same website and 92 m from The Irish Pub, St. Gallen."
+      "reason": "Same website and 92 m from The Irish Pub, St. Gallen.",
+      "lat": 47.42656,
+      "lng": 9.37704
     },
     {
       "id": "ch-node-1553431869",
       "name": "Shamrock Irish Pub",
       "duplicateOf": "lu-shamrock-luzern",
-      "reason": "111 m from Shamrock Irish Pub Luzern; its website, shamrock-luzern.ch, now belongs to the starter entry."
+      "reason": "111 m from Shamrock Irish Pub Luzern; its website, shamrock-luzern.ch, now belongs to the starter entry.",
+      "lat": 47.0540669,
+      "lng": 8.3084289
     },
     {
       "id": "ch-ov-8840ee7e-8463-4b70-a285-1d3aa88d982c",
       "name": "MFG",
       "duplicateOf": "ch-ov-644987a6-454d-48a9-8c1b-b97021a71937",
-      "reason": "Same hotel-freihof.ch website and address as UFO Bar, Glarus."
+      "reason": "Same hotel-freihof.ch website and address as UFO Bar, Glarus.",
+      "lat": 47.03876,
+      "lng": 9.07018
     }
   ]
 }

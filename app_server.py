@@ -1456,6 +1456,43 @@ def load_excluded_ids():
     return _ids_in(EXCLUDED_VENUES_PATH, "excluded") | _ids_in(EXCLUDED_VENUES_PATH, "duplicates")
 
 
+_EXCLUDE_MATCH_M = 120  # a live scan gives the same place a different id, so exclusions also match by name and position
+_EXCLUDE_MATCH_SCORE = 0.9
+
+
+def _exclusion_index():
+    try:
+        with open(EXCLUDED_VENUES_PATH, "r", encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, ValueError):
+        return overture.Index([])
+    rows = (doc.get("excluded") or []) + (doc.get("duplicates") or []) if isinstance(doc, dict) else []
+    return overture.Index([r for r in rows if isinstance(r, dict) and r.get("name") and isinstance(r.get("lat"), (int, float)) and isinstance(r.get("lng"), (int, float))])
+
+
+def _is_same_as_excluded(venue, index):
+    """True when ``venue`` is (almost) the same name as an excluded entry, within 120 m, and adds no distinguishing word of its own:
+    "Sonas Irish Pub" is the excluded "Sonas Irish Pub Davos", but "Shamrock Irish Pub Luzern" is not the duplicate "Shamrock Irish Pub"."""
+    name, lat, lng = venue.get("name"), venue.get("lat"), venue.get("lng")
+    if not name or not isinstance(lat, (int, float)) or not isinstance(lng, (int, float)):
+        return False
+    mine = set(overture.normalize_tokens(name))
+    for entry in index.candidates(lat, lng):
+        if overture.distance_m(lat, lng, entry["lat"], entry["lng"]) > _EXCLUDE_MATCH_M:
+            continue
+        if overture.name_score(name, entry["name"]) >= _EXCLUDE_MATCH_SCORE and mine <= set(overture.normalize_tokens(entry["name"])):
+            return True
+    return False
+
+
+def drop_excluded(venues, ids=None, index=None):
+    """The venues without the excluded ones: matched by id, and also by the same place (see ``_is_same_as_excluded``), because a live
+    scan of OpenStreetMap or Google gives a place a new id every time."""
+    ids = load_excluded_ids() if ids is None else ids
+    index = _exclusion_index() if index is None else index
+    return [v for v in (venues or []) if isinstance(v, dict) and v.get("id") not in ids and not _is_same_as_excluded(v, index)]
+
+
 def load_reviewed_ids():
     """Every venue the owner has already checked by hand (kept, still being investigated, or removed). A review list must never show these again."""
     return _ids_in(REVIEWED_VENUES_PATH, "reviewed") | load_excluded_ids()
@@ -1556,7 +1593,7 @@ def get_all_combined_venues(store):
             v["googleMapsUri"] = google_maps_link(v.get("name"), v.get("address"))
         v["googleMapsChecked"] = True
         deduped.append(v)
-    return deduped
+    return drop_excluded(deduped, ids=excluded)
 
 
 def upsert_gmaps_venues_into_store(store, new_venues):
@@ -2303,7 +2340,7 @@ class GuinnessHandler(SimpleHTTPRequestHandler):
             if mode == "osm_ch":
                 base_venues = get_all_combined_venues(store)
                 try:
-                    live_ch = fetch_osm_switzerland_nationwide(scrape_menus)
+                    live_ch = drop_excluded(fetch_osm_switzerland_nationwide(scrape_menus))
                     upsert_gmaps_venues_into_store(store, live_ch)
                     combined = get_all_combined_venues(store)
                 except Exception:
@@ -2315,7 +2352,7 @@ class GuinnessHandler(SimpleHTTPRequestHandler):
 
             if mode == "osm" and lat and lng:
                 try:
-                    osm_venues = fetch_osm_overpass_live(float(lat), float(lng), 2200, scrape_menus)
+                    osm_venues = drop_excluded(fetch_osm_overpass_live(float(lat), float(lng), 2200, scrape_menus))
                     upsert_gmaps_venues_into_store(store, osm_venues)
                     enriched = [enrich_venue(v, store) for v in osm_venues]
                     return self.send_json(
@@ -2328,9 +2365,9 @@ class GuinnessHandler(SimpleHTTPRequestHandler):
 
             if mode == "live" and api_key and lat and lng:
                 try:
-                    live_venues = fetch_google_places_live(
+                    live_venues = drop_excluded(fetch_google_places_live(
                         api_key, float(lat), float(lng), 3500, scrape_menus, city=city
-                    )
+                    ))
                     upsert_gmaps_venues_into_store(store, live_venues)
                     all_combined = get_all_combined_venues(store)
                     filtered = (
