@@ -845,6 +845,16 @@ class OtherGuinnessBeersTests(unittest.TestCase):
             self.assertEqual(evidence.website_mention_kind("pub", [text]), "mention", text)
             self.assertTrue(evidence.only_other_guinness_beers([text]), text)
 
+    def test_regression_hop_house_13_is_not_the_stout_either(self):
+        """Owner (2026-11): only Guinness is listed, not Hop House 13 (Guinness' lager). Soho, Roots Restaurant and Wyn's Pub named only that."""
+        for text in ("Grimbergen Blanche 2.5dl 6.00 5.0dl 9.00 Guinness Hop House 13 2.5dl 6.00 5.0dl 9.00 Valaisanne",
+                     "BEER MENU (Beer on Tap) GUINNESS HOPHOUSE 13 (IRL, 5.0%) Grimbergen Rouge (BE, 6.0%)", "Guinness Hop-House 13 5dl CHF 9.00"):
+            self.assertEqual(evidence.serving_snippets([text]), [], text)
+            self.assertTrue(evidence.only_other_guinness_beers([text]), text)
+            self.assertEqual(evidence.website_mention_kind("bar", [text]), "mention", text)
+        stout = "BEER MENU (Beer on Tap) GUINNESS (IRL, 4.2%) 25 cl / 50 cl 5.50 / 9.80 GUINNESS HOPHOUSE 13 (IRL, 5.0%) 25 cl / 50 cl 5.50 / 9.80"
+        self.assertEqual(evidence.serving_snippets([stout]), [stout], "the stout listed next to Hop House 13 (The Kings Pub) still counts")
+
     def test_the_stout_still_counts_next_to_an_ipa_and_so_does_the_zero(self):
         self.assertEqual(evidence.serving_snippets([self.STOUT_AND_IPA]), [self.STOUT_AND_IPA])
         self.assertFalse(evidence.only_other_guinness_beers([self.STOUT_AND_IPA]))

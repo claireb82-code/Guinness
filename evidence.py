@@ -101,10 +101,13 @@ def is_food_mention(snippet):
     return bool(_FOOD_BEFORE.search(text) or _FOOD_AFTER.search(text) or _COOKED.search(text))
 
 
-# Other beers sold under the Guinness name are not the stout: "Guinness IPA", "Guinness Nitro IPA", "Guinness (West Indies) Porter".
-# On their own they do not make a venue Confirmed (the owner's rule); Guinness 0.0 and the stout next to them still count.
-OTHER_GUINNESS_BEERS = re.compile(r"guinness[\s-]+(?:(?:nitro[\s-]+)?ipa\b|(?:west[\s-]+indies[\s-]+)?porter\b)", re.I)
-TAG_TEXT_OTHER_GUINNESS = "Its website lists a Guinness IPA or porter, not clearly the Guinness stout. That is not enough to call it confirmed."
+# Other beers sold under the Guinness name are not the stout: "Guinness IPA", "Guinness Nitro IPA", "Guinness (West Indies) Porter",
+# "Guinness Hop House 13" (a lager). On their own they do not make a venue Confirmed (the owner's rule: only Guinness counts);
+# Guinness 0.0 and the stout next to them still count.
+OTHER_GUINNESS_BEERS = re.compile(
+    r"guinness[\s-]+(?:(?:nitro[\s-]+)?ipa\b|(?:west[\s-]+indies[\s-]+)?porter\b|hop[\s-]*house(?:[\s-]*13)?\b)", re.I
+)
+TAG_TEXT_OTHER_GUINNESS = "Its website lists a Guinness IPA, porter or Hop House 13, not clearly the Guinness stout. That is not enough to call it confirmed."
 
 
 def _without_other_guinness_beers(text):
