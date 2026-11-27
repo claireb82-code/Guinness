@@ -223,7 +223,7 @@ class OwnerReviewDataTests(unittest.TestCase):
     def test_the_fifteen_removed_venues_are_gone_from_what_the_app_serves(self):
         with open(os.path.join(ROOT, "server", "data", "excluded_venues.json"), encoding="utf-8") as f:
             doc = json.load(f)
-        self.assertEqual(len(doc["excluded"]), 15)
+        self.assertEqual(len(doc["excluded"]), 16, "15 from the owner's Google Maps check + Stable (Konstanz, Germany)")
         names = {e["id"]: e["name"] for e in doc["excluded"]}
         served = {v["id"] for v in app.get_all_combined_venues({})}
         self.assertFalse(served & set(names), sorted(names[i] for i in served & set(names)))
@@ -305,11 +305,15 @@ class StarsAndStripesOerlikonTests(unittest.TestCase):
         self.assertIn("getrankekarte", v["menuUrl"].lower())
         self.assertTrue(v["website"].endswith("/standorte/oerlikon-1115.html"), "the branch's own page, not the chain's homepage")
 
-    def test_the_other_branches_are_not_marked_by_this_one(self):
-        """The Glattpark branch's drinks menu lists no Guinness: nothing here may turn it on."""
-        glattpark = [v for v in app.get_all_combined_venues({}) if "stars" in v["name"].lower() and "stripes" in v["name"].lower() and v["id"] != self.ID]
-        for v in glattpark:
-            self.assertNotEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", v["name"])
+    def test_each_branch_is_judged_by_its_own_drinks_menu(self):
+        """Glattpark's drinks menu lists no Guinness, Oerlikon's and Bern's do: the chain's one website must not decide for all branches."""
+        branches = [v for v in app.get_all_combined_venues({}) if "stars" in v["name"].lower() and "stripes" in v["name"].lower()]
+        by_menu = {v["id"]: v.get("menuUrl") or "" for v in branches}
+        for v in branches:
+            if "glattpark" in (v.get("address") or "").lower() or "glattpark" in by_menu[v["id"]].lower():
+                self.assertNotEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", "Glattpark: no Guinness on its menu")
+        bern = [v for v in branches if "getrankekartebern" in by_menu[v["id"]].lower()]
+        self.assertTrue(all(app.compute_guinness_status(v)["statusLabel"] == "Confirmed" for v in bern))
 
 
 class VenueOverrideTests(unittest.TestCase):
@@ -340,3 +344,14 @@ class VenueOverrideTests(unittest.TestCase):
                     self.assertEqual(app.load_venue_overrides(), {}, content)
             finally:
                 os.unlink(f.name)
+
+
+class OutsideSwitzerlandTests(unittest.TestCase):
+    """The app lists Switzerland only. Stable (stable-konstanz.de, "irish pub Konstanz") sat at 47.658, 9.175: the border town of Konstanz,
+    Germany, next to Kreuzlingen. The crawler's border test (a bounding box plus country tags) let it through."""
+
+    def test_stable_in_konstanz_germany_is_never_shown(self):
+        self.assertNotIn("ch-node-571498235", {v["id"] for v in app.get_all_combined_venues({})})
+        with open(os.path.join(ROOT, "server", "data", "excluded_venues.json"), encoding="utf-8") as f:
+            entry = next(e for e in json.load(f)["excluded"] if e["id"] == "ch-node-571498235")
+        self.assertIn("Konstanz", entry["reason"])
