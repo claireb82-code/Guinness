@@ -244,10 +244,18 @@ class OwnerReviewDataTests(unittest.TestCase):
         served = {v["id"] for v in app.get_all_combined_venues({})}
         self.assertEqual([r["name"] for r in rows if r["id"] not in served], [], "keep and investigate stay listed")
 
-    def test_the_three_duplicates_are_listed_once_under_the_venue_they_duplicate(self):
+    def test_regression_flanagans_zug_is_one_pin_not_two(self):
+        """"Flangans" (OpenStreetMap, misspelled, 8 m away) and "Flanagan's Irish Pub Zug" (Overture) are the same pub; the crawl brought both back."""
+        served = {v["id"]: v for v in app.get_all_combined_venues({})}
+        self.assertNotIn("ch-node-2088673041", served, "the misspelled duplicate")
+        self.assertIn("ch-ov-a8df6e96-4759-4676-9c5a-7c54da44beac", served)
+        zug = [v for v in served.values() if "flan" in v["name"].lower() and abs(v["lat"] - 47.172) < 0.01 and abs(v["lng"] - 8.515) < 0.01]
+        self.assertEqual(len(zug), 1, [v["name"] for v in zug])
+
+    def test_the_four_duplicates_are_listed_once_under_the_venue_they_duplicate(self):
         with open(os.path.join(ROOT, "server", "data", "excluded_venues.json"), encoding="utf-8") as f:
             dups = json.load(f)["duplicates"]
-        self.assertEqual(sorted(d["name"] for d in dups), ["Brian's Irish Bar", "MFG", "Shamrock Irish Pub"])
+        self.assertEqual(sorted(d["name"] for d in dups), ["Brian's Irish Bar", "Flangans", "MFG", "Shamrock Irish Pub"])
         served = {v["id"] for v in app.get_all_combined_venues({})}
         for d in dups:
             self.assertNotIn(d["id"], served, d["name"])
