@@ -283,3 +283,30 @@ class KreuzReadingTests(unittest.TestCase):
         self.assertEqual(v["menuCheck"]["extractedPrice"], "CHF 8.80", "the pint")
         self.assertTrue(v["menuUrl"].endswith("/Getraenkekarte_2026.pdf"))
         self.assertNotIn("tagCheck", v)
+
+
+class StarsAndStripesOerlikonTests(unittest.TestCase):
+    """Stars and Stripes Oerlikon (Hofwiesenstrasse 369) was not on the map: our data had only other branches of the chain, and the crawler could
+    not read the branch's drinks PDF. Its own menu lists Guinness on tap (2.5 dl CHF 6.50, 5 dl CHF 9.80)."""
+
+    ID = "zh-stars-stripes-oerlikon"
+
+    def venue(self):
+        return next((v for v in app.get_all_combined_venues({}) if v["id"] == self.ID), None)
+
+    def test_it_is_on_the_map_in_oerlikon_and_confirmed_on_tap_from_its_own_menu(self):
+        v = self.venue()
+        self.assertIsNotNone(v)
+        self.assertEqual(v["name"], "Stars and Stripes Oerlikon")
+        self.assertTrue(47.40 < v["lat"] < 47.42 and 8.53 < v["lng"] < 8.56, "Hofwiesenstrasse, Zürich Oerlikon")
+        s = app.compute_guinness_status(v)
+        self.assertEqual((s["statusLabel"], s["servingFormat"]), ("Confirmed", "draught"))
+        self.assertEqual(v["menuCheck"]["extractedPrice"], "CHF 9.80")
+        self.assertIn("getrankekarte", v["menuUrl"].lower())
+        self.assertTrue(v["website"].endswith("/standorte/oerlikon-1115.html"), "the branch's own page, not the chain's homepage")
+
+    def test_the_other_branches_are_not_marked_by_this_one(self):
+        """The Glattpark branch's drinks menu lists no Guinness: nothing here may turn it on."""
+        glattpark = [v for v in app.get_all_combined_venues({}) if "stars" in v["name"].lower() and "stripes" in v["name"].lower() and v["id"] != self.ID]
+        for v in glattpark:
+            self.assertNotEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", v["name"])

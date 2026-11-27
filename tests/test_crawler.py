@@ -745,3 +745,87 @@ class CarryOverReviewedTests(unittest.TestCase):
         self.assertEqual(crawler.carry_over_reviewed(new, [{"id": "a"}], {"a"}), new)
         self.assertEqual(crawler.carry_over_reviewed(new, None, {"a"}), new)
         self.assertEqual(crawler.carry_over_reviewed(new, [{"name": "no id"}, "x"], {"a"}), new)
+
+
+class ChainSiteTests(unittest.TestCase):
+    """Regression (Stars and Stripes Oerlikon, 2026-11): one website for several branches, each with its own drinks-menu PDF on its own
+    location page. The crawler read only the homepage once for all branches, picked the wine and brunch PDFs, and skipped the 42 MB drinks PDF."""
+
+    def setUp(self):
+        crawler._robots_cache.clear()
+
+    def site(self, routes):
+        server, base = page_server(routes)
+        self.addCleanup(stop, server)
+        for name, fn in (("fetch_page", local_fetch), ("fetch_bytes", lambda url, **kw: REAL_FETCH_BYTES(url, **{**kw, "allow_private": True}))):
+            patch = mock.patch.object(crawler.guard, name, side_effect=fn)
+            patch.start()
+            self.addCleanup(patch.stop)
+        return base
+
+    @staticmethod
+    def page(links):
+        return ("<html><body><p>Welcome to our American restaurant and sports bar, open daily. " + "w" * 40 + "</p>"
+                + "".join(f'<a href="{h}">{t}</a> ' for h, t in links) + "</body></html>").encode()
+
+    def test_regression_drinks_menu_pdfs_come_before_food_brunch_and_wine_lists(self):
+        body = ('<a href="/pdfs/202505weinkartess.pdf">Weinkarte</a> <a href="/pdfs/202602brunchkarteoerlikon.pdf">Brunch</a> '
+                '<a href="/pdfs/202602ssoerlgetrankekarte.pdf">Getränke</a> <a href="/pdfs/Speisekarte.pdf">Speisen</a>')
+        links = crawler.find_pdf_menu_links(body, "https://www.pub.example/")
+        self.assertEqual(links[0], "https://www.pub.example/pdfs/202602ssoerlgetrankekarte.pdf", "the drinks list is read first")
+        self.assertEqual(len(links), 2)
+
+    @unittest.skipUnless(HAVE_PYPDF, "needs pypdf")
+    def test_regression_a_large_drinks_pdf_is_read_but_a_large_food_pdf_is_not(self):
+        def large(text):  # the real content (and the index at its end) lies beyond 3 MB, as in a designed brochure full of images
+            return make_pdf(text, pad=4_000_000)
+
+        drinks, food = large("our international beers on tap: Guinness 5dl CHF 9.80"), large("Guinness on tap Guinness 5dl CHF 9.80")
+        base = self.site({"/": (200, {}, self.page([("/files/Getraenkekarte.pdf", "Getränke")])), "/files/Getraenkekarte.pdf": (200, {}, drinks)})
+        self.assertTrue(crawler.scan_venue_website({"website": base + "/"})["foundOnMenu"], "a drinks menu may be large")
+        base2 = self.site({"/": (200, {}, self.page([("/files/Speisekarte.pdf", "Speisekarte")])), "/files/Speisekarte.pdf": (200, {}, food)})
+        self.assertFalse(crawler.scan_venue_website({"website": base2 + "/"})["foundOnMenu"], "a large food menu is still skipped")
+
+    @unittest.skipUnless(HAVE_PYPDF, "needs pypdf")
+    def test_regression_each_branch_of_a_chain_reads_its_own_location_page(self):
+        routes = {
+            "/": (200, {}, self.page([("/standorte/oerlikon.html", "Oerlikon"), ("/standorte/glattpark.html", "Glattpark")])),
+            "/standorte/oerlikon.html": (200, {}, self.page([("/pdfs/oerl_getraenke.pdf", "Getränkekarte"), ("/pdfs/wein.pdf", "Weinkarte")])),
+            "/standorte/glattpark.html": (200, {}, self.page([("/pdfs/glatt_getraenke.pdf", "Getränkekarte")])),
+            "/pdfs/oerl_getraenke.pdf": (200, {}, make_pdf("international beers on tap Guinness 2.5dl CHF 6.50 5dl CHF 9.80")),
+            "/pdfs/glatt_getraenke.pdf": (200, {}, make_pdf("draft beer on tap Schuetzengarten lager 2.5dl CHF 4.90 Swiss stout 3.3dl CHF 7.00")),
+            "/pdfs/wein.pdf": (200, {}, make_pdf("Wine list")),
+        }
+        base = self.site(routes)
+        oerlikon = crawler.scan_venue_website({"website": base + "/", "city_name": "8050 Zürich Oerlikon"})
+        self.assertTrue(oerlikon["foundOnMenu"], oerlikon)
+        self.assertTrue(oerlikon["checkedUrl"].endswith("/pdfs/oerl_getraenke.pdf"))
+        glattpark = crawler.scan_venue_website({"website": base + "/", "city_name": "8152 Glattpark"})
+        self.assertFalse(glattpark["foundOnMenu"], "the Glattpark menu does not list Guinness")
+        self.assertTrue(glattpark["reachable"])
+
+    def test_regression_a_pdf_served_from_a_script_address_is_a_pdf_not_a_web_page(self):
+        """starsandstripes.ch serves its menus as /filefly/api?action=stream&path=%2Fpdfs%2F...pdf: the .pdf is in the query string."""
+        href = "/de/filefly/api?action=stream&amp;path=%2Fpdfs%2F202608sssportsbarguide20262027.pdf"
+        self.assertTrue(crawler.is_pdf_href(href))
+        self.assertTrue(crawler.is_pdf_href("/files/Menu.PDF?v=2"))
+        self.assertFalse(crawler.is_pdf_href("/de/p/standorte/oerlikon-1115.html"))
+        home = self.page([(href, "Sportsbar guide"), ("/de/p/reservation.html", "Reservation Oerlikon"), ("/de/p/standorte/oerlikon-1115.html", "Oerlikon"),
+                          ("/de/p/standorte/glattpark-1080.html", "Glattpark")])
+        self.assertEqual(crawler.find_location_page(home.decode(), "https://x.example/de", "8050 Zürich Oerlikon"), "https://x.example/de/p/standorte/oerlikon-1115.html",
+                         "other links that merely say Oerlikon in their text, or in a PDF name, are not the branch page")
+
+    def test_branches_sharing_one_website_are_scanned_separately_other_sites_once(self):
+        def v(name, site, city):
+            return {"name": name, "website": site, "city_name": city}
+
+        chain = [v("S&S Glattpark", "http://starsandstripes.ch/", "8152 Glattpark"), v("S&S Oerlikon", "http://starsandstripes.ch", "8050 Zürich Oerlikon"),
+                 v("S&S Rorschach", "http://starsandstripes.ch/", "Rorschach")]
+        same_place = [v("Hotel A", "https://hotel.example", "Davos"), v("Hotel A Bar", "https://hotel.example/", "7260 Davos")]
+        groups = crawler.build_scan_groups(chain + same_place)
+        keys = {g[0]["name"]: k for k, g in groups.items()}
+        self.assertEqual(len(groups), 4, "three branches + one hotel site")
+        self.assertEqual(len({chain[0]["scan_key"], chain[1]["scan_key"], chain[2]["scan_key"]}), 3)
+        self.assertEqual(same_place[0]["scan_key"], same_place[1]["scan_key"], "one place, one scan")
+        self.assertEqual(same_place[0]["scan_key"], "https://hotel.example", "an ordinary site keeps its address as the key")
+        self.assertTrue(all(len(g) >= 1 for g in groups.values()) and keys)

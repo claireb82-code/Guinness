@@ -16,7 +16,9 @@ import math
 import os
 import re
 import sys
+import threading
 import time
+import unicodedata
 import urllib.parse
 import urllib.robotparser
 from collections import Counter, defaultdict
@@ -410,8 +412,13 @@ def _parse_guinness(raw_html):
 # Many pubs publish their drinks list as a PDF. Read the ones the venue's own site links, with the same safe fetching and robots.txt rules.
 PDF_LINK_RE = re.compile(r'<a\b[^>]*?href=["\']([^"\'#]+?\.pdf(?:\?[^"\'#]*)?)["\'][^>]*>(.*?)</a>', re.I | re.S)
 PDF_MENU_WORDS_RE = re.compile(r"drink|getr[aä]nk|menu|men[uü]|karte|bier|beer|bi[eè]re|boisson|carte|cocktail|wein|wine|speise|food|tap", re.I)
+DRINKS_WORDS_RE = re.compile(r"drink|getr[aä]nk|bier|beer|bi[eè]re|boisson|cocktail|\btap\b", re.I)
 MAX_PDFS_PER_SITE = 2
 MAX_PDF_BYTES = 3_000_000
+# A drinks menu is often a designed brochure of tens of megabytes (images), though its text is small. Only drinks lists may be that large,
+# and only a few are downloaded at once so 120 workers cannot fill the machine's memory.
+MAX_DRINKS_PDF_BYTES = 50_000_000
+_big_pdf_slots = threading.BoundedSemaphore(4)
 
 
 def _host_without_www(url):
@@ -419,16 +426,25 @@ def _host_without_www(url):
     return host[4:] if host.startswith("www.") else host
 
 
-def find_pdf_menu_links(body, base_url):
-    """Up to two PDF links on the same site whose address or link text says drinks / menu / karte / carte."""
-    found = []
+def _pdf_candidates(body, base_url):
+    """(address, is_drinks_menu) for each PDF on the same site whose address or link text says drinks / menu / karte / carte,
+    drinks lists first (a venue's drinks menu says whether it pours Guinness; its wine, brunch and food menus do not), then page order."""
+    found, drinks = [], {}
     for href, label in PDF_LINK_RE.findall(body or ""):
         url = urllib.parse.urljoin(base_url, html.unescape(href.strip()))
         if _host_without_www(url) != _host_without_www(base_url) or url in found:
             continue
-        if PDF_MENU_WORDS_RE.search(urllib.parse.unquote(href)) or PDF_MENU_WORDS_RE.search(re.sub(r"<[^>]+>", " ", label)):
+        address, text = urllib.parse.unquote(href), re.sub(r"<[^>]+>", " ", label)
+        if PDF_MENU_WORDS_RE.search(address) or PDF_MENU_WORDS_RE.search(text):
             found.append(url)
-    return found[:MAX_PDFS_PER_SITE]
+            drinks[url] = bool(DRINKS_WORDS_RE.search(address) or DRINKS_WORDS_RE.search(text))
+    found.sort(key=lambda u: not drinks[u])  # stable: page order inside each group
+    return [(u, drinks[u]) for u in found]
+
+
+def find_pdf_menu_links(body, base_url):
+    """Up to two PDF links on the same site whose address or link text says drinks / menu / karte / carte (drinks lists first)."""
+    return [u for u, _ in _pdf_candidates(body, base_url)][:MAX_PDFS_PER_SITE]
 
 
 def pdf_text(data):
@@ -436,15 +452,75 @@ def pdf_text(data):
     return evidence.pdf_text(data)
 
 
-def fetch_pdf_text(url, max_time=6):
-    """The text of a public PDF, or None. Goes through guard.fetch_bytes (public hosts only, also on redirects, size and time limits)."""
+def fetch_pdf_text(url, max_time=6, big=False):
+    """The text of a public PDF, or None. Goes through guard.fetch_bytes (public hosts only, also on redirects, size and time limits).
+    ``big`` (a drinks menu) allows up to MAX_DRINKS_PDF_BYTES and more time; the download takes one of a few shared slots."""
     try:
         if not robots_allows(url):
             return None
-        data = guard.fetch_bytes(url, timeout=max_time, deadline=max_time + 4, max_bytes=MAX_PDF_BYTES)
+        if big:
+            with _big_pdf_slots:
+                data = guard.fetch_bytes(url, timeout=max_time, deadline=max_time + 40, max_bytes=MAX_DRINKS_PDF_BYTES)
+        else:
+            data = guard.fetch_bytes(url, timeout=max_time, deadline=max_time + 4, max_bytes=MAX_PDF_BYTES)
     except Exception:  # noqa: BLE001
         return None
     return pdf_text(data) if data[:5] == b"%PDF-" else None
+
+
+def is_pdf_href(href):
+    """A link to a PDF: the address ends in .pdf, or has it right before a query ("Menu.pdf?v=2") or as the file asked for by a script
+    ("/api?action=stream&path=%2Fpdfs%2Fmenu.pdf")."""
+    return bool(re.search(r"\.pdf(?:$|[?&#])", urllib.parse.unquote(html.unescape(href or "")).lower()))
+
+
+def _plain(text):
+    """Lower case, accents and umlauts removed: "Zürich" and "zurich" compare equal."""
+    return "".join(c for c in unicodedata.normalize("NFKD", (text or "").lower()) if not unicodedata.combining(c)).replace("ß", "ss")
+
+
+def find_location_page(body, base_url, city_name):
+    """The link on a homepage that leads to this venue's own branch page, or None.
+
+    A word of the venue's place ("Oerlikon", "Glattpark") that appears in exactly one link identifies that link; words in many links
+    ("Zürich") identify nothing. Same site only, never a PDF or a mail link."""
+    words = [w for w in re.findall(r"[^\W\d_]{4,}", _plain(city_name))]
+    if not words:
+        return None
+    by_address, by_text = {}, {}
+    for href, label in re.findall(r'<a\b[^>]*?href=["\']([^"\'#]+)["\'][^>]*>(.*?)</a>', body or "", re.I | re.S):
+        href = html.unescape(href.strip())
+        if href.lower().startswith(("mailto:", "tel:", "javascript:")) or is_pdf_href(href):
+            continue
+        url = urllib.parse.urljoin(base_url, href)
+        if _host_without_www(url) != _host_without_www(base_url) or url.rstrip("/") == base_url.rstrip("/"):
+            continue
+        by_address.setdefault(url, _plain(urllib.parse.unquote(urllib.parse.urlsplit(href).path)))
+        by_text.setdefault(url, _plain(re.sub(r"<[^>]+>", " ", label)).strip())
+    for word in words:  # the address names the place, or else a link whose whole text is the place
+        for hits in ([u for u, a in by_address.items() if word in a], [u for u, t in by_text.items() if t == word]):
+            if len(hits) == 1:
+                return hits[0]
+    return None
+
+
+def build_scan_groups(venues):
+    """Venues grouped by the website to read: ``{scan key: [venues]}``; every venue gets its ``scan_key``.
+
+    One website is read once for everyone who lists it. But when it is shared by branches in different places (a chain), each place is read
+    separately, because each branch has its own menu. Beyond 8 places a shared address is a portal, not a chain: it is read once."""
+    by_url = defaultdict(list)
+    for v in venues:
+        by_url[v["website"].rstrip("/").lower()].append(v)
+    groups = {}
+    for url, vs in by_url.items():
+        places = {" ".join(re.findall(r"[^\W\d_]+", _plain(v.get("city_name")))) for v in vs}
+        split = 2 <= len(places) <= 8
+        for v in vs:
+            key = f"{url}#{' '.join(re.findall(r'[^\W\d_]+', _plain(v.get('city_name'))))}" if split else url
+            v["scan_key"] = key
+            groups.setdefault(key, []).append(v)
+    return groups
 
 
 def scan_venue_website(venue):
@@ -480,7 +556,7 @@ def scan_venue_website(venue):
         for href in candidate_links[:2]:
             if href.lower().startswith(("mailto:", "tel:", "javascript:")):
                 continue
-            if urllib.parse.urlparse(href).path.lower().endswith(".pdf"):
+            if is_pdf_href(href):
                 continue  # read below as a PDF (its text); fetched like a web page it would be raw bytes and hidden metadata
             sub_url = urllib.parse.urljoin(url, href)
             if urllib.parse.urlparse(sub_url).netloc == urllib.parse.urlparse(url).netloc and sub_url != url:
@@ -493,11 +569,23 @@ def scan_venue_website(venue):
                         break
 
     if not found:
-        pdfs = []
+        # A chain's website serves every branch, each with its own menu on its own location page: follow the link for this venue's place.
+        location_url = find_location_page(body, url, venue.get("city_name"))
+        if location_url and location_url not in [u for u, _ in page_bodies]:
+            l_status, l_body = fetch_html(location_url, max_time=3.5)
+            if l_status and l_body:
+                page_bodies.append((location_url, l_body))
+                found, types_found, price, snippets = parse_guinness_from_html(l_body)
+                if found:
+                    checked_subpage = location_url
+
+    if not found:
+        candidates = []
         for page_url, page_body in page_bodies:
-            pdfs += [u for u in find_pdf_menu_links(page_body, page_url) if u not in pdfs]
-        for pdf_url in pdfs[:MAX_PDFS_PER_SITE]:
-            text = fetch_pdf_text(pdf_url)
+            candidates += [c for c in _pdf_candidates(page_body, page_url) if c[0] not in [u for u, _ in candidates]]
+        candidates.sort(key=lambda c: not c[1])  # drinks lists first, across every page read
+        for pdf_url, is_drinks in candidates[:MAX_PDFS_PER_SITE]:
+            text = fetch_pdf_text(pdf_url, big=is_drinks)
             if text:
                 found, types_found, price, snippets = parse_guinness_from_html(text)
                 if found:
@@ -716,10 +804,7 @@ def main(argv=None):
     print(f"  OSM Tag/Name Confirmed Irish/Guinness Venues: {len(tier1_osm_confirmed):,}", flush=True)
 
     venues_with_web = [v for v in all_venues if v["website"]]
-    domain_groups = defaultdict(list)
-    for v in venues_with_web:
-        norm_url = v["website"].rstrip("/").lower()
-        domain_groups[norm_url].append(v)
+    domain_groups = build_scan_groups(venues_with_web)
 
     def url_priority(norm_url):
         group = domain_groups[norm_url]
@@ -806,7 +891,7 @@ def main(argv=None):
     }
 
     for v in all_venues:
-        norm_url = v["website"].rstrip("/").lower() if v["website"] else None
+        norm_url = v.get("scan_key")
         scan_res = url_scan_results.get(norm_url) if norm_url else None
 
         if scan_res and scan_res.get("scanned"):

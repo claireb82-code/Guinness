@@ -80,6 +80,18 @@ CITY_PRESETS = {
 
 DEMO_VENUES = [
     # ================= ZURICH =================
+    # Added from the owner's report. Position: the building at Hofwiesenstrasse 369, as two Overture records at that address agree
+    # (47.41146, 8.54417). Only real facts are listed; what the menu says comes from server/data/menu_readings.json.
+    {
+        "id": "zh-stars-stripes-oerlikon",
+        "city": "zurich",
+        "name": "Stars and Stripes Oerlikon",
+        "category": "restaurant",
+        "address": "Hofwiesenstrasse 369, 8050 Zürich, Switzerland",
+        "lat": 47.41146,
+        "lng": 8.54417,
+        "website": "https://www.starsandstripes.ch/de/p/standorte/oerlikon-1115.html",
+    },
     {
         "id": "zh-kennedys",
         "city": "zurich",
