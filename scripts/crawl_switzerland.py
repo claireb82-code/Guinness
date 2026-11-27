@@ -554,6 +554,7 @@ def scan_venue_website(venue):
             "error": "Social media link only",
         }
 
+    partial = [False]  # a page or PDF the scan wanted could not be read: a "nothing found" would then only be "not seen"
     other = []  # Guinness IPA / porter mentions: kept as a hint only if nothing better turns up on any page read
 
     def read(text):
@@ -593,6 +594,8 @@ def scan_venue_website(venue):
                     found, types_found, price, snippets = read(s_body)
                     if found:
                         break
+                else:
+                    partial[0] = True
 
     if not found:
         # A chain's website serves every branch, each with its own menu on its own location page: follow the link for this venue's place.
@@ -604,6 +607,8 @@ def scan_venue_website(venue):
                 found, types_found, price, snippets = read(l_body)
                 if found:
                     checked_subpage = location_url
+            else:
+                partial[0] = True
 
     if not found:
         candidates = []
@@ -612,6 +617,8 @@ def scan_venue_website(venue):
         candidates.sort(key=lambda c: not c[1])  # drinks lists first, across every page read
         for pdf_url, is_drinks in candidates[:MAX_PDFS_PER_SITE]:
             text = fetch_pdf_text(pdf_url, big=is_drinks)
+            if not text:
+                partial[0] = True
             if text:
                 found, types_found, price, snippets = read(text)
                 if found:
@@ -630,7 +637,27 @@ def scan_venue_website(venue):
         "typesFound": types_found,
         "extractedPrice": price,
         "snippets": snippets,
+        "incomplete": bool(partial[0] and not found),
     }
+
+
+def carry_over_unread(new_venues, previous_venues, scan_result_of, previous_crawled_at):
+    """Venues with website evidence from the previous crawl that this crawl did not see, because their site could not be read (or only
+    partly), keep their earlier record, marked with where it comes from.
+
+    Every crawl reads a slightly different set of sites (timeouts, a host that refuses a burst of requests); without this a real venue
+    flips off the map and back on. A site read in full that no longer says Guinness drops the venue, as does one never read for guesses
+    (an Irish-name or OpenStreetMap-tag record is not evidence read from a site). ``scan_result_of(venue id)`` is that venue's scan result."""
+    out = list(new_venues)
+    have = {v.get("id") for v in out if isinstance(v, dict)}
+    for v in previous_venues or []:
+        if not isinstance(v, dict) or v.get("id") in have or not (v.get("menuCheck") or {}).get("foundOnMenu"):
+            continue
+        res = scan_result_of(v.get("id"))
+        if res is None or not res.get("reachable") or res.get("incomplete"):
+            out.append({**v, "carriedOverFrom": previous_crawled_at})
+            have.add(v["id"])
+    return out
 
 
 def carry_over_reviewed(new_venues, previous_venues, reviewed_ids):
@@ -1101,10 +1128,14 @@ def main(argv=None):
     reviewed = app_server._ids_in(app_server.REVIEWED_VENUES_PATH, "reviewed")
     confirmed_final = [evidence.sanitise_static_venue(v) for v in confirmed_venues_output]
     sample_final = [evidence.sanitise_static_venue(v) for v in verified_no_guinness_sample]
-    kept = carry_over_reviewed(confirmed_final, previous.get("confirmedVenues"), reviewed)
+    scan_of = {f"ch-{v['osm_id']}": url_scan_results.get(v.get("scan_key")) for v in all_venues}
+    unread = carry_over_unread(confirmed_final, previous.get("confirmedVenues"), scan_of.get, (previous.get("stats") or {}).get("crawledAt"))
+    if len(unread) > len(confirmed_final):
+        print(f"  Venues whose site could not be (fully) read this crawl, kept from the previous results: {len(unread) - len(confirmed_final)}", flush=True)
+    kept = carry_over_reviewed(unread, previous.get("confirmedVenues"), reviewed)
     kept = carry_over_reviewed(kept, previous.get("verifiedNoGuinnessSample"), reviewed)
-    if len(kept) > len(confirmed_final):
-        print(f"  Reviewed venues this crawl missed, kept from the previous results: {len(kept) - len(confirmed_final)}", flush=True)
+    if len(kept) > len(unread):
+        print(f"  Reviewed venues this crawl missed, kept from the previous results: {len(kept) - len(unread)}", flush=True)
     payload = {
         "stats": stats,
         "starterChecks": starter_checks,
