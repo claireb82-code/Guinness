@@ -1023,3 +1023,30 @@ class UnreadSitesKeepTheirEvidenceTests(unittest.TestCase):
         with mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch):
             res2 = crawler.scan_venue_website({"website": base2 + "/"})
         self.assertFalse(res2["incomplete"], "a site with nothing more to read was read in full")
+
+
+class MarkupAndCocktailTests(unittest.TestCase):
+    """Regression (crawl of 2026-11-27, 14:30): Le Poids Public was Confirmed from a navigation label (aria-label="Guinness"), Pinte Pub & Club from
+    a cocktail inside escaped JSON ("Guinness with drop shot of Baileys & Jameson"), and Banca had a hint from "Guinness-Schaum" (foam on a cocktail)."""
+
+    LABEL = 'v1smN8"></a></li><li><a href="./#comp-l0fld357" aria-label="Guinness" class="v1smN8"></a></li></ol></nav></div><!--/$-->'
+    SHOT = 'n&quot;:[0,&quot;Guinness with drop shot of Baileys &amp; Jameson&quot;],&quot;descri'
+    FOAM = "Spencer Cola-Sirup, Angostura Bitter, Wild Turkey Bourbon, Lagavullin 12, Guinness-Schaum hoher Alkoholgehalt | rauchig"
+    REAL_POST = 'item-action" aria-label="La Guinness a trouvé sa place derrière notre bar 🍺☘️'
+
+    def test_regression_a_page_label_a_cocktail_in_escaped_json_and_a_foam_are_not_the_beer(self):
+        for text in (self.LABEL, self.SHOT, self.FOAM):
+            self.assertTrue(evidence.is_food_mention(text), text)
+            self.assertEqual(evidence.serving_snippets([text]), [], text)
+            self.assertEqual(evidence.website_mention_kind("pub", [text]), "mention", text)
+
+    def test_a_sentence_a_visitor_reads_is_not_dropped_just_because_it_sits_in_a_label(self):
+        self.assertFalse(evidence.is_food_mention(self.REAL_POST))
+        self.assertFalse(evidence.is_food_mention("Guinness Draught 5dl CHF 9.00 | Kilkenny"))
+
+    def test_the_stored_confirmations_become_no_guinness_found(self):
+        for name, text in (("Le Poids Public", self.LABEL), ("Pinte Pub & Club", self.SHOT)):
+            record = {"id": "ch-ov-" + name[:4], "name": name, "category": "pub", "city": "geneva", "lat": 46.2, "lng": 6.1,
+                      "menuCheck": {"checked": True, "foundOnMenu": True, "typesFound": ["Guinness Draught (On Tap)"], "snippets": [text]}}
+            v = evidence.sanitise_static_venue(record)
+            self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "No Guinness found", name)
