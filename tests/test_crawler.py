@@ -973,3 +973,53 @@ class HeavyPagesAndDishesTests(unittest.TestCase):
             self.assertEqual(evidence.serving_snippets([text]), [], text)
         for text in ("irisches fassbier Guinness 0,3L / 0,5 L 3,80 / 5,60 Kilkenny", "Guinness Draught 5dl CHF 9.00"):
             self.assertFalse(evidence.is_food_mention(text), text)
+
+
+class UnreadSitesKeepTheirEvidenceTests(unittest.TestCase):
+    """Regression (crawls of 2026-11-27 lost 5, then 20, real venues: una más, Engel, Big Ben Pub, Old Gregory, Hans Heiri's, Revier...):
+    every crawl reads a slightly different set of sites (timeouts, hosts that refuse a burst of requests). A venue whose evidence was read
+    earlier must not vanish because today's read of its site failed or was partial; only a site read in full that says nothing drops it."""
+
+    PREV = [{"id": "ch-a", "name": "Unread Pub", "menuCheck": {"foundOnMenu": True}},
+            {"id": "ch-b", "name": "Changed Pub", "menuCheck": {"foundOnMenu": True}},
+            {"id": "ch-c", "name": "Partly Read Pub", "menuCheck": {"foundOnMenu": True}},
+            {"id": "ch-d", "name": "Seen Again", "menuCheck": {"foundOnMenu": True}},
+            {"id": "ch-e", "name": "Name Guess", "tagCheck": {"kind": "irish_name"}, "menuCheck": {"foundOnMenu": False}},
+            {"id": "ch-f", "name": "Never Scanned", "menuCheck": {"foundOnMenu": True}}]
+    RESULTS = {"ch-a": {"scanned": True, "reachable": False, "foundOnMenu": False},
+               "ch-b": {"scanned": True, "reachable": True, "foundOnMenu": False, "incomplete": False},
+               "ch-c": {"scanned": True, "reachable": True, "foundOnMenu": False, "incomplete": True},
+               "ch-d": {"scanned": True, "reachable": True, "foundOnMenu": True},
+               "ch-e": {"scanned": True, "reachable": False}}
+
+    def test_a_venue_whose_site_was_not_read_or_only_partly_read_keeps_its_earlier_record(self):
+        new = [{"id": "ch-d", "name": "Seen Again (new)"}]
+        out = crawler.carry_over_unread(new, self.PREV, self.RESULTS.get, "2026-11-12T00:00:00+00:00")
+        self.assertEqual([v["name"] for v in out], ["Seen Again (new)", "Unread Pub", "Partly Read Pub", "Never Scanned"])
+        self.assertTrue(all(v["carriedOverFrom"] == "2026-11-12T00:00:00+00:00" for v in out[1:]), "says it was carried over, and from when")
+        self.assertNotIn("carriedOverFrom", out[0])
+
+    def test_a_site_read_in_full_that_no_longer_says_so_drops_the_venue_and_guesses_are_not_carried(self):
+        out = crawler.carry_over_unread([], self.PREV, self.RESULTS.get, "x")
+        names = [v["name"] for v in out]
+        self.assertNotIn("Changed Pub", names)
+        self.assertNotIn("Name Guess", names, "an Irish-name guess is not evidence read from a site")
+
+    def test_nothing_changes_without_a_previous_file(self):
+        new = [{"id": "ch-d"}]
+        self.assertEqual(crawler.carry_over_unread(new, None, self.RESULTS.get, "x"), new)
+
+    def test_the_scan_says_when_a_page_or_pdf_it_wanted_could_not_be_read(self):
+        crawler._robots_cache.clear()
+        home = b'<html><body><p>Welcome to our pub, open every day. ' + b"w" * 40 + b'</p><a href="/menu/">Menu</a></body></html>'
+        server, base = page_server({"/": (200, {}, home), "/menu/": (500, {}, b"error")})
+        self.addCleanup(stop, server)
+        with mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch):
+            res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertFalse(res["foundOnMenu"])
+        self.assertTrue(res["incomplete"], "the menu page could not be read")
+        server2, base2 = page_server({"/": (200, {}, b"<html><body><p>Welcome to our pub, open every day. " + b"w" * 40 + b"</p></body></html>")})
+        self.addCleanup(stop, server2)
+        with mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch):
+            res2 = crawler.scan_venue_website({"website": base2 + "/"})
+        self.assertFalse(res2["incomplete"], "a site with nothing more to read was read in full")
