@@ -68,12 +68,12 @@ def price_near_guinness(snippets):
 
 
 # "Beef & Guinness pie", "Guinness cake", "Guinness World Record": the word is there, the beer is not (necessarily).
-FOOD_WORDS = r"pies?|stews?|beef|cakes?|brownies?|bread|sauce|gravy|chocolate|burgers?|braised|glazed|marinated|ice\s*cream|mousse|cheddar|chilli|records?|honig|honey|zwiebel\w*|onions?|konfit|confit|senf|mustard|brot|torte|kuchen|ragout|eintopf"
+FOOD_WORDS = r"pies?|stews?|beef|cakes?|brownies?|bread|sauce|gravy|chocolate|burgers?|braised|glazed|marinated|ice\s*cream|mousse|cheddar|chilli|records?|pudding|caramel|toffee|crumble|tiramisu|sorbet|honig|honey|zwiebel\w*|onions?|konfit|confit|senf|mustard|brot|torte|kuchen|ragout|eintopf"
 _FOOD_BEFORE = re.compile(rf"\b(?:{FOOD_WORDS})\W+(?:\w+\W+){{0,3}}guinness\b", re.I)
 _FOOD_AFTER = re.compile(rf"\bguinness\W+(?:\w+\W+){{0,2}}(?:{FOOD_WORDS})\b", re.I)
-_COOKED = re.compile(r"\b(?:cottura|cuit\w*|cooked|simmered|geschmort|gekocht|gebraten|mariné\w*)\W+(?:\w+\W+){0,4}guinness", re.I)
+_COOKED = re.compile(r"\b(?:cottura|cuit\w*|cooked|simmered|geschmort|gekocht|gebraten|mariné\w*|mijot\w*|brais\w*|rôti\w*|roti\w*|stufato)\W+(?:\w+\W+){0,4}guinness", re.I)
 # A record, a book, an event or a shot is not the beer: "Guinness-Weltrekord", "Livre Guinness", "Guinness Village", "Baby Guinness"
-_RECORD = re.compile(r"guinness[\s-]*(?:world|welt|buch|book|livre|village|record|rekord)|(?:buch|book|livre|record|rekord)\w*\W+(?:\w+\W+){0,3}guinness|baby\s*guinness|malta\s*guinness|guinness\s*(?:carbomb|bomb)", re.I)
+_RECORD = re.compile(r"guinness[\s-]*(?:world|welt|buch|book|livre|village|record|rekord)|(?:buch|book|livre|record|rekord)\w*\W+(?:\w+\W+){0,3}guinness|baby\s*guinness|malta\s*guinness|guinness\s*(?:carbomb|bomb)|car[\s-]?bomb", re.I)
 _FACET = re.compile(r"guinness\s*\(\d+\)", re.I)  # a shop's filter list: "Guinness (2) Gusswerk (1)"
 # Hidden file metadata (XMP in a PDF or image), not text a visitor reads: photoshop:LayerText="guinness &amp; ...", <rdf:li ...>
 _FILE_METADATA = re.compile(r"photoshop:|rdf:li|rdf:rdf|xmlns:|<x:xmpmeta|xmp:|LayerText", re.I)

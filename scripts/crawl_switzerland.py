@@ -350,7 +350,7 @@ def fetch_html(url, max_time=3.5):
     try:
         if not robots_allows(url):
             return None, "disallowed by robots.txt"
-        body = guard.fetch_page(url, timeout=max_time, deadline=max_time + 2, max_bytes=450_000)
+        body = guard.fetch_page(url, timeout=max_time, deadline=max_time + 2 + MAX_PAGE_READ_BYTES // 1_000_000 * 2, max_bytes=MAX_PAGE_READ_BYTES)
         if len(body.strip()) > 30:
             return 200, body
         return None, "empty page"
@@ -423,6 +423,9 @@ _big_pdf_slots = threading.BoundedSemaphore(4)
 
 ASSET_EXTENSIONS = (".css", ".js", ".mjs", ".map", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".avif", ".ico", ".woff", ".woff2", ".ttf", ".otf",
                     ".mp4", ".webm", ".mp3", ".xml", ".json", ".zip")
+# Page builders (Wix and the like) ship pages of 1-2 MB, mostly code, with the menu text or the link to the menu PDF hundreds of
+# kilobytes down: Guarany's Guinness mention is at character 725,000. Scripts and styles are stripped before the text is read.
+MAX_PAGE_READ_BYTES = 3_000_000
 PAGE_TIME = 5.0  # seconds per page: 120 parallel workers make servers slow (una más' menu page took 3.8 s)
 
 
