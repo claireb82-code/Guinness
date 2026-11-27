@@ -140,6 +140,14 @@
       "reason": "Same hotel-freihof.ch website and address as UFO Bar, Glarus.",
       "lat": 47.03876,
       "lng": 9.07018
+    },
+    {
+      "id": "ch-node-2088673041",
+      "name": "Flangans",
+      "duplicateOf": "ch-ov-a8df6e96-4759-4676-9c5a-7c54da44beac",
+      "reason": "OpenStreetMap's misspelled entry for Flanagan's Irish Pub Zug, 8 m from it.",
+      "lat": 47.17213,
+      "lng": 8.51502
     }
   ]
 }
