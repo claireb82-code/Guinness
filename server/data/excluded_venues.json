@@ -1,5 +1,5 @@
 {
-  "note": "Venues the site owner checked on Google Maps and found missing or permanently closed ('excluded'), or that are the same place listed twice ('duplicates'). The app never shows these ids, and a new crawl cannot bring them back.",
+  "note": "Venues the site owner checked on Google Maps and found missing or permanently closed, or that are not in Switzerland ('excluded'), or that are the same place listed twice ('duplicates'). The app never shows these ids, and a new crawl cannot bring them back.",
   "checkedOn": "2026-11-12",
   "excluded": [
     {
@@ -106,6 +106,14 @@
       "city": "lausanne",
       "lat": 46.51628,
       "lng": 6.61463
+    },
+    {
+      "id": "ch-node-571498235",
+      "name": "Stable",
+      "city": "east",
+      "lat": 47.6577254,
+      "lng": 9.1753461,
+      "reason": "Not in Switzerland: its website (stable-konstanz.de) says 'stable irish pub Konstanz'. The crawler's border test let this border-town venue through."
     }
   ],
   "duplicates": [
