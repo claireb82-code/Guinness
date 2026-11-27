@@ -882,3 +882,42 @@ class OtherGuinnessBeersTests(unittest.TestCase):
             res = crawler.scan_venue_website({"website": base + "/"})
         self.assertTrue(res["foundOnMenu"])
         self.assertTrue(evidence.only_other_guinness_beers(res["snippets"]))
+
+
+class LostPubsTests(unittest.TestCase):
+    """Regression (crawl of 2026-11-12 lost una más, The Kings Pub, Al Capone and Half Time, all with real Guinness listings earlier):
+    the crawl followed menu links only to the very same host spelling, spent its two sub-page tries on style sheets and scripts, and gave
+    slow pages too little time under 120 parallel workers."""
+
+    def setUp(self):
+        crawler._robots_cache.clear()
+
+    def test_regression_a_menu_link_on_the_www_or_bare_form_of_the_same_site_is_the_same_site(self):
+        """unamas.ch listed as www.unamas.ch linked its menu as https://unamas.ch/unsere-karte/: never followed."""
+        self.assertTrue(crawler.same_site("https://www.unamas.ch/", "https://unamas.ch/unsere-karte/"))
+        self.assertTrue(crawler.same_site("https://unamas.ch/", "http://www.unamas.ch/menu"))
+        self.assertFalse(crawler.same_site("https://www.unamas.ch/", "https://unamas.ch.evil.example/menu"))
+        self.assertFalse(crawler.same_site("https://www.unamas.ch/", "https://facebook.com/unamas"))
+
+    def test_regression_style_sheets_and_scripts_are_not_menu_pages(self):
+        hits = []
+        home = (b"<html><body><p>Welcome to our pub, open every day. " + b"w" * 40 + b"</p>"
+                b'<link href="/elementor-pro/assets/css/widget-nav-menu.min.css?ver=3.34" rel="stylesheet">'
+                b'<script src="/assets/js/bar-menu.min.js"></script><a href="/img/bar-menu.png">x</a><a href="/menu/">Menu</a></body></html>')
+        server, base = page_server({"/": (200, {}, home), "/menu/": (200, {}, b"<html><body>BEER MENU (Beer on Tap) GUINNESS 25 cl / 50 cl 5.50 / 9.80 Kilkenny</body></html>")}, hits)
+        self.addCleanup(stop, server)
+        with mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch):
+            res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertTrue(res["foundOnMenu"], res)
+        self.assertEqual([h for h in hits if h.endswith((".css", ".js", ".png")) or ".css?" in h], [], "assets are never fetched as menu pages")
+
+    def test_regression_slow_pages_get_enough_time(self):
+        seen = []
+
+        def fake(url, max_time=3.5):
+            seen.append(max_time)
+            return 200, "<html><body><p>Our pub " + "w" * 60 + '</p><a href="/menu/">Menu</a></body></html>' if url.endswith("/") and "menu" not in url else "<p>nothing here at all, no beer named</p>" + "x" * 40
+
+        with mock.patch.object(crawler, "fetch_html", fake):
+            crawler.scan_venue_website({"website": "https://pub.example/"})
+        self.assertTrue(seen and min(seen) >= 5, f"every page read gets at least 5 s, got {seen}")
