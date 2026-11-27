@@ -931,3 +931,45 @@ class LostPubsTests(unittest.TestCase):
         with mock.patch.object(crawler, "fetch_html", fake):
             crawler.scan_venue_website({"website": "https://pub.example/"})
         self.assertTrue(seen and min(seen) >= 5, f"every page read gets at least 5 s, got {seen}")
+
+
+class HeavyPagesAndDishesTests(unittest.TestCase):
+    """Regression (crawl of 2026-11-27 lost Guarany, Platzhirsch Langenthal and Alp and Horn): their homepages are 0.9-2 MB of page-builder
+    code, and the crawler kept only the first 450 KB, so the Guinness text (char 725,000) and the menu PDF link (char 562,000) were never seen.
+    Also: a lamb dish "mijotée à la Guinness", "Guinness-Caramel" and an "Irish Carbomb" cocktail were taken for the beer."""
+
+    FILLER = b"<script>" + b"var x=1;" * 120_000 + b"</script>"  # ~960 KB of page-builder code
+
+    def setUp(self):
+        crawler._robots_cache.clear()
+
+    def test_regression_text_far_down_a_heavy_page_is_read(self):
+        page = b"<html><body><p>Welcome to our bar, open every day. " + b"w" * 40 + b"</p>" + self.FILLER + b"<p>Draught beers: Guinness 5dl CHF 9.80, Kilkenny 5dl CHF 9.80</p></body></html>"
+        server, base = page_server({"/": (200, {}, page)})
+        self.addCleanup(stop, server)
+        with mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch):
+            res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertTrue(res["foundOnMenu"], "a page of a megabyte is read to its end")
+
+    @unittest.skipUnless(HAVE_PYPDF, "needs pypdf")
+    def test_regression_a_menu_pdf_linked_far_down_a_heavy_page_is_found(self):
+        page = (b"<html><body><p>Welcome to our bar, open every day. " + b"w" * 40 + b"</p>" + self.FILLER
+                + b'<a href="/s/Getraenke.pdf">Drinks</a></body></html>')
+        server, base = page_server({"/": (200, {}, page), "/s/Getraenke.pdf": (200, {}, make_pdf("Draught: Guinness 5dl CHF 9.80"))})
+        self.addCleanup(stop, server)
+        for name, fn in (("fetch_page", local_fetch), ("fetch_bytes", lambda url, **kw: REAL_FETCH_BYTES(url, **{**kw, "allow_private": True}))):
+            patch = mock.patch.object(crawler.guard, name, side_effect=fn)
+            patch.start()
+            self.addCleanup(patch.stop)
+        res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertTrue(res["foundOnMenu"] and res["checkedUrl"].endswith("/s/Getraenke.pdf"), res)
+
+    def test_regression_a_dish_a_dessert_and_a_cocktail_are_not_the_beer(self):
+        for text in ("Souris d’agneau mijotée à la Guinness, pomme purée et légumes CHF 44.- Cromesquis",
+                     "DESSERT Sticky Toffee Pudding Guinness-Caramel · Geräucherter Doppelrahm",
+                     "Irish Carbomb (0,25L Guinness + 2 cl Baileys + Schuss Irish Whiskey) 7,30 Stable-Special",
+                     "Boeuf braisé à la Guinness 38.-"):
+            self.assertTrue(evidence.is_food_mention(text), text)
+            self.assertEqual(evidence.serving_snippets([text]), [], text)
+        for text in ("irisches fassbier Guinness 0,3L / 0,5 L 3,80 / 5,60 Kilkenny", "Guinness Draught 5dl CHF 9.00"):
+            self.assertFalse(evidence.is_food_mention(text), text)
