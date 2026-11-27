@@ -1,0 +1,10 @@
+{
+  "note": "Facts the site owner corrected by hand, applied to a venue whatever a crawl says (only the category can be overridden).",
+  "overrides": {
+    "ch-ov-b8270c69-4cc2-481a-87d6-6644ed7a79fb": {
+      "category": "hotel",
+      "name": "Kreuz Herzogenbuchsee",
+      "reason": "Owner: it is a hotel (and serves Guinness)."
+    }
+  }
+}

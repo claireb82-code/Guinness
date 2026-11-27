@@ -310,3 +310,33 @@ class StarsAndStripesOerlikonTests(unittest.TestCase):
         glattpark = [v for v in app.get_all_combined_venues({}) if "stars" in v["name"].lower() and "stripes" in v["name"].lower() and v["id"] != self.ID]
         for v in glattpark:
             self.assertNotEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", v["name"])
+
+
+class VenueOverrideTests(unittest.TestCase):
+    """Facts the owner corrects (a category, say) are kept in venue_overrides.json, so a fresh crawl cannot undo them."""
+
+    KREUZ = "ch-ov-b8270c69-4cc2-481a-87d6-6644ed7a79fb"
+
+    def test_kreuz_herzogenbuchsee_is_a_hotel(self):
+        v = next(x for x in app.get_all_combined_venues({}) if x["id"] == self.KREUZ)
+        self.assertEqual(v["category"], "hotel")
+        self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Confirmed", "its own menu still says Guinness is on tap")
+
+    def test_an_override_changes_only_what_it_names_and_a_bad_file_changes_nothing(self):
+        path = write({"overrides": {"ch-ov-x": {"category": "hotel", "name": "Hacked"}, "other": "x"}})
+        crawl = [{"id": "ch-ov-x", "name": "Real Name", "city": "bern", "category": "restaurant"}]
+        try:
+            with mock.patch.object(app, "VENUE_OVERRIDES_PATH", path), mock.patch.object(app, "load_crawl_venues", lambda: crawl):
+                v = next(x for x in app.get_all_combined_venues({}) if x["id"] == "ch-ov-x")
+        finally:
+            os.unlink(path)
+        self.assertEqual((v["category"], v["name"]), ("hotel", "Real Name"), "only the category can be overridden")
+        for content in ("not json", '{"overrides": []}'):
+            f = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False)
+            f.write(content)
+            f.close()
+            try:
+                with mock.patch.object(app, "VENUE_OVERRIDES_PATH", f.name):
+                    self.assertEqual(app.load_venue_overrides(), {}, content)
+            finally:
+                os.unlink(f.name)

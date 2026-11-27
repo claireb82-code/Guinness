@@ -536,6 +536,16 @@ def scan_venue_website(venue):
             "error": "Social media link only",
         }
 
+    other = []  # Guinness IPA / porter mentions: kept as a hint only if nothing better turns up on any page read
+
+    def read(text):
+        found_, types_, price_, snippets_ = parse_guinness_from_html(text)
+        if not found_ and not other:
+            raw = _parse_guinness(text)[3]
+            if evidence.only_other_guinness_beers(raw):
+                other.extend(raw)
+        return found_, types_, price_, snippets_
+
     status, body = fetch_html(url, max_time=3.5)
     if (status is None or not body) and not str(body).startswith("disallowed"):
         # Many sites only answer on "www." (or only without it): try the other form once before calling a site unreachable.
@@ -547,7 +557,7 @@ def scan_venue_website(venue):
     if status is None or not body:
         return {"scanned": True, "reachable": False, "foundOnMenu": False, "error": body or "Unreachable"}
 
-    found, types_found, price, snippets = parse_guinness_from_html(body)
+    found, types_found, price, snippets = read(body)
     checked_subpage = None
     page_bodies = [(url, body)]
 
@@ -564,7 +574,7 @@ def scan_venue_website(venue):
                 s_status, s_body = fetch_html(sub_url, max_time=2.5)
                 if s_status and s_body:
                     page_bodies.append((sub_url, s_body))
-                    found, types_found, price, snippets = parse_guinness_from_html(s_body)
+                    found, types_found, price, snippets = read(s_body)
                     if found:
                         break
 
@@ -575,7 +585,7 @@ def scan_venue_website(venue):
             l_status, l_body = fetch_html(location_url, max_time=3.5)
             if l_status and l_body:
                 page_bodies.append((location_url, l_body))
-                found, types_found, price, snippets = parse_guinness_from_html(l_body)
+                found, types_found, price, snippets = read(l_body)
                 if found:
                     checked_subpage = location_url
 
@@ -587,10 +597,13 @@ def scan_venue_website(venue):
         for pdf_url, is_drinks in candidates[:MAX_PDFS_PER_SITE]:
             text = fetch_pdf_text(pdf_url, big=is_drinks)
             if text:
-                found, types_found, price, snippets = parse_guinness_from_html(text)
+                found, types_found, price, snippets = read(text)
                 if found:
                     checked_subpage = pdf_url
                     break
+
+    if not found and other:
+        found, types_found, price, snippets = True, ["Guinness (mentioned on website)"], None, other[:3]
 
     return {
         "scanned": True,
