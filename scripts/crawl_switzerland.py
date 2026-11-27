@@ -421,6 +421,21 @@ MAX_DRINKS_PDF_BYTES = 50_000_000
 _big_pdf_slots = threading.BoundedSemaphore(4)
 
 
+ASSET_EXTENSIONS = (".css", ".js", ".mjs", ".map", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".avif", ".ico", ".woff", ".woff2", ".ttf", ".otf",
+                    ".mp4", ".webm", ".mp3", ".xml", ".json", ".zip")
+PAGE_TIME = 5.0  # seconds per page: 120 parallel workers make servers slow (una más' menu page took 3.8 s)
+
+
+def is_asset_href(href):
+    """A style sheet, script, picture or other file that is never a menu page, though its address may say "menu" ("widget-nav-menu.min.css")."""
+    return urllib.parse.urlsplit(html.unescape(href or "")).path.lower().endswith(ASSET_EXTENSIONS)
+
+
+def same_site(url_a, url_b):
+    """The same website, with or without "www." (a site listed as www.x.ch often links its pages on x.ch, and the other way round)."""
+    return bool(_host_without_www(url_a)) and _host_without_www(url_a) == _host_without_www(url_b)
+
+
 def _host_without_www(url):
     host = (urllib.parse.urlsplit(url).hostname or "").lower()
     return host[4:] if host.startswith("www.") else host
@@ -546,12 +561,12 @@ def scan_venue_website(venue):
                 other.extend(raw)
         return found_, types_, price_, snippets_
 
-    status, body = fetch_html(url, max_time=3.5)
+    status, body = fetch_html(url, max_time=PAGE_TIME)
     if (status is None or not body) and not str(body).startswith("disallowed"):
         # Many sites only answer on "www." (or only without it): try the other form once before calling a site unreachable.
         alt = guard.other_host_form(url)
         if alt:
-            status, body = fetch_html(alt, max_time=3.5)
+            status, body = fetch_html(alt, max_time=PAGE_TIME)
             if status and body:
                 url = alt
     if status is None or not body:
@@ -562,16 +577,14 @@ def scan_venue_website(venue):
     page_bodies = [(url, body)]
 
     if not found and "<a " in body.lower():
-        candidate_links = MENU_LINK_RE.findall(body)
+        candidate_links = [h for h in MENU_LINK_RE.findall(body)
+                           if not h.lower().startswith(("mailto:", "tel:", "javascript:")) and not is_asset_href(h)
+                           and not is_pdf_href(h)]  # a PDF is read below as a PDF (its text); fetched like a web page it is raw bytes
         for href in candidate_links[:2]:
-            if href.lower().startswith(("mailto:", "tel:", "javascript:")):
-                continue
-            if is_pdf_href(href):
-                continue  # read below as a PDF (its text); fetched like a web page it would be raw bytes and hidden metadata
             sub_url = urllib.parse.urljoin(url, href)
-            if urllib.parse.urlparse(sub_url).netloc == urllib.parse.urlparse(url).netloc and sub_url != url:
+            if same_site(sub_url, url) and sub_url != url:
                 checked_subpage = sub_url
-                s_status, s_body = fetch_html(sub_url, max_time=2.5)
+                s_status, s_body = fetch_html(sub_url, max_time=PAGE_TIME)
                 if s_status and s_body:
                     page_bodies.append((sub_url, s_body))
                     found, types_found, price, snippets = read(s_body)
@@ -582,7 +595,7 @@ def scan_venue_website(venue):
         # A chain's website serves every branch, each with its own menu on its own location page: follow the link for this venue's place.
         location_url = find_location_page(body, url, venue.get("city_name"))
         if location_url and location_url not in [u for u, _ in page_bodies]:
-            l_status, l_body = fetch_html(location_url, max_time=3.5)
+            l_status, l_body = fetch_html(location_url, max_time=PAGE_TIME)
             if l_status and l_body:
                 page_bodies.append((location_url, l_body))
                 found, types_found, price, snippets = read(l_body)
