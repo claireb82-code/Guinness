@@ -20,6 +20,16 @@
         "Bier offen (on draught): Guinness Pint CHF 8.80, 1/2 Pint CHF 6.30, 4.2% vol. Prices in CHF incl. VAT, as the menu states."
       ],
       "readBy": "Text read from the venue's own 2026 drinks menu PDF (Getraenkekarte_2026.pdf), at the address the site owner supplied. Guinness is listed under 'Bier offen' (beer on draught) with half-pint and pint prices. The crawler had not found this PDF."
+    },
+    "zh-stars-stripes-oerlikon": {
+      "reachable": true,
+      "foundOnMenu": true,
+      "checkedAt": "2026-11-27T10:00:00+00:00",
+      "checkedUrl": "https://www.starsandstripes.ch/de/filefly/api?action=stream&path=%2Fpdfs%2F202602ssoerlgetrankekartezugeschnitten.pdf",
+      "snippets": [
+        "Our international beers on tap: Guinness (stout, Ireland, 4.2% vol.) 5dl CHF 9.80, 2.5dl CHF 6.50. Also on tap: Hop House 13 5dl CHF 9.80, Brooklyn Lager 5dl CHF 9.80."
+      ],
+      "readBy": "Text read from the Oerlikon branch's own drinks menu PDF (Getränkekarte, Feb 2026) linked on its location page. The PDF is 42 MB, over what the crawler downloaded, so the crawler had not read it. Prices are CHF including VAT, as the menu states."
     }
   }
 }
