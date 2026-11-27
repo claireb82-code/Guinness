@@ -829,3 +829,56 @@ class ChainSiteTests(unittest.TestCase):
         self.assertEqual(same_place[0]["scan_key"], same_place[1]["scan_key"], "one place, one scan")
         self.assertEqual(same_place[0]["scan_key"], "https://hotel.example", "an ordinary site keeps its address as the key")
         self.assertTrue(all(len(g) >= 1 for g in groups.values()) and keys)
+
+
+class OtherGuinnessBeersTests(unittest.TestCase):
+    """Owner's rule (2026-11): a Guinness IPA or a Guinness (West Indies) Porter is not the Guinness stout, so on its own it does not make a
+    venue Confirmed. It stays a hint (Possible). Guinness 0.0 and the stout next to an IPA still count."""
+
+    ONLY_IPA = "GRIMBERGEN – BLANCHE – 50 CL 8 GUINNESS IPA – 25 CL 5.5 GUINNESS IPA – 50 CL 8"
+    ONLY_PORTER = "Ale 4,5% 0.5l 9 Amber Shepherd Neame 1698 6,5% 0.5l 9 Dunkles Amber Irland Guinness West Indies Porter 6% 0.5l 9,8"
+    STOUT_AND_IPA = "Grimbergen Blonde 6.7% 5.50 8.00 Guinness Irland, 4.2% 6.50 9.00 Guinness IPA Irland, 5.0% 6.50 9.00"
+
+    def test_regression_an_ipa_or_porter_alone_is_not_a_serving_of_guinness(self):
+        for text in (self.ONLY_IPA, self.ONLY_PORTER, "Guinness Nitro IPA 5dl CHF 9.50"):
+            self.assertEqual(evidence.serving_snippets([text]), [], text)
+            self.assertEqual(evidence.website_mention_kind("pub", [text]), "mention", text)
+            self.assertTrue(evidence.only_other_guinness_beers([text]), text)
+
+    def test_the_stout_still_counts_next_to_an_ipa_and_so_does_the_zero(self):
+        self.assertEqual(evidence.serving_snippets([self.STOUT_AND_IPA]), [self.STOUT_AND_IPA])
+        self.assertFalse(evidence.only_other_guinness_beers([self.STOUT_AND_IPA]))
+        self.assertEqual(evidence.website_mention_kind("bar", ["Guinness 0.0 44cl 7.50"]), "menu")
+        self.assertFalse(evidence.only_other_guinness_beers(["no mention of the brand here"]))
+
+    def test_a_stored_confirmation_made_from_an_ipa_alone_becomes_a_possible_hint(self):
+        record = {"id": "ch-ov-x", "name": "Aquatis Hotel", "category": "hotel", "city": "lausanne", "lat": 46.5, "lng": 6.6,
+                  "menuCheck": {"checked": True, "foundOnMenu": True, "typesFound": ["Guinness Draught (On Tap)"], "extractedPrice": "CHF 5.50",
+                                "snippets": [self.ONLY_IPA]}}
+        v = evidence.sanitise_static_venue(record)
+        self.assertEqual(v["tagCheck"]["kind"], "web_mention")
+        self.assertIn("IPA", v["tagCheck"]["text"])
+        self.assertFalse(v["menuCheck"]["foundOnMenu"])
+        self.assertEqual(app.compute_guinness_status(v)["statusLabel"], "Possible")
+        self.assertEqual(evidence.sanitise_static_venue(v), v, "loading it again changes nothing")
+
+    def test_the_scan_keeps_looking_and_a_real_stout_listing_wins_over_an_ipa_mention(self):
+        crawler._robots_cache.clear()
+        server, base = page_server({
+            "/": (200, {}, b"<html><body><p>Try our Guinness IPA and craft beers. " + b"w" * 40 + b'</p><a href="/drinks">Drinks</a></body></html>'),
+            "/drinks": (200, {}, b"<html><body><p>Draught: Guinness 5dl CHF 9.80 stout from Ireland, Kilkenny 5dl 9.80</p></body></html>"),
+        })
+        self.addCleanup(stop, server)
+        with mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch):
+            res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertTrue(res["foundOnMenu"])
+        self.assertIn("5dl CHF 9.80", " ".join(res["snippets"]))
+
+    def test_a_site_that_only_names_an_ipa_is_still_reported_as_a_hint_not_lost(self):
+        crawler._robots_cache.clear()
+        server, base = page_server({"/": (200, {}, b"<html><body><p>On tap: Guinness IPA 5dl CHF 9.00. " + b"w" * 40 + b"</p></body></html>")})
+        self.addCleanup(stop, server)
+        with mock.patch.object(crawler.guard, "fetch_page", side_effect=local_fetch):
+            res = crawler.scan_venue_website({"website": base + "/"})
+        self.assertTrue(res["foundOnMenu"])
+        self.assertTrue(evidence.only_other_guinness_beers(res["snippets"]))

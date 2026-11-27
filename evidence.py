@@ -101,9 +101,28 @@ def is_food_mention(snippet):
     return bool(_FOOD_BEFORE.search(text) or _FOOD_AFTER.search(text) or _COOKED.search(text))
 
 
+# Other beers sold under the Guinness name are not the stout: "Guinness IPA", "Guinness Nitro IPA", "Guinness (West Indies) Porter".
+# On their own they do not make a venue Confirmed (the owner's rule); Guinness 0.0 and the stout next to them still count.
+OTHER_GUINNESS_BEERS = re.compile(r"guinness[\s-]+(?:(?:nitro[\s-]+)?ipa\b|(?:west[\s-]+indies[\s-]+)?porter\b)", re.I)
+TAG_TEXT_OTHER_GUINNESS = "Its website lists a Guinness IPA or porter, not clearly the Guinness stout. That is not enough to call it confirmed."
+
+
+def _without_other_guinness_beers(text):
+    return OTHER_GUINNESS_BEERS.sub(" ", text or "")
+
+
+def only_other_guinness_beers(snippets):
+    """True when the text names Guinness only as an IPA or a porter (and so shows nothing about the stout being poured)."""
+    texts = [x for x in (snippets or []) if isinstance(x, str)]
+    named = any(OTHER_GUINNESS_BEERS.search(x) for x in texts)
+    plain = any(re.search(r"guinness", strip_urls_and_files(_without_other_guinness_beers(x)), re.I) for x in texts)
+    return named and not plain
+
+
 def serving_snippets(snippets):
     """The snippets that could mean Guinness is served: it appears in readable text and is not a dish, record, shot, event or filter list."""
-    return [x for x in (snippets or []) if re.search(r"guinness", strip_urls_and_files(x), re.I) and not is_food_mention(x)]
+    return [x for x in (snippets or [])
+            if re.search(r"guinness", strip_urls_and_files(_without_other_guinness_beers(x)), re.I) and not is_food_mention(x)]
 
 
 def _says_how_served(text):
@@ -231,6 +250,9 @@ def _recheck_web_mention(v):
     menu = v.get("menuCheck") or {}
     snippets = menu.get("snippets") or []
     usable = serving_snippets(snippets)
+    if not usable and only_other_guinness_beers(snippets):
+        v["tagCheck"] = tag_check(TAG_WEB, TAG_TEXT_OTHER_GUINNESS)  # a Guinness IPA or porter: still a hint, never a confirmation
+        return v
     if not usable:
         v.pop("tagCheck", None)
         v["menuCheck"] = {**not_checked("The website was read: no Guinness text found."), "checked": True, "lastChecked": menu.get("lastChecked")}
@@ -283,6 +305,9 @@ def sanitise_static_venue(venue):
                 if scanned
                 else not_checked()
             )
+        elif menu.get("foundOnMenu") and only_other_guinness_beers(menu.get("snippets")):
+            tag = tag_check(TAG_WEB, TAG_TEXT_OTHER_GUINNESS)
+            v["menuCheck"] = {**menu, "foundOnMenu": False, "typesFound": [], "extractedPrice": None}
         elif menu.get("foundOnMenu") and not serving_snippets(menu.get("snippets")):
             # every mention was a record, a dish, a shot or a file name: the site was read and does not say Guinness is served
             v["menuCheck"] = {**not_checked("The website was read: no Guinness text found."), "checked": True, "lastChecked": menu.get("lastChecked")}

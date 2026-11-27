@@ -1518,6 +1518,22 @@ def load_menu_readings():
     return {k: v for k, v in readings.items() if isinstance(k, str) and isinstance(v, dict)} if isinstance(readings, dict) else {}
 
 
+VENUE_OVERRIDES_PATH = os.path.join(ROOT_DIR, "server", "data", "venue_overrides.json")
+OVERRIDABLE_FIELDS = ("category",)
+
+
+def load_venue_overrides():
+    """Corrections the owner made to a venue's facts (venue id -> {field: value}); only the fields in OVERRIDABLE_FIELDS apply."""
+    try:
+        with open(VENUE_OVERRIDES_PATH, "r", encoding="utf-8") as f:
+            rows = json.load(f).get("overrides")
+    except (OSError, ValueError, AttributeError):
+        return {}
+    if not isinstance(rows, dict):
+        return {}
+    return {k: {f: x[f] for f in OVERRIDABLE_FIELDS if isinstance(x.get(f), str)} for k, x in rows.items() if isinstance(k, str) and isinstance(x, dict)}
+
+
 def load_reviewed_ids():
     """Every venue the owner has already checked by hand (kept, still being investigated, or removed). A review list must never show these again."""
     return _ids_in(REVIEWED_VENUES_PATH, "reviewed") | load_excluded_ids()
@@ -1618,6 +1634,9 @@ def get_all_combined_venues(store):
             v["googleMapsUri"] = google_maps_link(v.get("name"), v.get("address"))
         v["googleMapsChecked"] = True
         deduped.append(v)
+    overrides = load_venue_overrides()
+    if overrides:
+        deduped = [{**v, **overrides[v["id"]]} if v.get("id") in overrides else v for v in deduped]
     readings = load_menu_readings()
     if readings:
         for i, v in enumerate(deduped):
